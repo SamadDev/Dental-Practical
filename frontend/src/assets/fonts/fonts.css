@@ -1,0 +1,30 @@
+/*
+ * Bundled offline fonts. Drop the actual .woff2 files into this directory:
+ *   - Vazirmatn-Regular.woff2, Vazirmatn-Bold.woff2  (Kurdish/Arabic)
+ *   - Inter-Regular.woff2,     Inter-Bold.woff2      (Latin)
+ * They are served by Vite as static assets — no Google Fonts, no internet.
+ */
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./Inter-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./Inter-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  font-weight: 400;
+  font-display: swap;
+  src: url('./Vazirmatn-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  font-weight: 700;
+  font-display: swap;
+  src: url('./Vazirmatn-Bold.woff2') format('woff2');
+}

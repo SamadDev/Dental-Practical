@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Direction-aware root font selection driven by [dir] attribute. */
+html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
+html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
+
+/* ----- Print Media Rules — clean PDFs for the cash register ledger ----- */
+@media print {
+  .no-print          { display: none !important; }
+  body               { background: white !important; color: black !important; }
+  .print-container   { box-shadow: none !important; border: none !important; }
+  table              { width: 100%; border-collapse: collapse; }
+  th, td             { border: 1px solid #999; padding: 6px 10px; font-size: 12px; }
+  @page              { margin: 1.2cm; }
+}

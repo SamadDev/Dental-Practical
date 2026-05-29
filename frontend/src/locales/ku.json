@@ -1,0 +1,116 @@
+{
+  "app": { "title": "دەنتاڵ پراکتی-سمارت" },
+  "nav": {
+    "queue": "ڕیزی ڕۆژانە",
+    "patients": "نەخۆشەکان",
+    "archive": "ئەرشیفی چارەسەرکردن",
+    "dashboard": "داشبۆردی دارایی",
+    "expenses": "خەرجییەکان"
+  },
+  "lang": { "english": "English", "kurdish": "کوردی" },
+  "common": {
+    "save": "پاشەکەوت",
+    "cancel": "هەڵوەشاندنەوە",
+    "delete": "سڕینەوە",
+    "edit": "دەستکاری",
+    "search": "گەڕان",
+    "loading": "بارکردن…",
+    "actions": "کردارەکان",
+    "yes": "بەڵێ",
+    "no": "نەخێر",
+    "total": "کۆی گشتی",
+    "print": "چاپی ڕاپۆرت",
+    "back": "گەڕانەوە",
+    "submit": "ناردن",
+    "close": "داخستن",
+    "confirm_save": "پاشەکەوتی گۆڕانکاری؟",
+    "confirm_save_msg": "دڵنیایت دەتەوێت ئەم گۆڕانکارییانە پاشەکەوت بکەیت؟",
+    "confirm_add_msg": "دڵنیایت دەتەوێت ئەم تۆمارە زیاد بکەیت؟",
+    "confirm_delete": "سڕینەوە؟",
+    "confirm_queue": "زیادکردن بۆ ڕیز؟",
+    "confirm_remove": "لابردن لە ڕیز؟",
+    "confirm_action": "دڵنیایت؟"
+  },
+  "patient": {
+    "title": "نەخۆشەکان",
+    "new": "نەخۆشی نوێ",
+    "name": "ناو",
+    "phone": "ژمارەی تەلەفۆن",
+    "age": "تەمەن",
+    "medical_notes": "تێبینی پزیشکی",
+    "outstanding_debt": "قەرزی ماوە",
+    "appointment_date": "نووبەتی داهاتوو"
+  },
+  "queue": {
+    "title": "ڕیزی ئەمڕۆ",
+    "add_walk_in": "زیادکردنی نەخۆشی هاتوو",
+    "status": {
+      "pending": "چاوەڕوان",
+      "active": "چالاک",
+      "completed": "تەواوبوو"
+    },
+    "add_to_queue": "زیادکردن بۆ ڕیز",
+    "in_queue": "لە ڕیزدایە",
+    "remove": "لابردن",
+    "empty": "هیچ نەخۆشێک لە ڕیزدا نییە."
+  },
+  "visit": {
+    "treatment_notes": "تێبینی چارەسەرکردن",
+    "xray": "ئەکس ڕای",
+    "upload_xray": "بارکردن / وێنەی ئەکس ڕای",
+    "snap_camera": "گرتنی وێنە",
+    "checkout": "تەسفیە"
+  },
+  "checkout": {
+    "title": "تەسفیە",
+    "total_cost": "کۆی تێچوون",
+    "amount_paid": "بڕی دراو",
+    "short_term_debt": "قەرزی ماوەی کورت",
+    "method": "شێوازی پارەدان",
+    "methods": {
+      "full_cash": "نەختی تەواو",
+      "short_debt": "قەرزی کورت ماوە",
+      "aqsat": "ئەقساط"
+    },
+    "select_contract": "گرێبەستی ئەقساط",
+    "confirm": "پشتڕاستکردنەوەی تەسفیە",
+    "pay_debt": "دانەوەی قەرز",
+    "pay_full": "دانەوەی هەموو بڕەکە",
+    "remaining_debt": "قەرزی ماوە",
+    "remaining_after": "قەرزی ماوە دوای پارەدان",
+    "amount_paying_now": "بڕی پارەی ئێستا",
+    "confirm_payment": "پشتڕاستکردنەوەی پارەدان"
+  },
+  "aqsat": {
+    "title": "گرێبەستەکانی ئەقساط",
+    "new": "گرێبەستی نوێ",
+    "treatment_name": "چارەسەرکردن",
+    "total_amount": "کۆی گشتی",
+    "remaining_balance": "ماوە",
+    "status": "دۆخ"
+  },
+  "expense": {
+    "title": "خەرجی نەختی",
+    "amount": "بڕ",
+    "description": "وەسف",
+    "add": "تۆمارکردنی خەرجی"
+  },
+  "dashboard": {
+    "title": "داشبۆردی دارایی",
+    "total_cash_collected": "کۆی پارەی کۆکراوەی نەختی",
+    "active_customer_debt": "قەرزی چالاکی کڕیار",
+    "upcoming_aqsat_revenue": "داهاتی داهاتووی ئەقساط",
+    "true_net_profit": "قازانجی ڕاستەقینە",
+    "total_expenses": "کۆی خەرجی",
+    "from": "لە",
+    "to": "بۆ"
+  },
+  "archive": {
+    "title": "ئەرشیفی چارەسەرکردن",
+    "filter_with_debt": "بە قەرزی کورت ماوە",
+    "date_from": "لە بەرواری",
+    "date_to": "تا بەرواری",
+    "checkout_date": "بەرواری تەسفیە"
+  },
+  "currency": "د.ع"
+}

@@ -1,0 +1,116 @@
+{
+  "app": { "title": "Dental Practi-Smart" },
+  "nav": {
+    "queue": "Daily Queue",
+    "patients": "Patients",
+    "archive": "Treatment Archive",
+    "dashboard": "Financial Dashboard",
+    "expenses": "Expenses"
+  },
+  "lang": { "english": "English", "kurdish": "کوردی" },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading…",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "total": "Total",
+    "print": "Print Report",
+    "back": "Back",
+    "submit": "Submit",
+    "close": "Close",
+    "confirm_save": "Save changes?",
+    "confirm_save_msg": "Are you sure you want to save these changes?",
+    "confirm_add_msg": "Are you sure you want to add this record?",
+    "confirm_delete": "Delete?",
+    "confirm_queue": "Add to queue?",
+    "confirm_remove": "Remove from queue?",
+    "confirm_action": "Are you sure?"
+  },
+  "patient": {
+    "title": "Patients",
+    "new": "New Patient",
+    "name": "Name",
+    "phone": "Phone",
+    "age": "Age",
+    "medical_notes": "Medical Notes",
+    "outstanding_debt": "Outstanding Debt",
+    "appointment_date": "Next Appointment"
+  },
+  "queue": {
+    "title": "Today's Queue",
+    "add_walk_in": "Add Walk-In",
+    "status": {
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "add_to_queue": "Add to Queue",
+    "in_queue": "In Queue",
+    "remove": "Remove",
+    "empty": "No patients in the queue yet."
+  },
+  "visit": {
+    "treatment_notes": "Treatment Notes",
+    "xray": "X-Ray",
+    "upload_xray": "Upload / Snap X-Ray",
+    "snap_camera": "Take Photo",
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "total_cost": "Total Cost",
+    "amount_paid": "Amount Paid",
+    "short_term_debt": "Short-Term Debt",
+    "method": "Payment Method",
+    "methods": {
+      "full_cash": "Full Cash",
+      "short_debt": "Short-Term Debt",
+      "aqsat": "Aqsat / Installment"
+    },
+    "select_contract": "Installment Contract",
+    "confirm": "Confirm Checkout",
+    "pay_debt": "Pay Debt",
+    "pay_full": "Pay Full Amount",
+    "remaining_debt": "Remaining Debt",
+    "remaining_after": "Remaining After Payment",
+    "amount_paying_now": "Amount Paying Now",
+    "confirm_payment": "Confirm Payment"
+  },
+  "aqsat": {
+    "title": "Installment Contracts",
+    "new": "New Contract",
+    "treatment_name": "Treatment",
+    "total_amount": "Total Amount",
+    "remaining_balance": "Remaining Balance",
+    "status": "Status"
+  },
+  "expense": {
+    "title": "Cash Expenses",
+    "amount": "Amount",
+    "description": "Description",
+    "add": "Log Expense"
+  },
+  "dashboard": {
+    "title": "Financial Dashboard",
+    "total_cash_collected": "Total Cash Collected",
+    "active_customer_debt": "Active Customer Debt",
+    "upcoming_aqsat_revenue": "Upcoming Aqsat Revenue",
+    "true_net_profit": "True Net Profit",
+    "total_expenses": "Total Expenses",
+    "from": "From",
+    "to": "To"
+  },
+  "archive": {
+    "title": "Treatment Archive",
+    "filter_with_debt": "With short-term debt",
+    "date_from": "From",
+    "date_to": "To",
+    "checkout_date": "Checkout Date"
+  },
+  "currency": "IQD"
+}

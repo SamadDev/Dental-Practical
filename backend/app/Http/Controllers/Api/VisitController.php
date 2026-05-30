@@ -188,24 +188,127 @@ class VisitController extends Controller
         return response()->json($visit->fresh()->load('patient'));
     }
 
-    /** Treatment Archive — completed visits with smart filters. */
+    /**
+     * Treatment Archive — completed visits with smart filters.
+     *
+     * Installment-contract payments are FOLDED into one synthetic row per
+     * contract so the user sees "the contract" instead of one row per
+     * installment. Walk-in / short-debt visits stay one-row-each.
+     */
     public function archive(Request $request): JsonResponse
     {
-        $q = Visit::with('patient:id,name,phone')
-            ->where('queue_status', 'completed');
+        $from      = $request->query('from');
+        $to        = $request->query('to');
+        $withDebt  = $request->boolean('with_debt');
+        $aqsatOnly = $request->boolean('aqsat_only');
+        // Free-text search across patient name/phone, treatment notes, and
+        // contract treatment name. Trimmed; empty string is treated as absent.
+        $search    = trim((string) $request->query('search', ''));
+        $like      = $search === '' ? null : '%' . $search . '%';
 
-        if ($from = $request->query('from')) {
-            $q->whereDate('created_at', '>=', $from);
-        }
-        if ($to = $request->query('to')) {
-            $q->whereDate('created_at', '<=', $to);
-        }
-        if ($request->boolean('with_debt')) {
-            $q->where('short_term_debt', '>', 0);
+        // --- Non-contract completed visits (walk-in / short-debt) ----------
+        //
+        // Skipped entirely when the user narrowed to installment visits only.
+        $nonContract = collect();
+        if (!$aqsatOnly) {
+            $q = Visit::with('patient:id,name,phone')
+                ->where('queue_status', 'completed')
+                ->whereNull('aqsat_contract_id');
+
+            if ($from)     $q->whereDate('created_at', '>=', $from);
+            if ($to)       $q->whereDate('created_at', '<=', $to);
+            if ($withDebt) $q->where('short_term_debt', '>', 0);
+
+            // Match against the visit's own notes OR the related patient's
+            // name/phone. Wrapped so it doesn't break the AND-chain above.
+            if ($like) {
+                $q->where(function ($w) use ($like) {
+                    $w->where('treatment_notes', 'like', $like)
+                      ->orWhereHas('patient', function ($p) use ($like) {
+                          $p->where('name',  'like', $like)
+                            ->orWhere('phone', 'like', $like);
+                      });
+                });
+            }
+
+            $nonContract = $q->get()->map(fn ($v) => [
+                'id'                => $v->id,
+                'patient'           => $v->patient,
+                'created_at'        => $v->created_at,
+                'total_cost'        => $v->total_cost,
+                'amount_paid'       => $v->amount_paid,
+                'short_term_debt'   => $v->short_term_debt,
+                'treatment_notes'   => $v->treatment_notes,
+                'aqsat_contract'    => null,
+                'aqsat_contract_id' => null,
+                'is_contract_row'   => false,
+            ]);
         }
 
-        return response()->json(
-            $q->orderByDesc('created_at')->paginate((int) $request->query('per_page', 25))
-        );
+        // --- Contract rows: one row per AqsatContract that has at least one
+        //     completed payment-visit in the date window. Short-term-debt
+        //     filter excludes contracts entirely (installments don't carry
+        //     short-term debt). ----------------------------------------------
+        $contracts = collect();
+        if (!$withDebt) {
+            $cq = AqsatContract::with(['patient:id,name,phone'])
+                ->whereHas('visits', function ($v) use ($from, $to) {
+                    $v->where('queue_status', 'completed')
+                      ->where('amount_paid', '>', 0);
+                    if ($from) $v->whereDate('created_at', '>=', $from);
+                    if ($to)   $v->whereDate('created_at', '<=', $to);
+                })
+                ->with(['visits' => function ($v) use ($from, $to) {
+                    $v->where('queue_status', 'completed')
+                      ->where('amount_paid', '>', 0);
+                    if ($from) $v->whereDate('created_at', '>=', $from);
+                    if ($to)   $v->whereDate('created_at', '<=', $to);
+                }]);
+
+            // Contract rows match if the search term hits the treatment name
+            // OR the linked patient's name/phone. (Visit treatment_notes is
+            // irrelevant here — installment visits don't carry notes.)
+            if ($like) {
+                $cq->where(function ($w) use ($like) {
+                    $w->where('treatment_name', 'like', $like)
+                      ->orWhereHas('patient', function ($p) use ($like) {
+                          $p->where('name',  'like', $like)
+                            ->orWhere('phone', 'like', $like);
+                      });
+                });
+            }
+
+            $contracts = $cq->get()->map(function (AqsatContract $c) {
+                // Anchor the row at the most recent payment so it sorts where
+                // the user expects ("when did anything last happen on this
+                // contract?").
+                $latest = $c->visits->max('created_at');
+
+                return [
+                    'id'                => 'contract-' . $c->id,
+                    'patient'           => $c->patient,
+                    'created_at'        => $latest,
+                    'total_cost'        => $c->total_amount,
+                    // Sum of every payment so far on this contract — the
+                    // "Total Amount Paid" the user wanted to see.
+                    'amount_paid'       => (int) $c->paid_amount,
+                    'short_term_debt'   => 0,
+                    'treatment_notes'   => null,
+                    'aqsat_contract'    => [
+                        'id'             => $c->id,
+                        'treatment_name' => $c->treatment_name,
+                        'status'         => $c->status,
+                    ],
+                    'aqsat_contract_id' => $c->id,
+                    'is_contract_row'   => true,
+                ];
+            });
+        }
+
+        $merged = $nonContract->concat($contracts)
+            ->sortByDesc('created_at')
+            ->values();
+
+        return response()->json($merged);
     }
 }

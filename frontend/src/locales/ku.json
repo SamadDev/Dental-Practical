@@ -29,7 +29,15 @@
     "confirm_delete": "سڕینەوە؟",
     "confirm_queue": "زیادکردن بۆ ڕیز؟",
     "confirm_remove": "لابردن لە ڕیز؟",
-    "confirm_action": "دڵنیایت؟"
+    "confirm_action": "دڵنیایت؟",
+    "clear": "پاککردنەوە",
+    "date_range": "ماوەی بەروار",
+    "presets": {
+      "today": "ئەمڕۆ",
+      "last_7_days": "٧ ڕۆژی ڕابردوو",
+      "last_30_days": "٣٠ ڕۆژی ڕابردوو",
+      "this_month": "ئەم مانگە"
+    }
   },
   "patient": {
     "title": "نەخۆشەکان",
@@ -39,7 +47,12 @@
     "age": "تەمەن",
     "medical_notes": "تێبینی پزیشکی",
     "outstanding_debt": "قەرزی ماوە",
-    "appointment_date": "نووبەتی داهاتوو"
+    "appointment_date": "نووبەتی داهاتوو",
+    "filter": {
+      "all": "هەموو نەخۆشەکان"
+    },
+    "duplicate_warning": "نەخۆشێک بە هەمان ناو یان ژمارە پێشتر هەیە:",
+    "use_existing": "ئەم نەخۆشە بەکاربهێنە"
   },
   "queue": {
     "title": "ڕیزی ئەمڕۆ",
@@ -73,6 +86,7 @@
       "aqsat": "ئەقساط"
     },
     "select_contract": "گرێبەستی ئەقساط",
+    "no_contracts": "هیچ گرێبەستی ئەقساط بۆ ئەم نەخۆشە نییە.",
     "confirm": "پشتڕاستکردنەوەی تەسفیە",
     "pay_debt": "دانەوەی قەرز",
     "pay_full": "دانەوەی هەموو بڕەکە",
@@ -86,8 +100,27 @@
     "new": "گرێبەستی نوێ",
     "treatment_name": "چارەسەرکردن",
     "total_amount": "کۆی گشتی",
+    "installment_amount": "بڕی هەر قیست",
+    "installments_count": "ژمارەی قیستەکان",
     "remaining_balance": "ماوە",
-    "status": "دۆخ"
+    "paid_amount": "بڕی دراو",
+    "paid_installments": "قیستی دراو",
+    "remaining_installments": "قیستی ماوە",
+    "status": "دۆخ",
+    "statuses": {
+      "active": "چالاک",
+      "completed": "تەواوبوو",
+      "cancelled": "هەڵوەشاوە"
+    },
+    "detail": "وردەکارییەکانی گرێبەست",
+    "payment_history": "مێژووی پارەدان",
+    "progress_label": "پێشکەوتن",
+    "derived_count": "= {n} قیست",
+    "progress": "{paid}/{total} قیستی دراو · {balance} ماوە",
+    "next_due_date": "بەرواری قیستی داهاتوو",
+    "expected_completion_date": "بەرواری تەواوبوون",
+    "pay_installment": "دانەوەی قیست",
+    "remaining_after": "ماوە دوای ئەمە"
   },
   "expense": {
     "title": "خەرجی نەختی",
@@ -108,6 +141,7 @@
   "archive": {
     "title": "ئەرشیفی چارەسەرکردن",
     "filter_with_debt": "بە قەرزی کورت ماوە",
+    "filter_aqsat_only": "تەنها سەردانی ئەقساط",
     "date_from": "لە بەرواری",
     "date_to": "تا بەرواری",
     "checkout_date": "بەرواری تەسفیە"

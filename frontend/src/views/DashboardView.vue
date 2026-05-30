@@ -10,12 +10,8 @@
 
     <div class="no-print mb-4 flex flex-wrap gap-3 items-end bg-white p-3 rounded-lg border border-slate-200">
       <div>
-        <label class="block text-xs text-slate-500">{{ $t('dashboard.from') }}</label>
-        <input type="date" v-model="range.from" @change="load" class="rounded-md border-slate-300" />
-      </div>
-      <div>
-        <label class="block text-xs text-slate-500">{{ $t('dashboard.to') }}</label>
-        <input type="date" v-model="range.to" @change="load" class="rounded-md border-slate-300" />
+        <label class="block text-xs text-slate-500">{{ $t('common.date_range') }}</label>
+        <DateRangePicker v-model="range" @change="load" />
       </div>
     </div>
 
@@ -33,6 +29,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import api from '../utils/axios';
 import KpiCard from '../components/KpiCard.vue';
+import DateRangePicker from '../components/DateRangePicker.vue';
 
 const m     = ref({});
 const range = reactive({ from: '', to: '' });

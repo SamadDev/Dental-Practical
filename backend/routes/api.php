@@ -14,6 +14,8 @@ Route::prefix('v1')->group(function () {
     // Aqsat contracts
     Route::apiResource('aqsat-contracts', AqsatContractController::class)
         ->only(['index', 'store', 'show', 'update']);
+    Route::post('aqsat-contracts/{aqsat_contract}/pay-installment',
+        [AqsatContractController::class, 'payInstallment']);
 
     // Visits & queue
     Route::get   ('queue',                       [VisitController::class, 'queue']);

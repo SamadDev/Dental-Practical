@@ -1,60 +1,81 @@
 <template>
   <Modal v-model="open" :title="$t('checkout.pay_debt')">
-    <div v-if="visit" class="space-y-4">
-      <!-- Summary -->
-      <div class="bg-slate-50 border border-slate-200 rounded-md p-3 text-sm space-y-1">
-        <div class="flex justify-between">
-          <span class="text-slate-500">{{ $t('common.total') }}:</span>
-          <span class="font-mono">{{ format(visit.total_cost) }} {{ $t('currency') }}</span>
+    <div v-if="visit" class="space-y-5">
+      <!-- Balance summary -->
+      <dl class="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-sm">
+        <div class="flex justify-between gap-4">
+          <dt class="text-slate-500">{{ $t('common.total') }}</dt>
+          <dd class="font-mono tabular-nums text-slate-900">
+            {{ format(visit.total_cost) }} {{ $t('currency') }}
+          </dd>
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-500">{{ $t('checkout.amount_paid') }}:</span>
-          <span class="font-mono text-emerald-700">
+        <div class="flex justify-between gap-4">
+          <dt class="text-slate-500">{{ $t('checkout.amount_paid') }}</dt>
+          <dd class="font-mono tabular-nums text-emerald-700">
             {{ format(visit.amount_paid) }} {{ $t('currency') }}
-          </span>
+          </dd>
         </div>
-        <div class="flex justify-between font-semibold">
-          <span>{{ $t('checkout.remaining_debt') }}:</span>
-          <span class="font-mono text-red-700">
+        <div class="flex justify-between gap-4 border-t border-slate-200 pt-2 font-semibold">
+          <dt class="text-slate-900">{{ $t('checkout.remaining_debt') }}</dt>
+          <dd class="font-mono tabular-nums text-red-700">
             {{ format(visit.short_term_debt) }} {{ $t('currency') }}
-          </span>
+          </dd>
         </div>
-      </div>
+      </dl>
 
-      <!-- Amount to pay now -->
-      <div>
-        <label class="block text-sm font-medium mb-1">
-          {{ $t('checkout.amount_paying_now') }}
-        </label>
-        <IqdInput v-model="amount" :placeholder="String(visit.short_term_debt)" />
+      <FormField
+        v-slot="{ id }"
+        :label="$t('checkout.amount_paying_now')"
+        :error="overpaid ? $t('checkout.amount_exceeds') : ''"
+        required
+      >
+        <IqdInput
+          :id="id"
+          v-model="amount"
+          :invalid="overpaid"
+          :placeholder="String(visit.short_term_debt)"
+        />
         <button
           type="button"
-          class="mt-2 text-xs px-2 py-1 rounded border border-slate-300 hover:bg-slate-50"
+          class="btn-ghost btn-sm mt-2"
           @click="amount = visit.short_term_debt"
         >
           {{ $t('checkout.pay_full') }}
         </button>
-      </div>
+      </FormField>
 
       <!-- Live preview of remaining after this payment -->
-      <div v-if="amount > 0 && amount <= visit.short_term_debt"
-           class="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm flex justify-between">
-        <strong>{{ $t('checkout.remaining_after') }}:</strong>
-        <span class="font-mono">
-          {{ format(visit.short_term_debt - amount) }} {{ $t('currency') }}
+      <div
+        v-if="amount > 0 && !overpaid"
+        class="flex items-center justify-between rounded-lg border px-3 py-2.5 text-sm"
+        :class="remainingAfter === 0
+          ? 'border-emerald-200 bg-emerald-50'
+          : 'border-amber-200 bg-amber-50'"
+      >
+        <span class="font-medium" :class="remainingAfter === 0 ? 'text-emerald-900' : 'text-amber-900'">
+          {{ $t('checkout.remaining_after') }}
+        </span>
+        <span
+          class="font-mono font-semibold tabular-nums"
+          :class="remainingAfter === 0 ? 'text-emerald-900' : 'text-amber-900'"
+        >
+          {{ format(remainingAfter) }} {{ $t('currency') }}
         </span>
       </div>
 
-      <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
+      <p v-if="error" role="alert"
+         class="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50
+                px-3 py-2 text-sm text-red-700">
+        <span aria-hidden="true">⚠</span>{{ error }}
+      </p>
     </div>
 
     <template #footer>
-      <button class="px-4 py-2 rounded-md border border-slate-300 hover:bg-slate-50"
-              @click="open = false">{{ $t('common.cancel') }}</button>
-      <button class="px-4 py-2 rounded-md bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
-              :disabled="!canSubmit || submitting"
-              @click="submit">
-        {{ $t('checkout.confirm_payment') }}
+      <button type="button" class="btn-ghost" @click="open = false">
+        {{ $t('common.cancel') }}
+      </button>
+      <button type="button" class="btn-primary" :disabled="!canSubmit || submitting" @click="submit">
+        {{ submitting ? $t('common.saving') : $t('checkout.confirm_payment') }}
       </button>
     </template>
   </Modal>
@@ -64,6 +85,7 @@
 import { computed, ref, watch } from 'vue';
 import Modal     from './Modal.vue';
 import IqdInput  from './IqdInput.vue';
+import FormField from './FormField.vue';
 import api       from '../utils/axios';
 import { formatIQD } from '../utils/iqd';
 
@@ -80,6 +102,14 @@ const submitting = ref(false);
 const error      = ref('');
 
 const format = (v) => formatIQD(v);
+
+const overpaid = computed(() =>
+  !!props.visit && (amount.value | 0) > props.visit.short_term_debt,
+);
+
+const remainingAfter = computed(() =>
+  props.visit ? Math.max(0, props.visit.short_term_debt - (amount.value | 0)) : 0,
+);
 
 // Reset the form whenever a new visit is loaded into the dialog.
 watch(() => props.visit, (v) => {

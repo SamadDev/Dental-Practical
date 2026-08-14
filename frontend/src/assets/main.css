@@ -6,12 +6,68 @@
 html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
 html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
 
+/* ----- Form + button primitives -----
+   Every view was repeating slightly different input classes, which is why
+   fields looked inconsistent. These are the single source of truth. */
+@layer components {
+  /* .form-* come from @tailwindcss/forms (class strategy) and restore the
+     border that preflight removes. */
+  .field {
+    @apply form-input block w-full rounded-lg border-slate-300 text-sm text-slate-900
+           shadow-sm transition-colors placeholder:text-slate-400
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
+  }
+  .field-select   { @apply field form-select pe-9; }
+  .field-textarea { @apply field form-textarea leading-relaxed; }
+  .field-check {
+    @apply form-checkbox h-4 w-4 rounded border-slate-300 text-brand-600
+           transition focus:ring-2 focus:ring-brand-500/30;
+  }
+  /* Invalid state — paired with aria-invalid so it is not colour-only. */
+  .field-error { @apply border-red-400 focus:border-red-500 focus:ring-red-500/30; }
+
+  .label     { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .help-text { @apply mt-1 text-xs text-slate-500; }
+  .error-text{ @apply mt-1 flex items-center gap-1 text-xs font-medium text-red-600; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg
+           px-4 py-2 text-sm font-semibold transition-colors focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700; }
+  .btn-ghost   { @apply btn border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50; }
+  .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50; }
+  .btn-success { @apply btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700; }
+  .btn-sm      { @apply px-3 py-1.5 text-xs; }
+
+  .card { @apply rounded-xl border border-slate-200 bg-white shadow-card; }
+
+  /* Appointment timestamp pill. inline-flex so it sits inline in tables
+     but can take a margin when stacked in the mobile cards. */
+  .chip-date {
+    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-md border
+           border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700;
+  }
+}
+
 /* ----- Print Media Rules — clean PDFs for the cash register ledger ----- */
 @media print {
   .no-print          { display: none !important; }
   body               { background: white !important; color: black !important; }
+  /* The app shell paints a slate background on screen — force it white for paper. */
+  body *             { background-color: transparent !important; }
   .print-container   { box-shadow: none !important; border: none !important; }
+  /* KPI cards keep a hairline rule so they stay visually grouped in print.
+     Scoped to the dashboard's grid — a table container must not get boxed. */
+  .print-container.grid > * { box-shadow: none !important; border: 1px solid #999 !important; }
+  /* Horizontal scroll wrappers must not clip columns on paper. */
+  .overflow-x-auto   { overflow: visible !important; }
   table              { width: 100%; border-collapse: collapse; }
   th, td             { border: 1px solid #999; padding: 6px 10px; font-size: 12px; }
+  /* Totals row carries the ledger's bottom line — keep it emphasised. */
+  tfoot              { font-weight: 700; }
+  tfoot td           { border-top: 2px solid #333 !important; }
   @page              { margin: 1.2cm; }
 }

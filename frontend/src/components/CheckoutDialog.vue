@@ -1,68 +1,92 @@
 <template>
   <Modal v-model="open" :title="$t('checkout.title')">
-    <div class="space-y-4">
-      <!-- Method selector -->
+    <div class="space-y-5">
+      <!-- Method selector — radiogroup so arrow keys work and state is announced. -->
       <div>
-        <label class="block text-sm font-medium mb-1">{{ $t('checkout.method') }}</label>
-        <div class="grid grid-cols-3 gap-2">
+        <span class="label">{{ $t('checkout.method') }}</span>
+        <div class="grid grid-cols-3 gap-2" role="radiogroup" :aria-label="$t('checkout.method')">
           <button
             v-for="m in methods" :key="m"
             type="button"
-            @click="setMethod(m)"
-            class="px-3 py-2 rounded-md border text-sm transition"
+            role="radio"
+            :aria-checked="form.method === m"
+            class="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
+                   focus-visible:ring-offset-1"
             :class="form.method === m
-              ? 'bg-brand-600 border-brand-600 text-white shadow'
-              : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'"
+              ? 'border-brand-600 bg-brand-600 text-white shadow-sm'
+              : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'"
+            @click="setMethod(m)"
           >
             {{ $t(`checkout.methods.${m}`) }}
           </button>
         </div>
       </div>
 
-      <!-- Total cost -->
-      <div>
-        <label class="block text-sm font-medium mb-1">{{ $t('checkout.total_cost') }}</label>
-        <IqdInput v-model="form.total_cost" />
-      </div>
+      <FormField v-slot="{ id }" :label="$t('checkout.total_cost')" required>
+        <IqdInput :id="id" v-model="form.total_cost" />
+      </FormField>
 
       <!-- Aqsat contract picker -->
-      <div v-if="form.method === 'aqsat'">
-        <label class="block text-sm font-medium mb-1">{{ $t('checkout.select_contract') }}</label>
-        <select v-model="form.aqsat_contract_id" class="block w-full rounded-md border-slate-300">
-          <option :value="null" disabled>—</option>
+      <FormField
+        v-if="form.method === 'aqsat'"
+        v-slot="{ id }"
+        :label="$t('checkout.select_contract')"
+        :error="contracts.length ? '' : $t('checkout.no_contracts')"
+        required
+      >
+        <select
+          :id="id"
+          v-model="form.aqsat_contract_id"
+          class="field-select"
+          :disabled="!contracts.length"
+        >
+          <option :value="null" disabled>{{ $t('common.none') }}</option>
           <option v-for="c in contracts" :key="c.id" :value="c.id">
             {{ c.treatment_name }} ({{ format(c.remaining_balance) }} {{ $t('currency') }})
           </option>
         </select>
-      </div>
+      </FormField>
 
       <!--
         Amount paid only matters for partial payments. Under full_cash the
         amount paid is always equal to total_cost (watch() mirrors it below),
         so hiding the field removes a redundant input.
       -->
-      <div v-if="form.method !== 'full_cash'">
-        <label class="block text-sm font-medium mb-1">{{ $t('checkout.amount_paid') }}</label>
-        <IqdInput v-model="form.amount_paid" placeholder="0" />
-      </div>
+      <FormField
+        v-if="form.method !== 'full_cash'"
+        v-slot="{ id }"
+        :label="$t('checkout.amount_paid')"
+        :error="overpaid ? $t('checkout.amount_exceeds') : ''"
+      >
+        <IqdInput :id="id" v-model="form.amount_paid" :invalid="overpaid" placeholder="0" />
+      </FormField>
 
       <!-- Live derived short-term debt -->
-      <div v-if="form.method === 'short_debt'"
-           class="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm">
-        <strong>{{ $t('checkout.short_term_debt') }}:</strong>
-        {{ format(shortTermDebt) }} {{ $t('currency') }}
+      <div
+        v-if="form.method === 'short_debt' && !overpaid"
+        class="flex items-center justify-between rounded-lg border border-amber-200
+               bg-amber-50 px-3 py-2.5 text-sm"
+      >
+        <span class="font-medium text-amber-900">{{ $t('checkout.short_term_debt') }}</span>
+        <span class="font-mono font-semibold tabular-nums text-amber-900">
+          {{ format(shortTermDebt) }} {{ $t('currency') }}
+        </span>
       </div>
 
-      <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
+      <p v-if="error" role="alert"
+         class="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50
+                px-3 py-2 text-sm text-red-700">
+        <span aria-hidden="true">⚠</span>{{ error }}
+      </p>
     </div>
 
     <template #footer>
-      <button class="px-4 py-2 rounded-md border border-slate-300 hover:bg-slate-50"
-              @click="open = false">{{ $t('common.cancel') }}</button>
-      <button class="px-4 py-2 rounded-md bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
-              :disabled="!canSubmit || submitting"
-              @click="submit">
-        {{ $t('checkout.confirm') }}
+      <button type="button" class="btn-ghost" @click="open = false">
+        {{ $t('common.cancel') }}
+      </button>
+      <button type="button" class="btn-primary" :disabled="!canSubmit || submitting" @click="submit">
+        {{ submitting ? $t('common.saving') : $t('checkout.confirm') }}
       </button>
     </template>
   </Modal>
@@ -72,8 +96,10 @@
 import { computed, ref, watch } from 'vue';
 import Modal     from './Modal.vue';
 import IqdInput  from './IqdInput.vue';
+import FormField from './FormField.vue';
 import api       from '../utils/axios';
 import { formatIQD } from '../utils/iqd';
+
 const props = defineProps({ modelValue: Boolean, visit: Object });
 const emit  = defineEmits(['update:modelValue', 'completed']);
 
@@ -92,6 +118,11 @@ const format = (v) => formatIQD(v);
 
 const shortTermDebt = computed(() =>
   Math.max(0, (form.value.total_cost | 0) - (form.value.amount_paid | 0)),
+);
+
+const overpaid = computed(() =>
+  form.value.method === 'short_debt'
+  && (form.value.amount_paid | 0) > (form.value.total_cost | 0),
 );
 
 // Reset form whenever a new visit is opened.
@@ -128,7 +159,7 @@ function setMethod(m) {
 
 const canSubmit = computed(() => {
   if (form.value.total_cost < 0) return false;
-  if (form.value.method === 'short_debt' && form.value.amount_paid > form.value.total_cost) return false;
+  if (overpaid.value) return false;
   if (form.value.method === 'aqsat' && !form.value.aqsat_contract_id) return false;
   return true;
 });

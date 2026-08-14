@@ -1,5 +1,7 @@
 {
-  "app": { "title": "Dental Practi-Smart" },
+  "app": {
+    "title": "Dental Practi-Smart"
+  },
   "nav": {
     "queue": "Daily Queue",
     "patients": "Patients",
@@ -7,7 +9,10 @@
     "dashboard": "Financial Dashboard",
     "expenses": "Expenses"
   },
-  "lang": { "english": "English", "kurdish": "کوردی" },
+  "lang": {
+    "english": "English",
+    "kurdish": "کوردی"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -29,7 +34,16 @@
     "confirm_delete": "Delete?",
     "confirm_queue": "Add to queue?",
     "confirm_remove": "Remove from queue?",
-    "confirm_action": "Are you sure?"
+    "confirm_action": "Are you sure?",
+    "optional": "Optional",
+    "network_error": "Unable to connect to the server. Make sure the backend is running.",
+    "required_field": "This field is required",
+    "saving": "Saving…",
+    "none": "—",
+    "clear": "Clear",
+    "all": "All",
+    "results": "results",
+    "no_results": "No results found"
   },
   "patient": {
     "title": "Patients",
@@ -39,7 +53,17 @@
     "age": "Age",
     "medical_notes": "Medical Notes",
     "outstanding_debt": "Outstanding Debt",
-    "appointment_date": "Next Appointment"
+    "outstanding": "Outstanding",
+    "last_visit": "Last Visit",
+    "total_visits": "Visits",
+    "appointment_date": "Next Appointment",
+    "name_required": "Patient name is required",
+    "phone_invalid": "Enter a valid phone number",
+    "age_invalid": "Age must be between 0 and 120",
+    "phone_hint": "Digits only, e.g. 0770 123 4567",
+    "notes_hint": "Allergies, conditions, medication",
+    "empty": "No patients yet. Add the first one to get started.",
+    "search_placeholder": "Search by name or phone…"
   },
   "queue": {
     "title": "Today's Queue",
@@ -52,7 +76,10 @@
     "add_to_queue": "Add to Queue",
     "in_queue": "In Queue",
     "remove": "Remove",
-    "empty": "No patients in the queue yet."
+    "empty": "No patients in the queue yet.",
+    "search_hint": "Type at least 2 characters to search",
+    "select_patient": "Select a patient from the list",
+    "searching": "Searching…"
   },
   "visit": {
     "treatment_notes": "Treatment Notes",
@@ -79,7 +106,10 @@
     "remaining_debt": "Remaining Debt",
     "remaining_after": "Remaining After Payment",
     "amount_paying_now": "Amount Paying Now",
-    "confirm_payment": "Confirm Payment"
+    "confirm_payment": "Confirm Payment",
+    "amount_exceeds": "Cannot exceed the remaining balance",
+    "contract_required": "Select an installment contract",
+    "no_contracts": "This patient has no active contracts"
   },
   "aqsat": {
     "title": "Installment Contracts",
@@ -93,7 +123,11 @@
     "title": "Cash Expenses",
     "amount": "Amount",
     "description": "Description",
-    "add": "Log Expense"
+    "add": "Log Expense",
+    "amount_required": "Enter an amount greater than zero",
+    "description_required": "Description is required",
+    "empty": "No expenses logged yet.",
+    "description_hint": "What was this spent on?"
   },
   "dashboard": {
     "title": "Financial Dashboard",
@@ -103,14 +137,25 @@
     "true_net_profit": "True Net Profit",
     "total_expenses": "Total Expenses",
     "from": "From",
-    "to": "To"
+    "to": "To",
+    "net_profit_hint": "Cash collected minus expenses",
+    "aqsat_hint": "Not affected by the date range",
+    "load_error": "Could not load dashboard metrics.",
+    "retry": "Retry",
+    "presets": {
+      "today": "Today",
+      "last_7": "Last 7 Days",
+      "this_month": "This Month",
+      "all_time": "All Time"
+    }
   },
   "archive": {
     "title": "Treatment Archive",
     "filter_with_debt": "With short-term debt",
     "date_from": "From",
     "date_to": "To",
-    "checkout_date": "Checkout Date"
+    "checkout_date": "Checkout Date",
+    "empty": "No visits match these filters."
   },
   "currency": "IQD"
 }

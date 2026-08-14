@@ -3,10 +3,13 @@ import axios from 'axios';
 /**
  * Local-network Axios instance. Base URL is set at runtime so the same build
  * can be deployed to any clinic — point VITE_API_BASE at the reception PC
- * (e.g., http://192.168.1.50:8000/api/v1). Falls back to same-origin /api/v1.
+ * (e.g., http://192.168.1.50:8000/api/v1).
+ *
+ * During local frontend development we proxy /api to the backend,
+ * and in production the same-origin fallback /api/v1 is used.
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE || '/api/v1',
   timeout: 15000,
   headers: { Accept: 'application/json' },
 });

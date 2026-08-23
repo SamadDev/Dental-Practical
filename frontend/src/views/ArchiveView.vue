@@ -3,8 +3,8 @@
     <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('archive.title') }}</h2>
-        <p v-if="items.length" class="mt-0.5 text-sm text-slate-500">
-          {{ items.length }} {{ $t('common.results') }}
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
+          {{ meta.total }} {{ $t('common.results') }}
         </p>
       </div>
       <button class="no-print btn-ghost" @click="print">
@@ -12,117 +12,304 @@
       </button>
     </header>
 
-    <!-- Filters -->
-    <div class="no-print card mb-4 flex flex-wrap items-end gap-4 p-4">
-      <FormField v-slot="{ id }" :label="$t('archive.date_from')">
-        <input :id="id" v-model="filters.from" type="date" class="field" @change="load" />
-      </FormField>
-      <FormField v-slot="{ id }" :label="$t('archive.date_to')">
-        <input :id="id" v-model="filters.to" type="date" class="field" @change="load" />
-      </FormField>
+    <p v-if="error" role="alert"
+       class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <span aria-hidden="true">⚠</span> {{ error }}
+    </p>
 
-      <label class="inline-flex h-[38px] cursor-pointer select-none items-center gap-2
-                    text-sm text-slate-700">
-        <input type="checkbox" v-model="filters.with_debt" class="field-check" @change="load" />
-        {{ $t('archive.filter_with_debt') }}
-      </label>
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('archive.search_placeholder')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    >
+      <template #chips>
+        <button
+          type="button"
+          :class="filters.settlement === 'outstanding' ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="toggleSettlement('outstanding')"
+        >
+          💰 {{ $t('archive.filter_with_debt') }}
+        </button>
+        <button
+          type="button"
+          :class="filters.settlement === 'settled' ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="toggleSettlement('settled')"
+        >
+          ✓ {{ $t('table.settled') }}
+        </button>
+        <button
+          type="button"
+          :class="filters.has_xray ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.has_xray = !filters.has_xray; reload()"
+        >
+          🦴 {{ $t('table.has_xray') }}
+        </button>
+      </template>
 
-      <button v-if="hasFilters" type="button"
-              class="h-[38px] text-sm font-medium text-slate-500 underline underline-offset-2
-                     hover:text-slate-800"
-              @click="clearFilters">
-        {{ $t('common.clear') }}
-      </button>
-    </div>
+      <template #advanced>
+        <FormField v-slot="{ id }" :label="$t('archive.date_from')">
+          <input :id="id" v-model="filters.from" type="date" class="field" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('archive.date_to')">
+          <input :id="id" v-model="filters.to" type="date" class="field" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.min_total')">
+          <input :id="id" v-model="filters.min_total" type="number" min="0" inputmode="numeric"
+                 class="field font-mono" placeholder="0" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.max_total')">
+          <input :id="id" v-model="filters.max_total" type="number" min="0" inputmode="numeric"
+                 class="field font-mono" placeholder="—" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.visit_type')">
+          <select :id="id" v-model="filters.visit_type" class="field-select" @change="reload">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="walk_in">{{ $t('queue.type.walk_in') }}</option>
+            <option value="phone">{{ $t('queue.type.phone') }}</option>
+            <option value="whatsapp">{{ $t('queue.type.whatsapp') }}</option>
+          </select>
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.date_preset')">
+          <select :id="id" class="field-select" :value="preset" @change="applyPreset($event.target.value)">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="today">{{ $t('dashboard.presets.today') }}</option>
+            <option value="last_7">{{ $t('dashboard.presets.last_7') }}</option>
+            <option value="this_month">{{ $t('dashboard.presets.this_month') }}</option>
+          </select>
+        </FormField>
+      </template>
+    </DataTableFilters>
 
-    <div class="print-container card overflow-hidden">
+    <!-- print-container strips the card chrome for paper; see main.css. -->
+    <div class="print-container">
       <h3 class="hidden py-2 text-center text-lg font-bold print:block">
         {{ $t('archive.title') }}
       </h3>
 
-      <div v-if="!items.length" class="p-12 text-center">
-        <span class="text-4xl" aria-hidden="true">🗂</span>
-        <p class="mt-2 text-slate-500">{{ $t('archive.empty') }}</p>
-      </div>
+      <DataTable
+        :columns="columns"
+        :rows="rows"
+        :loading="loading"
+        :sort="sort"
+        :dir="dir"
+        :is-filtered="isFiltered"
+        :empty-text="$t('archive.empty')"
+        empty-icon="🗂"
+        @sort="toggleSort"
+        @reset="resetFilters"
+      >
+        <template #cell(patient)="{ row }">
+          <span class="font-medium text-slate-900">{{ row.patient?.name || '—' }}</span>
+        </template>
 
-      <!-- overflow-x-auto keeps the 8-column table usable on narrow screens. -->
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.name') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.phone') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('archive.checkout_date') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('common.total') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('checkout.amount_paid') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('checkout.short_term_debt') }}</th>
-              <th class="px-4 py-3 text-start font-semibold">{{ $t('visit.treatment_notes') }}</th>
-              <th class="no-print px-4 py-3 text-end font-semibold">{{ $t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr v-for="v in items" :key="v.id" class="transition-colors hover:bg-slate-50">
-              <td class="px-4 py-3 font-medium text-slate-900">{{ v.patient.name }}</td>
-              <td class="px-4 py-3 font-mono text-slate-600" dir="ltr">{{ v.patient.phone || '—' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ formatDateTime(v.created_at) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-slate-900">{{ format(v.total_cost) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-emerald-700">{{ format(v.amount_paid) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums"
-                  :class="v.short_term_debt > 0 ? 'font-semibold text-red-700' : 'text-slate-400'">
-                {{ format(v.short_term_debt) }}
-              </td>
-              <td class="max-w-xs truncate px-4 py-3 text-slate-600">{{ v.treatment_notes || '—' }}</td>
-              <td class="no-print px-4 py-3 text-end">
-                <button v-if="v.short_term_debt > 0" class="btn-success btn-sm" @click="openPay(v)">
-                  💳 {{ $t('checkout.pay_debt') }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-          <!-- Totals row: the printed ledger needs a bottom line. -->
-          <tfoot class="border-t-2 border-slate-300 bg-slate-50 font-semibold">
-            <tr>
-              <td class="px-4 py-3 text-slate-700" colspan="3">{{ $t('common.total') }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-slate-900">{{ format(totals.total) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-emerald-700">{{ format(totals.paid) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-red-700">{{ format(totals.debt) }}</td>
-              <td></td>
-              <td class="no-print"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+        <template #cell(phone)="{ row }">
+          <span class="font-mono text-slate-600" dir="ltr">{{ row.patient?.phone || '—' }}</span>
+        </template>
+
+        <template #cell(created_at)="{ row }">
+          <span class="whitespace-nowrap text-slate-600">{{ formatDateTime(row.created_at) }}</span>
+        </template>
+
+        <template #cell(visit_type)="{ row }">
+          <StatusBadge kind="visit_type" :value="row.visit_type" />
+        </template>
+
+        <template #cell(total_cost)="{ row }">
+          <span class="font-mono tabular-nums text-slate-900">{{ format(row.total_cost) }}</span>
+        </template>
+
+        <template #cell(amount_paid)="{ row }">
+          <span class="font-mono tabular-nums text-emerald-700">{{ format(row.amount_paid) }}</span>
+        </template>
+
+        <template #cell(short_term_debt)="{ row }">
+          <span class="font-mono tabular-nums"
+                :class="row.short_term_debt > 0 ? 'font-semibold text-red-700' : 'text-slate-400'">
+            {{ format(row.short_term_debt) }}
+          </span>
+        </template>
+
+        <template #cell(treatment_notes)="{ row }">
+          <span class="block max-w-xs truncate text-slate-600" :title="row.treatment_notes || ''">
+            {{ row.treatment_notes || '—' }}
+          </span>
+        </template>
+
+        <template #cell(actions)="{ row }">
+          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm" @click="openPay(row)">
+            💳 {{ $t('checkout.pay_debt') }}
+          </button>
+        </template>
+
+        <!--
+          Totals come from the server and cover every row matching the filters,
+          not just this page — the printed ledger's bottom line has to be whole.
+        -->
+        <template #footer>
+          <tr>
+            <td class="px-4 py-3 text-slate-700" colspan="4">
+              {{ $t('common.total') }}
+              <span v-if="meta.last_page > 1" class="no-print text-xs font-normal text-slate-400">
+                ({{ $t('table.all_pages') }})
+              </span>
+            </td>
+            <td class="px-4 py-3 font-mono tabular-nums text-slate-900">
+              {{ format(totals?.total) }}
+            </td>
+            <td class="px-4 py-3 font-mono tabular-nums text-emerald-700">
+              {{ format(totals?.paid) }}
+            </td>
+            <td class="px-4 py-3 font-mono tabular-nums text-red-700">
+              {{ format(totals?.debt) }}
+            </td>
+            <td></td>
+            <td class="no-print"></td>
+          </tr>
+        </template>
+
+        <template #card="{ row }">
+          <div class="flex items-start justify-between gap-3">
+            <span class="font-semibold text-slate-900">{{ row.patient?.name || '—' }}</span>
+            <StatusBadge kind="visit_type" :value="row.visit_type" />
+          </div>
+          <div class="mt-1 font-mono text-xs text-slate-500" dir="ltr">
+            {{ row.patient?.phone || '—' }}
+          </div>
+          <div class="mt-1 text-xs text-slate-500">{{ formatDateTime(row.created_at) }}</div>
+          <dl class="mt-2 grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <dt class="text-slate-400">{{ $t('common.total') }}</dt>
+              <dd class="font-mono tabular-nums text-slate-900">{{ format(row.total_cost) }}</dd>
+            </div>
+            <div>
+              <dt class="text-slate-400">{{ $t('checkout.amount_paid') }}</dt>
+              <dd class="font-mono tabular-nums text-emerald-700">{{ format(row.amount_paid) }}</dd>
+            </div>
+            <div>
+              <dt class="text-slate-400">{{ $t('checkout.short_term_debt') }}</dt>
+              <dd class="font-mono tabular-nums"
+                  :class="row.short_term_debt > 0 ? 'font-semibold text-red-700' : 'text-slate-400'">
+                {{ format(row.short_term_debt) }}
+              </dd>
+            </div>
+          </dl>
+          <p v-if="row.treatment_notes" class="mt-2 text-xs text-slate-600">
+            {{ row.treatment_notes }}
+          </p>
+          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm mt-3"
+                  @click="openPay(row)">
+            💳 {{ $t('checkout.pay_debt') }}
+          </button>
+        </template>
+      </DataTable>
     </div>
+
+    <DataTablePagination
+      :meta="meta"
+      :per-page="perPage"
+      @go="goToPage"
+      @update:per-page="perPage = $event"
+    />
 
     <PayDebtDialog v-model="showPay" :visit="payVisit" @completed="onPaid" />
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
-import api from '../utils/axios';
-import { formatIQD } from '../utils/iqd';
-import { formatDateTime } from '../utils/datetime';
+import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import DataTable           from '../components/DataTable.vue';
+import DataTableFilters    from '../components/DataTableFilters.vue';
+import DataTablePagination from '../components/DataTablePagination.vue';
 import PayDebtDialog from '../components/PayDebtDialog.vue';
 import FormField     from '../components/FormField.vue';
+import StatusBadge   from '../components/StatusBadge.vue';
+import { useDataTable } from '../composables/useDataTable';
+import { formatIQD } from '../utils/iqd';
+import { formatDateTime } from '../utils/datetime';
 
-const items   = ref([]);
-const filters = reactive({ from: '', to: '', with_debt: false });
-const format  = (v) => formatIQD(v);
+const { t } = useI18n();
+
+const {
+  rows, totals, loading, error, search, filters, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/visits/archive', {
+  filters: {
+    from: '', to: '',
+    settlement: '',
+    has_xray: false,
+    visit_type: '',
+    min_total: '', max_total: '',
+  },
+  sort: 'created_at',
+  dir: 'desc',
+});
+
+const format = (v) => formatIQD(v || 0);
 
 // `window` isn't exposed to Vue templates — this has to be called from script.
 const print = () => window.print();
 
-const hasFilters = computed(() => !!(filters.from || filters.to || filters.with_debt));
+const columns = computed(() => [
+  { key: 'patient',         label: t('patient.name'),             sortable: true, skeleton: 'lg' },
+  { key: 'phone',           label: t('patient.phone'),            skeleton: 'md' },
+  { key: 'created_at',      label: t('archive.checkout_date'),    sortable: true, skeleton: 'md' },
+  { key: 'visit_type',      label: t('table.visit_type'),         sortable: true, skeleton: 'sm' },
+  { key: 'total_cost',      label: t('common.total'),             sortable: true, skeleton: 'md',
+    initialDir: 'desc' },
+  { key: 'amount_paid',     label: t('checkout.amount_paid'),     sortable: true, skeleton: 'md',
+    initialDir: 'desc' },
+  { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, skeleton: 'md',
+    initialDir: 'desc' },
+  { key: 'treatment_notes', label: t('visit.treatment_notes'),    skeleton: 'lg' },
+  { key: 'actions',         label: t('common.actions'), align: 'end', printHidden: true,
+    skeleton: 'md' },
+]);
 
-const totals = computed(() => items.value.reduce(
-  (acc, v) => ({
-    total: acc.total + (Number(v.total_cost) || 0),
-    paid:  acc.paid  + (Number(v.amount_paid) || 0),
-    debt:  acc.debt  + (Number(v.short_term_debt) || 0),
-  }),
-  { total: 0, paid: 0, debt: 0 },
-));
+/** Which date preset the current from/to happens to match, if any. */
+const preset = computed(() => {
+  const { from, to } = filters;
+  if (!from && !to) return '';
+  for (const key of ['today', 'last_7', 'this_month']) {
+    const r = presetRange(key);
+    if (r.from === from && r.to === to) return key;
+  }
+  return '';
+});
+
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  + `-${String(d.getDate()).padStart(2, '0')}`;
+
+function presetRange(key) {
+  const now = new Date();
+  const today = iso(now);
+  if (key === 'today') return { from: today, to: today };
+  if (key === 'last_7') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 6);
+    return { from: iso(d), to: today };
+  }
+  if (key === 'this_month') {
+    return { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: today };
+  }
+  return { from: '', to: '' };
+}
+
+function applyPreset(key) {
+  const { from, to } = presetRange(key);
+  filters.from = from;
+  filters.to = to;
+  reload();
+}
+
+/** The two settlement chips are mutually exclusive views of one param. */
+function toggleSettlement(value) {
+  filters.settlement = filters.settlement === value ? '' : value;
+  reload();
+}
 
 const showPay  = ref(false);
 const payVisit = ref(null);
@@ -132,28 +319,10 @@ function openPay(v) {
   showPay.value  = true;
 }
 
-// Patch the row in-place so the user sees the new balance without a full reload.
-function onPaid(updated) {
-  const i = items.value.findIndex((x) => x.id === updated.id);
-  if (i !== -1) items.value[i] = { ...items.value[i], ...updated };
-}
-
-function clearFilters() {
-  filters.from = '';
-  filters.to = '';
-  filters.with_debt = false;
+// A payment changes the debt totals, so reload rather than patching in place —
+// the footer's server-side totals would otherwise go stale.
+function onPaid() {
   load();
-}
-
-async function load() {
-  const { data } = await api.get('/visits/archive', {
-    params: {
-      from: filters.from || undefined,
-      to:   filters.to   || undefined,
-      with_debt: filters.with_debt || undefined,
-    },
-  });
-  items.value = data.data || data;
 }
 
 onMounted(load);

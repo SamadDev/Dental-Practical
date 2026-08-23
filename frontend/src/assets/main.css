@@ -44,6 +44,32 @@ html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
 
   .card { @apply rounded-xl border border-slate-200 bg-white shadow-card; }
 
+  /* ----- DataTable chrome ----- */
+
+  /* Pagination page / prev / next button. Fixed min-width so the control
+     doesn't reflow as the page number goes from 9 to 10. */
+  .page-btn {
+    @apply inline-flex h-8 min-w-8 items-center justify-center rounded-lg border
+           border-slate-300 bg-white px-2 text-sm font-medium text-slate-700
+           transition-colors hover:bg-slate-50 focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
+  }
+
+  /* Count badge on a quick-filter chip. */
+  .chip-count {
+    @apply ms-1 rounded px-1 text-[10px] font-semibold tabular-nums;
+  }
+
+  /* Toggleable quick-filter pill in the filter bar. */
+  .filter-chip {
+    @apply inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1
+           text-xs font-medium transition-colors focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
+  }
+  .filter-chip-off { @apply filter-chip border-slate-300 bg-white text-slate-600 hover:bg-slate-50; }
+  .filter-chip-on  { @apply filter-chip border-brand-600 bg-brand-600 text-white hover:bg-brand-700; }
+
   /* Appointment timestamp pill. inline-flex so it sits inline in tables
      but can take a margin when stacked in the mobile cards. */
   .chip-date {

@@ -63,7 +63,8 @@
     "phone_hint": "Digits only, e.g. 0770 123 4567",
     "notes_hint": "Allergies, conditions, medication",
     "empty": "No patients yet. Add the first one to get started.",
-    "search_placeholder": "Search by name or phone…"
+    "search_placeholder": "Search by name or phone…",
+    "smoker_badge": "🚬 Smoker"
   },
   "queue": {
     "title": "Today's Queue",
@@ -79,7 +80,12 @@
     "empty": "No patients in the queue yet.",
     "search_hint": "Type at least 2 characters to search",
     "select_patient": "Select a patient from the list",
-    "searching": "Searching…"
+    "searching": "Searching…",
+    "type": {
+      "walk_in": "Walk-In",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp"
+    }
   },
   "visit": {
     "treatment_notes": "Treatment Notes",
@@ -127,7 +133,8 @@
     "amount_required": "Enter an amount greater than zero",
     "description_required": "Description is required",
     "empty": "No expenses logged yet.",
-    "description_hint": "What was this spent on?"
+    "description_hint": "What was this spent on?",
+    "search_placeholder": "Search description…"
   },
   "dashboard": {
     "title": "Financial Dashboard",
@@ -155,7 +162,36 @@
     "date_from": "From",
     "date_to": "To",
     "checkout_date": "Checkout Date",
-    "empty": "No visits match these filters."
+    "empty": "No visits match these filters.",
+    "search_placeholder": "Search patient, phone or notes…"
   },
-  "currency": "IQD"
+  "currency": "IQD",
+  "table": {
+    "age_max": "Max age",
+    "age_min": "Min age",
+    "all_pages": "all pages",
+    "clear_filters": "Clear filters",
+    "date_preset": "Date range",
+    "filtered": "filtered",
+    "filters": "Filters",
+    "has_xray": "Has X-ray",
+    "max_amount": "Max amount",
+    "max_total": "Max total",
+    "min_amount": "Min amount",
+    "min_total": "Min total",
+    "next": "Next page",
+    "no_appointment": "No appointment",
+    "of": "of",
+    "pagination": "Pagination",
+    "past": "Past due",
+    "previous": "Previous page",
+    "registered_from": "Registered from",
+    "rows_per_page": "Rows per page",
+    "settled": "Settled",
+    "smoker": "Smoker",
+    "smokers": "Smokers",
+    "sort_by": "Sort by",
+    "upcoming": "Upcoming",
+    "visit_type": "Visit Type"
+  }
 }

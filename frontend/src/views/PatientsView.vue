@@ -4,7 +4,7 @@
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('patient.title') }}</h2>
         <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
-          {{ items.length }} {{ $t('common.results') }}
+          {{ meta.total }} {{ $t('common.results') }}
         </p>
       </div>
       <button class="btn-primary" @click="openAdd">
@@ -12,170 +12,215 @@
       </button>
     </header>
 
-    <!-- Error banner -->
-    <p v-if="errorMessage" role="alert"
+    <p v-if="error" role="alert"
        class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <span aria-hidden="true">⚠</span> {{ errorMessage }}
+      <span aria-hidden="true">⚠</span> {{ error }}
     </p>
 
-    <!-- Filter bar -->
-    <div class="card mb-4 flex flex-wrap items-center gap-3 p-3">
-      <div class="relative min-w-[16rem] flex-1">
-        <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center
-                     text-slate-400" aria-hidden="true">🔍</span>
-        <input
-          v-model="search"
-          type="search"
-          class="field ps-9"
-          :placeholder="$t('patient.search_placeholder')"
-          @input="onSearch"
-        />
-      </div>
-      <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm text-slate-700">
-        <input type="checkbox" v-model="hasDebt" class="field-check" @change="load" />
-        {{ $t('archive.filter_with_debt') }}
-      </label>
-    </div>
-
-    <!-- Loading -->
-    <div v-if="loading" class="card divide-y divide-slate-100">
-      <div v-for="n in 5" :key="n" class="flex items-center gap-4 p-4">
-        <div class="h-4 w-40 animate-pulse rounded bg-slate-200"></div>
-        <div class="h-4 w-28 animate-pulse rounded bg-slate-100"></div>
-        <div class="ms-auto h-7 w-32 animate-pulse rounded bg-slate-100"></div>
-      </div>
-    </div>
-
-    <!-- Empty -->
-    <div v-else-if="!items.length"
-         class="card flex flex-col items-center gap-3 p-12 text-center">
-      <span class="text-4xl" aria-hidden="true">🦷</span>
-      <p class="text-slate-500">
-        {{ search || hasDebt ? $t('common.no_results') : $t('patient.empty') }}
-      </p>
-      <button v-if="!search && !hasDebt" class="btn-primary" @click="openAdd">
-        <span aria-hidden="true">+</span> {{ $t('patient.new') }}
-      </button>
-    </div>
-
-    <!-- Table (md+) -->
-    <div v-else class="card hidden overflow-hidden md:block">
-      <table class="w-full text-sm">
-        <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-          <tr>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.name') }}</th>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.phone') }}</th>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.age') }}</th>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.appointment_date') }}</th>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.outstanding_debt') }}</th>
-            <th class="px-4 py-3 text-start font-semibold">{{ $t('patient.last_visit') }}</th>
-            <th class="px-4 py-3 text-end font-semibold">{{ $t('common.actions') }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr
-            v-for="p in items" :key="p.id"
-            class="cursor-pointer transition-colors hover:bg-slate-50"
-            @click="$router.push(`/patients/${p.id}`)"
-          >
-            <td class="px-4 py-3 font-medium text-slate-900">{{ p.name }}</td>
-            <td class="px-4 py-3 font-mono text-slate-600" dir="ltr">{{ p.phone || '—' }}</td>
-            <td class="px-4 py-3 tabular-nums text-slate-600">{{ p.age || '—' }}</td>
-            <td class="px-4 py-3">
-              <span v-if="p.appointment_date" class="chip-date">
-                <span aria-hidden="true">📅</span> {{ formatDateTime(p.appointment_date) }}
-              </span>
-              <span v-else class="text-slate-400">—</span>
-            </td>
-            <td class="px-4 py-3">
-              <span v-if="p.outstanding_short_term_debt > 0" class="font-mono tabular-nums text-red-700">
-                {{ formatIQD(p.outstanding_short_term_debt) }}
-              </span>
-              <span v-else class="text-slate-400">—</span>
-            </td>
-            <td class="px-4 py-3">
-              <span v-if="p.last_visit_date || p.last_visit || p.last_visit_at" class="text-slate-600">
-                {{ formatDateTime(p.last_visit_date || p.last_visit || p.last_visit_at) }}
-              </span>
-              <span v-else class="text-slate-400">—</span>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex flex-wrap justify-end gap-2" @click.stop>
-                <!--
-                  Patients with an outstanding short-term debt cannot be queued
-                  again until they settle it from the Treatment Archive.
-                -->
-                <span v-if="p.outstanding_short_term_debt > 0"
-                      class="inline-flex items-center rounded-lg border border-red-200
-                             bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
-                  {{ $t('patient.outstanding_debt') }}
-                </span>
-                <button
-                  v-else-if="!inQueue(p.id)"
-                  class="btn-success btn-sm"
-                  :disabled="addingId === p.id"
-                  @click="askAddToQueue(p)"
-                >
-                  {{ addingId === p.id ? '✓' : '➕ ' + $t('queue.add_walk_in') }}
-                </button>
-                <span v-else
-                      class="inline-flex items-center rounded-lg border border-slate-200
-                             bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
-                  ✓ {{ $t('queue.in_queue') }}
-                </span>
-                <button class="btn-ghost btn-sm" @click="openEdit(p)">
-                  ✏️ {{ $t('common.edit') }}
-                </button>
-                <button class="btn-danger btn-sm" @click="askDelete(p)">
-                  🗑 {{ $t('common.delete') }}
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Cards (below md) — a 5-column table is unusable on a phone. -->
-    <ul v-if="!loading && items.length" class="space-y-3 md:hidden">
-      <li v-for="p in items" :key="p.id" class="card p-4">
-        <div class="cursor-pointer" @click="$router.push(`/patients/${p.id}`)">
-          <div class="flex items-start justify-between gap-3">
-            <span class="font-semibold text-slate-900">{{ p.name }}</span>
-            <span v-if="p.age" class="shrink-0 text-xs text-slate-400">{{ p.age }}</span>
-          </div>
-          <div class="mt-1 font-mono text-sm text-slate-600" dir="ltr">{{ p.phone || '—' }}</div>
-          <span v-if="p.appointment_date" class="chip-date mt-2">
-            <span aria-hidden="true">📅</span> {{ formatDateTime(p.appointment_date) }}
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('patient.search_placeholder')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    >
+      <template #chips>
+        <button
+          type="button"
+          :class="filters.has_debt ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.has_debt = !filters.has_debt; reload()"
+        >
+          💰 {{ $t('archive.filter_with_debt') }}
+          <span v-if="stats.with_debt != null" class="chip-count"
+                :class="filters.has_debt ? 'bg-white/20' : 'bg-slate-100'">
+            {{ stats.with_debt }}
           </span>
-          <div class="mt-2 flex items-center gap-3 text-xs text-slate-600">
-            <span v-if="p.outstanding_short_term_debt > 0" class="font-mono text-red-700">
-              {{ formatIQD(p.outstanding_short_term_debt) }}
+        </button>
+        <button
+          type="button"
+          :class="filters.appointment === 'upcoming' ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="toggleAppointment('upcoming')"
+        >
+          📅 {{ $t('table.upcoming') }}
+          <span v-if="stats.upcoming != null" class="chip-count"
+                :class="filters.appointment === 'upcoming' ? 'bg-white/20' : 'bg-slate-100'">
+            {{ stats.upcoming }}
+          </span>
+        </button>
+        <button
+          type="button"
+          :class="filters.is_smoker === '1' ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.is_smoker = filters.is_smoker === '1' ? '' : '1'; reload()"
+        >
+          🚬 {{ $t('table.smokers') }}
+          <span v-if="stats.smokers != null" class="chip-count"
+                :class="filters.is_smoker === '1' ? 'bg-white/20' : 'bg-slate-100'">
+            {{ stats.smokers }}
+          </span>
+        </button>
+      </template>
+
+      <template #advanced>
+        <FormField v-slot="{ id }" :label="$t('table.age_min')">
+          <input :id="id" v-model="filters.age_min" type="number" min="0" max="120"
+                 inputmode="numeric" class="field" placeholder="0" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.age_max')">
+          <input :id="id" v-model="filters.age_max" type="number" min="0" max="120"
+                 inputmode="numeric" class="field" placeholder="120" @change="reload" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('patient.appointment_date')">
+          <select :id="id" v-model="filters.appointment" class="field-select" @change="reload">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="upcoming">{{ $t('table.upcoming') }}</option>
+            <option value="past">{{ $t('table.past') }}</option>
+            <option value="none">{{ $t('table.no_appointment') }}</option>
+          </select>
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('table.registered_from')">
+          <input :id="id" v-model="filters.created_from" type="date" class="field"
+                 @change="reload" />
+        </FormField>
+      </template>
+    </DataTableFilters>
+
+    <DataTable
+      :columns="columns"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered"
+      row-clickable
+      :empty-text="$t('patient.empty')"
+      empty-icon="🦷"
+      @sort="toggleSort"
+      @reset="resetFilters"
+      @row-click="(p) => $router.push(`/patients/${p.id}`)"
+    >
+      <template #cell(name)="{ row }">
+        <span class="font-medium text-slate-900">{{ row.name }}</span>
+        <SmokerBadge :show="!!row.is_smoker" class="ms-1.5" />
+      </template>
+
+      <template #cell(phone)="{ row }">
+        <span class="font-mono text-slate-600" dir="ltr">{{ row.phone || '—' }}</span>
+      </template>
+
+      <template #cell(age)="{ row }">
+        <span class="tabular-nums text-slate-600">{{ row.age ?? '—' }}</span>
+      </template>
+
+      <template #cell(appointment_date)="{ row }">
+        <span v-if="row.appointment_date" class="chip-date">
+          <span aria-hidden="true">📅</span> {{ formatDateTime(row.appointment_date) }}
+        </span>
+        <span v-else class="text-slate-400">—</span>
+      </template>
+
+      <template #cell(outstanding_debt)="{ row }">
+        <span v-if="row.outstanding_debt > 0" class="font-mono tabular-nums text-red-700">
+          {{ formatIQD(row.outstanding_debt) }}
+        </span>
+        <span v-else class="text-slate-400">—</span>
+      </template>
+
+      <template #cell(visits_count)="{ row }">
+        <span class="tabular-nums text-slate-600">{{ row.visits_count ?? 0 }}</span>
+      </template>
+
+      <template #cell(last_visit_at)="{ row }">
+        <span v-if="row.last_visit_at" class="whitespace-nowrap text-slate-600">
+          {{ formatDateTime(row.last_visit_at) }}
+        </span>
+        <span v-else class="text-slate-400">—</span>
+      </template>
+
+      <template #cell(actions)="{ row }">
+        <div class="flex flex-wrap justify-end gap-2" @click.stop>
+          <!--
+            Patients with an outstanding short-term debt cannot be queued
+            again until they settle it from the Treatment Archive.
+          -->
+          <span v-if="row.outstanding_debt > 0"
+                class="inline-flex items-center rounded-lg border border-red-200
+                       bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+            {{ $t('patient.outstanding_debt') }}
+          </span>
+          <button
+            v-else-if="!inQueue(row.id)"
+            class="btn-success btn-sm"
+            :disabled="addingId === row.id"
+            @click="askAddToQueue(row)"
+          >
+            {{ addingId === row.id ? '✓' : '➕ ' + $t('queue.add_walk_in') }}
+          </button>
+          <span v-else
+                class="inline-flex items-center rounded-lg border border-slate-200
+                       bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+            ✓ {{ $t('queue.in_queue') }}
+          </span>
+          <button class="btn-ghost btn-sm" @click="openEdit(row)">
+            ✏️ {{ $t('common.edit') }}
+          </button>
+          <button class="btn-danger btn-sm" @click="askDelete(row)">
+            🗑 {{ $t('common.delete') }}
+          </button>
+        </div>
+      </template>
+
+      <!-- Below md a 7-column table is unusable, so rows render as cards. -->
+      <template #card="{ row }">
+        <div class="cursor-pointer" @click="$router.push(`/patients/${row.id}`)">
+          <div class="flex items-start justify-between gap-3">
+            <span class="font-semibold text-slate-900">
+              {{ row.name }}
+              <SmokerBadge :show="!!row.is_smoker" class="ms-1" />
             </span>
-            <span v-if="p.last_visit_date || p.last_visit || p.last_visit_at" class="text-slate-500">
-              · {{ formatDateTime(p.last_visit_date || p.last_visit || p.last_visit_at) }}
+            <span v-if="row.age" class="shrink-0 text-xs text-slate-400">{{ row.age }}</span>
+          </div>
+          <div class="mt-1 font-mono text-sm text-slate-600" dir="ltr">{{ row.phone || '—' }}</div>
+          <span v-if="row.appointment_date" class="chip-date mt-2">
+            <span aria-hidden="true">📅</span> {{ formatDateTime(row.appointment_date) }}
+          </span>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+            <span v-if="row.outstanding_debt > 0" class="font-mono text-red-700">
+              {{ formatIQD(row.outstanding_debt) }}
+            </span>
+            <span class="text-slate-500">
+              {{ row.visits_count ?? 0 }} {{ $t('patient.total_visits') }}
+            </span>
+            <span v-if="row.last_visit_at" class="text-slate-500">
+              · {{ formatDateTime(row.last_visit_at) }}
             </span>
           </div>
         </div>
         <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-          <span v-if="p.outstanding_short_term_debt > 0"
+          <span v-if="row.outstanding_debt > 0"
                 class="inline-flex items-center rounded-lg border border-red-200 bg-red-50
                        px-2.5 py-1 text-xs font-medium text-red-700">
-            {{ formatIQD(p.outstanding_short_term_debt) }}
+            {{ formatIQD(row.outstanding_debt) }}
           </span>
-          <button v-else-if="!inQueue(p.id)" class="btn-success btn-sm"
-                  :disabled="addingId === p.id" @click="askAddToQueue(p)">
+          <button v-else-if="!inQueue(row.id)" class="btn-success btn-sm"
+                  :disabled="addingId === row.id" @click="askAddToQueue(row)">
             ➕ {{ $t('queue.add_walk_in') }}
           </button>
           <span v-else class="inline-flex items-center rounded-lg border border-slate-200
                               bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
-          <button class="btn-ghost btn-sm ms-auto" @click="openEdit(p)">✏️</button>
-          <button class="btn-danger btn-sm" @click="askDelete(p)">🗑</button>
+          <button class="btn-ghost btn-sm ms-auto" @click="openEdit(row)">✏️</button>
+          <button class="btn-danger btn-sm" @click="askDelete(row)">🗑</button>
         </div>
-      </li>
-    </ul>
+      </template>
+    </DataTable>
+
+    <DataTablePagination
+      :meta="meta"
+      :per-page="perPage"
+      @go="goToPage"
+      @update:per-page="perPage = $event"
+    />
 
     <!-- Add / Edit form -->
     <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')">
@@ -200,6 +245,11 @@
                  inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
                  :aria-invalid="!!errors.age || undefined" placeholder="—" />
         </FormField>
+
+        <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" v-model="form.is_smoker" class="field-check" />
+          🚬 {{ $t('table.smoker') }}
+        </label>
 
         <FormField v-slot="{ id }" :label="$t('patient.medical_notes')"
                    :hint="$t('patient.notes_hint')">
@@ -249,26 +299,60 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
+import DataTable           from '../components/DataTable.vue';
+import DataTableFilters    from '../components/DataTableFilters.vue';
+import DataTablePagination from '../components/DataTablePagination.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
+import SmokerBadge   from '../components/SmokerBadge.vue';
+import { useDataTable } from '../composables/useDataTable';
 import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
 
 const { t } = useI18n();
 
-const items       = ref([]);
-const loading     = ref(true);
-const errorMessage = ref('');
-const search      = ref('');
-const hasDebt     = ref(false);
-const showForm    = ref(false);
-const editingId   = ref(null);
-const addingId    = ref(null);
-const queueIds    = ref(new Set());
+const {
+  rows, loading, error, search, filters, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/patients', {
+  filters: {
+    has_debt: false,
+    is_smoker: '',
+    appointment: '',
+    age_min: '',
+    age_max: '',
+    created_from: '',
+  },
+  sort: 'created_at',
+  dir: 'desc',
+});
+
+const columns = computed(() => [
+  { key: 'name',             label: t('patient.name'),             sortable: true, skeleton: 'lg' },
+  { key: 'phone',            label: t('patient.phone'),            sortable: true, skeleton: 'md' },
+  { key: 'age',              label: t('patient.age'),              sortable: true, skeleton: 'sm' },
+  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, skeleton: 'md' },
+  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, skeleton: 'md',
+    initialDir: 'desc' },
+  { key: 'visits_count',     label: t('patient.total_visits'),     sortable: true, skeleton: 'sm',
+    initialDir: 'desc' },
+  { key: 'last_visit_at',    label: t('patient.last_visit'),       sortable: true, skeleton: 'md',
+    initialDir: 'desc' },
+  { key: 'actions',          label: t('common.actions'), align: 'end', skeleton: 'lg' },
+]);
+
+/** Quick-filter counts, over the unfiltered table. */
+const stats = ref({});
+
+const showForm   = ref(false);
+const editingId  = ref(null);
+const addingId   = ref(null);
+const queueIds   = ref(new Set());
 
 const pendingPatient = ref(null);
 
@@ -279,7 +363,7 @@ const confirmQueueMsg   = ref('');
 const confirmDeleteMsg  = ref('');
 
 const emptyForm = () => ({
-  name: '', phone: '', age: null, medical_notes: '',
+  name: '', phone: '', age: null, medical_notes: '', is_smoker: false,
   appointment_date: nowLocalInput(),
 });
 const form   = ref(emptyForm());
@@ -305,34 +389,25 @@ function inQueue(patientId) {
   return queueIds.value.has(patientId);
 }
 
-let searchTimer;
-function onSearch() {
-  // Debounce so typing doesn't fire a request per keystroke.
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(load, 300);
+/** The chip and the advanced <select> drive the same param — keep them in step. */
+function toggleAppointment(value) {
+  filters.appointment = filters.appointment === value ? '' : value;
+  reload();
 }
 
-async function load() {
-  loading.value = true;
-  errorMessage.value = '';
+/** Queue membership and chip counts are independent of the table's query. */
+async function loadSidecars() {
   try {
-    const [patientsRes, queueRes] = await Promise.all([
-      api.get('/patients', {
-        params: {
-          search:   search.value || undefined,
-          has_debt: hasDebt.value || undefined,
-        },
-      }),
+    const [queueRes, statsRes] = await Promise.all([
       api.get('/queue'),
+      api.get('/patients/stats'),
     ]);
-    items.value = patientsRes.data.data || patientsRes.data;
     queueIds.value = new Set((queueRes.data || []).map((v) => v.patient_id));
-  } catch (err) {
-    errorMessage.value = err.userMessage || err.message || t('common.network_error');
-    items.value = [];
+    stats.value = statsRes.data || {};
+  } catch {
+    // Non-fatal: the table itself still renders. Chips just lose their counts.
     queueIds.value = new Set();
-  } finally {
-    loading.value = false;
+    stats.value = {};
   }
 }
 
@@ -350,6 +425,7 @@ function openEdit(p) {
     phone:            p.phone || '',
     age:              p.age || null,
     medical_notes:    p.medical_notes || '',
+    is_smoker:        !!p.is_smoker,
     // Local time — toISOString() would shift this by the UTC offset.
     appointment_date: toLocalInput(p.appointment_date),
   };
@@ -369,7 +445,7 @@ async function save() {
     await api.post('/patients', form.value);
   }
   showForm.value = false;
-  await load();
+  await Promise.all([load(), loadSidecars()]);
 }
 
 function askDelete(p) {
@@ -381,7 +457,7 @@ function askDelete(p) {
 async function deletePatient() {
   await api.delete(`/patients/${pendingPatient.value.id}`);
   pendingPatient.value = null;
-  await load();
+  await Promise.all([load(), loadSidecars()]);
 }
 
 function askAddToQueue(p) {
@@ -395,12 +471,15 @@ async function addToQueue() {
   addingId.value = p.id;
   try {
     await api.post('/visits', { patient_id: p.id, visit_type: 'walk_in' });
-    await load();
+    await loadSidecars();
   } finally {
     addingId.value = null;
     pendingPatient.value = null;
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  load();
+  loadSidecars();
+});
 </script>

@@ -1,6 +1,6 @@
 <template>
   <section>
-    <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <header class="mb-3 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('queue.title') }}</h2>
         <p v-if="!loading && queue.length" class="mt-0.5 text-sm text-slate-500">

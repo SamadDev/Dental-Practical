@@ -1,5 +1,5 @@
 <template>
-  <div class="no-print table-filters mb-4">
+  <div class="no-print table-filters mb-3">
     <!-- Row 1: search + quick chips + advanced toggle -->
     <div class="flex flex-wrap items-center gap-3 p-3.5">
       <div class="relative min-w-[16rem] flex-1">

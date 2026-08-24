@@ -2,7 +2,7 @@
   <div v-if="mobileOpen" class="no-print fixed inset-0 z-30 bg-slate-950/30 lg:hidden"
          @click="mobileOpen = false"></div>
 
-    <aside class="app-sidebar no-print" :class="mobileOpen ? 'is-open' : ''">
+    <aside class="app-sidebar no-print lg:hidden" :class="mobileOpen ? 'is-open' : ''">
       <div class="flex items-center gap-3 px-5 py-6">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-xl text-white shadow-lg shadow-brand-600/20"
               aria-hidden="true">✦</span>
@@ -42,8 +42,8 @@
       </div>
     </aside>
 
-  <header class="app-topbar no-print">
-      <div class="flex items-center gap-3">
+    <header class="app-topbar no-print">
+      <div class="flex min-w-0 items-center gap-3">
         <button type="button" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-lg text-slate-600 shadow-sm lg:hidden"
                 aria-label="Open navigation" @click="mobileOpen = true">☰</button>
         <div>
@@ -51,6 +51,18 @@
           <h2 class="mt-0.5 text-lg font-bold tracking-tight text-slate-900">{{ currentTitle }}</h2>
         </div>
       </div>
+      <nav class="hidden items-center gap-1 rounded-xl bg-slate-100 p-1 lg:flex">
+        <router-link
+          v-for="r in routes" :key="r.name" :to="r.path"
+          class="rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors xl:px-3 xl:text-sm
+                 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          :class="$route.name === r.name
+            ? 'bg-white text-brand-700 shadow-sm'
+            : 'text-slate-500 hover:text-slate-900'"
+        >
+          {{ $t(`nav.${r.name}`) }}
+        </router-link>
+      </nav>
       <div class="flex items-center gap-3">
         <span class="hidden items-center gap-2 text-xs font-medium text-slate-500 sm:flex">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Online

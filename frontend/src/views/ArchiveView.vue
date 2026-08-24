@@ -132,7 +132,7 @@
         </template>
 
         <template #cell(treatment_notes)="{ row }">
-          <span class="block max-w-xs truncate text-slate-600" :title="row.treatment_notes || ''">
+          <span class="table-note-expand block text-slate-600" :title="row.treatment_notes || ''">
             {{ row.treatment_notes || '—' }}
           </span>
         </template>
@@ -149,7 +149,7 @@
         -->
         <template #footer>
           <tr>
-            <td class="px-4 py-3 text-slate-700" colspan="4">
+            <td class="px-4 py-3 text-slate-700" colspan="2">
               {{ $t('common.total') }}
               <span v-if="meta.last_page > 1" class="no-print text-xs font-normal text-slate-400">
                 ({{ $t('table.all_pages') }})
@@ -164,6 +164,7 @@
             <td class="px-4 py-3 font-mono tabular-nums text-red-700">
               {{ format(totals?.debt) }}
             </td>
+            <td></td>
             <td></td>
             <td class="no-print"></td>
           </tr>
@@ -256,14 +257,14 @@ const print = () => window.print();
 const columns = computed(() => [
   { key: 'patient',         label: t('patient.name'),             sortable: true, skeleton: 'lg' },
   { key: 'phone',           label: t('patient.phone'),            skeleton: 'md' },
-  { key: 'created_at',      label: t('archive.checkout_date'),    sortable: true, skeleton: 'md' },
-  { key: 'visit_type',      label: t('table.visit_type'),         sortable: true, skeleton: 'sm' },
   { key: 'total_cost',      label: t('common.total'),             sortable: true, skeleton: 'md',
     initialDir: 'desc' },
   { key: 'amount_paid',     label: t('checkout.amount_paid'),     sortable: true, skeleton: 'md',
     initialDir: 'desc' },
   { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, skeleton: 'md',
     initialDir: 'desc' },
+  { key: 'created_at',      label: t('archive.checkout_date'),    sortable: true, skeleton: 'md' },
+  { key: 'visit_type',      label: t('table.visit_type'),         sortable: true, skeleton: 'sm' },
   { key: 'treatment_notes', label: t('visit.treatment_notes'),    skeleton: 'lg' },
   { key: 'actions',         label: t('common.actions'), align: 'end', printHidden: true,
     skeleton: 'md' },

@@ -1,8 +1,8 @@
 <template>
-  <div class="no-print card mb-4">
+  <div class="no-print table-filters mb-4">
     <!-- Row 1: search + quick chips + advanced toggle -->
-    <div class="flex flex-wrap items-center gap-3 p-3">
-      <div class="relative min-w-[14rem] flex-1">
+    <div class="flex flex-wrap items-center gap-3 p-3.5">
+      <div class="relative min-w-[16rem] flex-1">
         <span
           class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-slate-400"
           aria-hidden="true"
@@ -51,8 +51,8 @@
     </div>
 
     <!-- Row 2: advanced panel -->
-    <div v-if="$slots.advanced && open" id="dt-advanced"
-         class="animate-fade-up border-t border-slate-100 p-4">
+        <div v-if="$slots.advanced && open" id="dt-advanced"
+          class="animate-fade-up border-t border-slate-200/80 bg-slate-50/70 p-4">
       <div class="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <slot name="advanced" />
       </div>

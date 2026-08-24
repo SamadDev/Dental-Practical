@@ -45,6 +45,33 @@ html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
   .card { @apply rounded-xl border border-slate-200 bg-white shadow-card; }
 
   /* ----- DataTable chrome ----- */
+  .table-shell {
+    @apply rounded-xl border border-slate-200/90 bg-white shadow-card;
+  }
+  .table-filters {
+    @apply rounded-xl border border-slate-200/90 bg-white shadow-sm;
+  }
+  .data-table-head {
+    @apply border-b border-slate-200 bg-slate-100/80;
+  }
+  .data-table-head th {
+    @apply whitespace-nowrap text-[11px] font-bold tracking-wider text-slate-500;
+  }
+  .data-table-head button {
+    @apply min-h-7 rounded-md px-1.5 py-1;
+  }
+  .data-table-head button:hover {
+    @apply bg-white text-slate-900 shadow-sm;
+  }
+  .data-table-row:nth-child(even) {
+    @apply bg-slate-50/45;
+  }
+  .data-table-row td {
+    @apply border-slate-100 text-slate-700;
+  }
+  .data-table-row td:first-child {
+    @apply font-medium text-slate-900;
+  }
 
   /* Pagination page / prev / next button. Fixed min-width so the control
      doesn't reflow as the page number goes from 9 to 10. */

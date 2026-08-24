@@ -1,16 +1,15 @@
 <template>
-  <div class="card overflow-hidden">
+  <div class="table-shell overflow-hidden">
     <!-- Table (md+). Below md the parent supplies a #cards slot instead —
          a 7-column table is unusable on a phone. -->
     <div class="hidden overflow-x-auto md:block">
-      <table class="w-full text-sm">
-        <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase
-                      tracking-wide text-slate-500">
+      <table class="data-table w-full text-sm">
+        <thead class="data-table-head text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th
               v-for="col in columns" :key="col.key"
               scope="col"
-              class="px-4 py-3 font-semibold"
+              class="px-4 py-3.5 font-semibold"
               :class="[
                 col.align === 'end' ? 'text-end' : 'text-start',
                 col.thClass,
@@ -47,7 +46,7 @@
              doesn't jump when data lands. -->
         <tbody v-if="loading" class="divide-y divide-slate-100">
           <tr v-for="n in skeletonRows" :key="`sk-${n}`">
-            <td v-for="col in columns" :key="col.key" class="px-4 py-3">
+            <td v-for="col in columns" :key="col.key" class="px-4 py-3.5">
               <div
                 class="h-4 animate-pulse rounded bg-slate-200"
                 :style="{ width: skeletonWidth(col) }"
@@ -78,13 +77,13 @@
         <tbody v-else class="divide-y divide-slate-100">
           <tr
             v-for="(row, i) in rows" :key="rowKey(row, i)"
-            class="transition-colors hover:bg-slate-50"
+            class="data-table-row transition-colors hover:bg-slate-50"
             :class="rowClickable ? 'cursor-pointer' : ''"
             @click="rowClickable && $emit('row-click', row)"
           >
             <td
               v-for="col in columns" :key="col.key"
-              class="px-4 py-3"
+              class="px-4 py-3.5 align-middle"
               :class="[
                 col.align === 'end' ? 'text-end' : '',
                 col.tdClass,

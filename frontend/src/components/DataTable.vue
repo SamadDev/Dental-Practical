@@ -2,7 +2,7 @@
   <div class="table-shell overflow-hidden">
     <!-- Table (md+). Below md the parent supplies a #cards slot instead —
          a 7-column table is unusable on a phone. -->
-    <div class="hidden overflow-x-auto md:block">
+    <div class="hidden overflow-hidden lg:block">
       <table class="data-table w-full text-sm">
         <thead class="data-table-head text-xs uppercase tracking-wide text-slate-500">
           <tr>
@@ -107,7 +107,7 @@
     </div>
 
     <!-- Mobile -->
-    <div class="md:hidden">
+    <div class="lg:hidden">
       <div v-if="loading" class="divide-y divide-slate-100">
         <div v-for="n in skeletonRows" :key="`mk-${n}`" class="space-y-2 p-4">
           <div class="h-4 w-40 animate-pulse rounded bg-slate-200"></div>

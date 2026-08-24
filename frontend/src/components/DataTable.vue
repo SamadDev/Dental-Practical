@@ -1,10 +1,13 @@
 <template>
   <div class="table-shell overflow-hidden">
+    <div v-if="$slots.toolbar" class="table-toolbar no-print">
+      <slot name="toolbar" />
+    </div>
     <!-- Table (md+). Below md the parent supplies a #cards slot instead —
          a 7-column table is unusable on a phone. -->
-    <div class="hidden overflow-hidden lg:block">
+    <div class="data-table-scroll hidden overflow-x-hidden overflow-y-auto lg:block">
       <table class="data-table w-full text-sm">
-        <thead class="data-table-head text-xs uppercase tracking-wide text-slate-500">
+        <thead class="data-table-head sticky top-0 z-10 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th
               v-for="col in columns" :key="col.key"

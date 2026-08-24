@@ -1,17 +1,5 @@
 <template>
   <section>
-    <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight">{{ $t('archive.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
-          {{ meta.total }} {{ $t('common.results') }}
-        </p>
-      </div>
-      <button class="no-print btn-ghost" @click="print">
-        🖨 {{ $t('common.print') }}
-      </button>
-    </header>
-
     <p v-if="error" role="alert"
        class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       <span aria-hidden="true">⚠</span> {{ error }}
@@ -100,6 +88,20 @@
         @sort="toggleSort"
         @reset="resetFilters"
       >
+        <template #toolbar>
+          <div class="flex min-w-0 items-center gap-3">
+            <div>
+              <p class="text-sm font-bold text-slate-900">{{ $t('archive.title') }}</p>
+              <p v-if="!loading" class="text-xs text-slate-500">
+                {{ meta.total }} {{ $t('common.results') }}
+              </p>
+            </div>
+          </div>
+          <button class="btn-ghost btn-sm" @click="print">
+            🖨 {{ $t('common.print') }}
+          </button>
+        </template>
+
         <template #cell(patient)="{ row }">
           <span class="font-medium text-slate-900">{{ row.patient?.name || '—' }}</span>
         </template>

@@ -5,6 +5,38 @@
 /* Direction-aware root font selection driven by [dir] attribute. */
 html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
 html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
+body { background: #f6f7fb; }
+
+@layer components {
+  .app-shell { background: #f6f7fb; }
+  .app-sidebar {
+    @apply fixed inset-y-0 start-0 z-40 flex w-64 -translate-x-full flex-col border-e border-slate-200/80 bg-white transition-transform duration-200 lg:translate-x-0;
+  }
+  [dir='rtl'] .app-sidebar { transform: translateX(100%); }
+  [dir='rtl'] .app-sidebar.is-open { transform: translateX(0); }
+  .app-sidebar.is-open { transform: translateX(0); }
+  @media (min-width: 1024px) {
+    .app-sidebar,
+    [dir='rtl'] .app-sidebar { transform: translateX(0); }
+  }
+  .app-topbar {
+    @apply sticky top-0 z-20 flex min-h-[4.5rem] items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:ms-64 lg:px-8;
+  }
+  [dir='rtl'] .app-topbar { @apply lg:me-64 lg:ms-0; }
+  .app-content { margin-inline-start: 0; }
+  @media (min-width: 1024px) {
+    .app-content { margin-inline-start: 16rem; }
+  }
+  .app-nav-link.is-active {
+    @apply bg-brand-50 text-brand-700 shadow-sm;
+  }
+  .app-nav-link.is-active .app-nav-icon {
+    @apply bg-brand-600 text-white shadow-sm shadow-brand-600/20;
+  }
+  .app-nav-icon {
+    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-sm text-slate-400 transition-colors group-hover:bg-slate-100 group-hover:text-slate-700;
+  }
+}
 
 /* ----- Form + button primitives -----
    Every view was repeating slightly different input classes, which is why

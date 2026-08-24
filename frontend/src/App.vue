@@ -1,13 +1,12 @@
 <template>
-  <!-- Root direction binding: flips entire UI between LTR (English) and RTL (Kurdish). -->
-  <div :dir="lang.dir" class="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+  <div :dir="lang.dir" class="app-shell min-h-screen text-slate-900">
     <NavBar />
-    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+    <main class="app-content min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <router-view />
+      <footer class="no-print mt-10 border-t border-slate-200/80 py-5 text-center text-xs text-slate-400">
+        © {{ new Date().getFullYear() }} {{ $t('app.title') }}
+      </footer>
     </main>
-    <footer class="no-print py-6 text-center text-xs text-slate-400">
-      © {{ new Date().getFullYear() }} {{ $t('app.title') }}
-    </footer>
   </div>
 </template>
 

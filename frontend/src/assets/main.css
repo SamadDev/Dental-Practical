@@ -111,7 +111,7 @@ body { background: #f6f7fb; }
   }
   .data-table th,
   .data-table td {
-    border-width: 1px;
+    border-width: 2px;
   }
   .data-table th:first-child,
   .data-table td:first-child {

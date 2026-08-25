@@ -98,15 +98,16 @@ const auth    = useAuthStore();
 const mobileOpen = ref(false);
 
 const routes = [
-  { name: 'queue',     path: '/queue',         icon: '⌁' },
-  { name: 'patients',  path: '/patients',      icon: '◉' },
-  { name: 'archive',   path: '/archive',       icon: '▤' },
+  { name: 'home',      path: '/home',          icon: '⌂' },
+  { name: 'queue',     path: '/queue',         icon: '📅' },
+  { name: 'patients',  path: '/patients',      icon: '🗂️' },
+  { name: 'archive',   path: '/archive',       icon: '🦷' },
   { name: 'plans',     path: '/payment-plans', icon: '💳' },
   { name: 'inventory', path: '/inventory',     icon: '📦' },
   { name: 'vendors',   path: '/vendors',       icon: '🏭' },
   { name: 'cashflow',  path: '/cash-flow',     icon: '📈' },
-  { name: 'expenses',  path: '/expenses',      icon: '◇' },
-  { name: 'dashboard', path: '/dashboard',     icon: '▦' },
+  { name: 'expenses',  path: '/expenses',      icon: '🧾' },
+  { name: 'dashboard', path: '/dashboard',     icon: '📊' },
 ];
 
 const currentTitle = computed(() => {

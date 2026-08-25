@@ -62,7 +62,8 @@
     "empty": "هێشتا هیچ نەخۆشێک نییە. یەکەمیان زیاد بکە.",
     "search_placeholder": "گەڕان بە ناو یان ژمارە…",
     "smoker_badge": "🚬 جگەرەکێش",
-    "total_visits": "سەردانەکان"
+    "total_visits": "سەردانەکان",
+    "whatsapp_tooltip": "کردنەوەی قسەکەوت لەگەڵ {phone} بە واتساپ"
   },
   "queue": {
     "title": "ڕیزی ئەمڕۆ",

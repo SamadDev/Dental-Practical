@@ -7,6 +7,16 @@ html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif;
 html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
 body { background: #f6f7fb; }
 
+/* Custom utilities */
+@layer utilities {
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  }
+  .shadow-card-hover {
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  }
+}
+
 @layer components {
   .app-shell { background: #f6f7fb; }
   .app-sidebar {

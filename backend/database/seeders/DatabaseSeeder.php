@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\AqsatContract;
 use App\Models\Expense;
 use App\Models\Patient;
+use App\Models\User;
 use App\Models\Visit;
 use Illuminate\Database\Seeder;
 
@@ -15,6 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (User::count() === 0) {
+            $this->call(UserSeeder::class);
+        }
+
         $patients = [
             [
                 'name' => 'شیلان ئەحمەد (Shilan Ahmad)',

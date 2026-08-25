@@ -1,165 +1,189 @@
 <template>
-  <div class="table-shell overflow-hidden">
+  <div class="table-shell">
+    <!-- Toolbar -->
     <div v-if="$slots.toolbar" class="table-toolbar no-print">
       <slot name="toolbar" />
     </div>
-    <!-- Table (md+). Below md the parent supplies a #cards slot instead —
-         a 7-column table is unusable on a phone. -->
-    <div class="data-table-scroll hidden overflow-x-hidden overflow-y-auto lg:block">
-      <table class="data-table w-full text-sm">
-        <thead class="data-table-head sticky top-0 z-10 text-xs uppercase tracking-wide text-slate-500">
-          <tr>
-            <th
-              v-for="col in columns" :key="col.key"
-              scope="col"
-              class="px-4 py-3.5 font-semibold"
-              :class="[
-                col.align === 'end' ? 'text-end' : 'text-start',
-                col.thClass,
-                col.printHidden ? 'no-print' : '',
-              ]"
-              :aria-sort="ariaSort(col)"
-            >
-              <!-- Sortable headers are buttons so they're keyboard reachable;
-                   plain labels stay as text to avoid a fake affordance. -->
-              <button
-                v-if="col.sortable"
-                type="button"
-                class="group inline-flex items-center gap-1 rounded transition-colors
-                       hover:text-slate-900 focus:outline-none focus-visible:ring-2
-                       focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                :class="col.align === 'end' ? 'flex-row-reverse' : ''"
-                @click="$emit('sort', col.key, col.initialDir || 'asc')"
+
+    <!-- Table Wrapper -->
+    <div class="table-wrapper">
+      <!-- Desktop Table -->
+      <div class="hidden lg:block">
+        <div class="table-container overflow-x-auto">
+          <table class="data-table w-full min-w-max text-sm">
+            <thead class="data-table-head">
+              <tr>
+                <th
+                  v-for="col in columns" :key="col.key"
+                  scope="col"
+                  class="px-4 py-3.5 font-semibold text-left text-[11px] uppercase tracking-wider whitespace-nowrap"
+                  :class="[
+                    col.align === 'end' ? 'text-right' : 'text-left',
+                    col.thClass,
+                    col.printHidden ? 'no-print' : '',
+                    col.sticky === 'start' ? 'sticky left-0 z-20' : '',
+                    col.sticky === 'end' ? 'sticky right-0 z-20' : '',
+                  ]"
+                  :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
+                  :aria-sort="ariaSort(col)"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      v-if="col.sortable"
+                      type="button"
+                      class="group inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors
+                             hover:bg-slate-100 dark:hover:bg-slate-800
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      :class="col.align === 'end' ? 'flex-row-reverse' : ''"
+                      @click="$emit('sort', col.key, col.initialDir || 'asc')"
+                    >
+                      <span class="font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">
+                        {{ col.label }}
+                      </span>
+                      <span
+                        class="text-[10px] leading-none transition-all duration-200"
+                        :class="sort === col.key
+                          ? 'text-brand-600 dark:text-brand-400 opacity-100 translate-y-0'
+                          : 'opacity-0 group-hover:opacity-60 translate-y-0.5'"
+                        aria-hidden="true"
+                      >
+                        {{ sort === col.key && dir === 'asc' ? '▲' : '▼' }}
+                      </span>
+                    </button>
+                    <span v-else class="font-medium text-slate-600 dark:text-slate-300">{{ col.label }}</span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+
+            <!-- Loading Skeletons -->
+            <tbody v-if="loading" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr v-for="n in skeletonRows" :key="`sk-${n}`">
+                <td v-for="col in columns" :key="col.key" class="px-4 py-4">
+                  <div
+                    class="h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700"
+                    :style="{ width: skeletonWidth(col), maxWidth: '100%' }"
+                  ></div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- Empty State -->
+            <tbody v-else-if="!rows.length">
+              <tr>
+                <td :colspan="columns.length" class="px-4 py-16">
+                  <slot name="empty">
+                    <div class="flex flex-col items-center gap-4 text-center">
+                      <span class="text-5xl opacity-30">{{ emptyIcon }}</span>
+                      <p class="text-slate-500 dark:text-slate-400 text-lg">
+                        {{ isFiltered ? $t('common.no_results') : emptyText }}
+                      </p>
+                      <button v-if="isFiltered" type="button" class="btn-ghost btn-sm mt-2"
+                              @click="$emit('reset')">
+                        {{ $t('table.clear_filters') }}
+                      </button>
+                    </div>
+                  </slot>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- Data Rows -->
+            <tbody v-else class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr
+                v-for="(row, i) in rows" :key="rowKey(row, i)"
+                class="data-table-row group transition-all duration-150
+                       bg-white dark:bg-slate-900
+                       hover:bg-slate-50 dark:hover:bg-slate-800/50
+                       even:bg-slate-50/30 dark:even:bg-slate-800/30
+                       odd:bg-white dark:odd:bg-slate-900"
+                :class="[
+                  rowClickable ? 'cursor-pointer' : '',
+                  rowHighlight && rowHighlight(row) ? 'bg-brand-50/50 dark:bg-brand-900/20 ring-1 ring-brand-200 dark:ring-brand-800' : ''
+                ]"
+                @click="rowClickable && $emit('row-click', row)"
               >
-                <span>{{ col.label }}</span>
-                <span
-                  class="text-[10px] leading-none transition-opacity"
-                  :class="sort === col.key
-                    ? 'text-brand-600 opacity-100'
-                    : 'opacity-0 group-hover:opacity-40'"
-                  aria-hidden="true"
-                >{{ sort === col.key && dir === 'asc' ? '▲' : '▼' }}</span>
-              </button>
-              <span v-else>{{ col.label }}</span>
-            </th>
-          </tr>
-        </thead>
+                <td
+                  v-for="col in columns" :key="col.key"
+                  class="px-4 py-3.5 align-middle whitespace-nowrap border-l border-transparent group-hover:border-slate-100 dark:group-hover:border-slate-800"
+                  :class="[
+                    col.align === 'end' ? 'text-right' : 'text-left',
+                    col.tdClass,
+                    col.printHidden ? 'no-print' : '',
+                    col.sticky === 'start' ? 'sticky left-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-[inset_-8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
+                    col.sticky === 'end' ? 'sticky right-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-[inset_8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
+                  ]"
+                  :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
+                >
+                  <slot :name="`cell(${col.key})`" :row="row" :value="row[col.key]" :index="i">
+                    <span class="text-slate-600 dark:text-slate-300">{{ row[col.key] ?? '—' }}</span>
+                  </slot>
+                </td>
+              </tr>
+            </tbody>
 
-        <!-- Loading: skeleton rows in the real column grid, so the header
-             doesn't jump when data lands. -->
-        <tbody v-if="loading" class="divide-y divide-slate-100">
-          <tr v-for="n in skeletonRows" :key="`sk-${n}`">
-            <td v-for="col in columns" :key="col.key" class="px-4 py-3.5">
-              <div
-                class="h-4 animate-pulse rounded bg-slate-200"
-                :style="{ width: skeletonWidth(col) }"
-              ></div>
-            </td>
-          </tr>
-        </tbody>
-
-        <tbody v-else-if="!rows.length">
-          <tr>
-            <td :colspan="columns.length" class="px-4 py-16">
-              <slot name="empty">
-                <div class="flex flex-col items-center gap-3 text-center">
-                  <span class="text-4xl" aria-hidden="true">{{ emptyIcon }}</span>
-                  <p class="text-slate-500">
-                    {{ isFiltered ? $t('common.no_results') : emptyText }}
-                  </p>
-                  <button v-if="isFiltered" type="button" class="btn-ghost btn-sm"
-                          @click="$emit('reset')">
-                    {{ $t('table.clear_filters') }}
-                  </button>
-                </div>
-              </slot>
-            </td>
-          </tr>
-        </tbody>
-
-        <tbody v-else class="divide-y divide-slate-100">
-          <tr
-            v-for="(row, i) in rows" :key="rowKey(row, i)"
-            class="data-table-row transition-colors hover:bg-slate-50"
-            :class="rowClickable ? 'cursor-pointer' : ''"
-            @click="rowClickable && $emit('row-click', row)"
-          >
-            <td
-              v-for="col in columns" :key="col.key"
-              class="px-4 py-3.5 align-middle"
-              :class="[
-                col.align === 'end' ? 'text-end' : '',
-                col.tdClass,
-                col.printHidden ? 'no-print' : '',
-              ]"
-            >
-              <!-- One named slot per column: `cell(<key>)`. The parent owns all
-                   formatting; this component only owns the table chrome. -->
-              <slot :name="`cell(${col.key})`" :row="row" :value="row[col.key]" :index="i">
-                {{ row[col.key] ?? '—' }}
-              </slot>
-            </td>
-          </tr>
-        </tbody>
-
-        <tfoot v-if="$slots.footer && rows.length && !loading"
-               class="border-t-2 border-slate-300 bg-slate-50 font-semibold">
-          <slot name="footer" />
-        </tfoot>
-      </table>
-    </div>
-
-    <!-- Mobile -->
-    <div class="lg:hidden">
-      <div v-if="loading" class="divide-y divide-slate-100">
-        <div v-for="n in skeletonRows" :key="`mk-${n}`" class="space-y-2 p-4">
-          <div class="h-4 w-40 animate-pulse rounded bg-slate-200"></div>
-          <div class="h-3 w-24 animate-pulse rounded bg-slate-100"></div>
+            <!-- Footer / Totals -->
+            <tfoot v-if="$slots.footer && rows.length && !loading"
+                   class="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 font-semibold">
+              <slot name="footer" />
+            </tfoot>
+          </table>
         </div>
       </div>
 
-      <div v-else-if="!rows.length" class="flex flex-col items-center gap-3 p-12 text-center">
-        <span class="text-4xl" aria-hidden="true">{{ emptyIcon }}</span>
-        <p class="text-slate-500">{{ isFiltered ? $t('common.no_results') : emptyText }}</p>
-        <button v-if="isFiltered" type="button" class="btn-ghost btn-sm" @click="$emit('reset')">
-          {{ $t('table.clear_filters') }}
-        </button>
-      </div>
+      <!-- Mobile Cards -->
+      <div class="lg:hidden">
+        <div v-if="loading" class="space-y-3">
+          <div v-for="n in skeletonRows" :key="`mk-${n}`" class="card p-4 space-y-3">
+            <div class="h-4 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div class="h-3 w-1/2 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+          </div>
+        </div>
 
-      <ul v-else class="divide-y divide-slate-100">
-        <li v-for="(row, i) in rows" :key="rowKey(row, i)" class="p-4">
-          <slot name="card" :row="row" :index="i" />
-        </li>
-      </ul>
+        <div v-else-if="!rows.length" class="card p-12 text-center">
+          <span class="text-5xl opacity-30 block mb-3">{{ emptyIcon }}</span>
+          <p class="text-slate-500 dark:text-slate-400 text-lg mb-4">
+            {{ isFiltered ? $t('common.no_results') : emptyText }}
+          </p>
+          <button v-if="isFiltered" type="button" class="btn-ghost btn-sm" @click="$emit('reset')">
+            {{ $t('table.clear_filters') }}
+          </button>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-for="(row, i) in rows" :key="rowKey(row, i)"
+            class="card p-4 transition-shadow hover:shadow-md"
+            :class="rowClickable ? 'cursor-pointer' : ''"
+            @click="rowClickable && $emit('row-click', row)"
+          >
+            <slot name="card" :row="row" :index="i" />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 const props = defineProps({
-  /**
-   * Column descriptors:
-   *   { key, label, sortable?, align?: 'start'|'end', initialDir?, tdClass?,
-   *     thClass?, printHidden?, skeleton?: 'sm'|'md'|'lg' }
-   */
-  columns:      { type: Array,  required: true },
-  rows:         { type: Array,  default: () => [] },
-  loading:      { type: Boolean, default: false },
-  sort:         { type: String, default: '' },
-  dir:          { type: String, default: 'desc' },
-  isFiltered:   { type: Boolean, default: false },
-  rowClickable: { type: Boolean, default: false },
-  emptyText:    { type: String, default: '' },
-  emptyIcon:    { type: String, default: '📋' },
-  skeletonRows: { type: Number, default: 5 },
+  columns:       { type: Array,  required: true },
+  rows:          { type: Array,  default: () => [] },
+  loading:       { type: Boolean, default: false },
+  sort:          { type: String, default: '' },
+  dir:           { type: String, default: 'desc' },
+  isFiltered:    { type: Boolean, default: false },
+  rowClickable:  { type: Boolean, default: false },
+  emptyText:     { type: String, default: '' },
+  emptyIcon:     { type: String, default: '📋' },
+  skeletonRows:  { type: Number, default: 5 },
+  rowHighlight:  { type: Function, default: undefined },
 });
 
 defineEmits(['sort', 'reset', 'row-click']);
 
 const rowKey = (row, i) => row?.id ?? i;
 
-// Varying the skeleton widths per column reads as content rather than a
-// uniform grey grid.
 const SKELETON_WIDTHS = { sm: '3rem', md: '6rem', lg: '10rem' };
 const skeletonWidth = (col) => SKELETON_WIDTHS[col.skeleton] || SKELETON_WIDTHS.md;
 
@@ -169,3 +193,67 @@ function ariaSort(col) {
   return props.dir === 'asc' ? 'ascending' : 'descending';
 }
 </script>
+
+<style scoped>
+.table-shell {
+  @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm;
+}
+
+.table-toolbar {
+  @apply px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-xl;
+}
+
+.table-wrapper {
+  @apply overflow-hidden;
+}
+
+.table-container {
+  @apply relative;
+}
+
+/* Sticky header with subtle shadow */
+.data-table-head {
+  @apply sticky top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm;
+}
+
+.data-table-head tr {
+  @apply border-b-2 border-slate-200 dark:border-slate-700;
+}
+
+/* Smooth row transitions */
+.data-table-row {
+  @apply transition-colors duration-150;
+}
+
+.data-table-row:last-child td {
+  @apply border-b-0;
+}
+
+/* Focus visible for keyboard navigation */
+.data-table-row:focus-visible {
+  @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  .table-shell { @apply shadow-none border-0; }
+  .table-toolbar { display: none !important; }
+  .data-table-head { @apply bg-slate-100 dark:bg-slate-800 !important; }
+  .data-table-row { @apply bg-white dark:bg-slate-900 !important; }
+}
+
+/* Scrollbar styling */
+.table-container::-webkit-scrollbar {
+  @apply h-2 w-2;
+}
+.table-container::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.table-container::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-500;
+}
+</style>

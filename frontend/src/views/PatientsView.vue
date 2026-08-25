@@ -104,7 +104,13 @@
       </template>
 
       <template #cell(phone)="{ row }">
-        <span class="font-mono text-slate-600" dir="ltr">{{ row.phone || '—' }}</span>
+        <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
+           class="font-mono text-slate-600 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+           dir="ltr" :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.phone) })">
+          <span class="text-brand-600" aria-hidden="true">💬</span>
+          {{ formatPhoneForDisplay(row.phone) }}
+        </a>
+        <span v-else class="text-slate-400">—</span>
       </template>
 
       <template #cell(age)="{ row }">
@@ -179,7 +185,15 @@
             </span>
             <span v-if="row.age" class="shrink-0 text-xs text-slate-400">{{ row.age }}</span>
           </div>
-          <div class="mt-1 font-mono text-sm text-slate-600" dir="ltr">{{ row.phone || '—' }}</div>
+          <div class="mt-1" dir="ltr">
+          <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
+             class="font-mono text-sm text-slate-600 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+             :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.phone) })">
+            <span class="text-brand-600" aria-hidden="true">💬</span>
+            {{ formatPhoneForDisplay(row.phone) }}
+          </a>
+          <span v-else class="text-slate-400">—</span>
+        </div>
           <span v-if="row.appointment_date" class="chip-date mt-2">
             <span aria-hidden="true">📅</span> {{ formatDateTime(row.appointment_date) }}
           </span>
@@ -312,6 +326,7 @@ import SmokerBadge   from '../components/SmokerBadge.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneForTel } from '../utils/phone';
 
 const { t } = useI18n();
 
@@ -333,17 +348,14 @@ const {
 });
 
 const columns = computed(() => [
-  { key: 'name',             label: t('patient.name'),             sortable: true, skeleton: 'lg' },
-  { key: 'phone',            label: t('patient.phone'),            sortable: true, skeleton: 'md' },
-  { key: 'age',              label: t('patient.age'),              sortable: true, skeleton: 'sm' },
-  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, skeleton: 'md' },
-  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, skeleton: 'md',
-    initialDir: 'desc' },
-  { key: 'visits_count',     label: t('patient.total_visits'),     sortable: true, skeleton: 'sm',
-    initialDir: 'desc' },
-  { key: 'last_visit_at',    label: t('patient.last_visit'),       sortable: true, skeleton: 'md',
-    initialDir: 'desc' },
-  { key: 'actions',          label: t('common.actions'), align: 'end', skeleton: 'lg' },
+  { key: 'name',             label: t('patient.name'),             sortable: true, skeleton: 'lg', sticky: 'start', width: '200px' },
+  { key: 'phone',            label: t('patient.phone'),            sortable: true, skeleton: 'md', width: '160px' },
+  { key: 'age',              label: t('patient.age'),              sortable: true, skeleton: 'sm', width: '70px', align: 'end' },
+  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, skeleton: 'md', width: '160px' },
+  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, skeleton: 'md', initialDir: 'desc', width: '140px', align: 'end' },
+  { key: 'visits_count',     label: t('patient.total_visits'),     sortable: true, skeleton: 'sm', initialDir: 'desc', width: '80px', align: 'end' },
+  { key: 'last_visit_at',    label: t('patient.last_visit'),       sortable: true, skeleton: 'md', initialDir: 'desc', width: '160px' },
+  { key: 'actions',          label: t('common.actions'), align: 'end', skeleton: 'lg', sticky: 'end', width: '200px' },
 ]);
 
 /** Quick-filter counts, over the unfiltered table. */

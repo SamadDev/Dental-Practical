@@ -49,7 +49,15 @@
         <dl class="space-y-3 text-sm">
           <div class="flex justify-between gap-4 border-b border-slate-100 pb-3">
             <dt class="text-slate-500">{{ $t('patient.phone') }}</dt>
-            <dd class="font-mono text-slate-900" dir="ltr">{{ patient.phone || '—' }}</dd>
+            <dd class="font-mono text-slate-900" dir="ltr">
+              <a v-if="patient.phone" :href="formatPhoneForWhatsApp(patient.phone)" target="_blank" rel="noopener noreferrer"
+                 class="flex items-center gap-1 hover:text-brand-600 transition-colors"
+                 :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(patient.phone) })">
+                <span class="text-brand-600" aria-hidden="true">💬</span>
+                {{ formatPhoneForDisplay(patient.phone) }}
+              </a>
+              <span v-else class="text-slate-400">—</span>
+            </dd>
           </div>
           <div class="flex justify-between gap-4 border-b border-slate-100 pb-3">
             <dt class="text-slate-500">{{ $t('patient.age') }}</dt>
@@ -202,6 +210,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 
 const route   = useRoute();
 const { t }   = useI18n();

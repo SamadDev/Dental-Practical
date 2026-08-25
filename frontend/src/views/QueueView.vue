@@ -50,8 +50,14 @@
               <span aria-hidden="true">📅</span> {{ formatDateTime(v.patient.appointment_date) }}
             </span>
           </div>
-          <div class="mt-1 font-mono text-xs text-slate-500" dir="ltr">
-            {{ v.patient.phone || '—' }}
+          <div class="mt-1" dir="ltr">
+            <a v-if="v.patient.phone" :href="formatPhoneForWhatsApp(v.patient.phone)" target="_blank" rel="noopener noreferrer"
+               class="font-mono text-xs text-slate-500 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+               :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(v.patient.phone) })">
+              <span class="text-brand-600" aria-hidden="true">💬</span>
+              {{ formatPhoneForDisplay(v.patient.phone) }}
+            </a>
+            <span v-else class="text-slate-400 text-xs">—</span>
           </div>
         </div>
 
@@ -121,7 +127,12 @@
               <span class="min-w-0">
                 <span class="block truncate text-sm font-medium text-slate-900">{{ p.name }}</span>
                 <span v-if="p.phone" class="block font-mono text-xs text-slate-500" dir="ltr">
-                  {{ p.phone }}
+                  <a :href="formatPhoneForWhatsApp(p.phone)" target="_blank" rel="noopener noreferrer"
+                     class="flex items-center gap-1 hover:text-brand-600 transition-colors"
+                     :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(p.phone) })">
+                    <span class="text-brand-600" aria-hidden="true">💬</span>
+                    {{ formatPhoneForDisplay(p.phone) }}
+                  </a>
                 </span>
               </span>
               <span v-if="p.appointment_date" class="chip-date shrink-0">
@@ -186,6 +197,7 @@ import ConfirmDialog  from '../components/ConfirmDialog.vue';
 import CheckoutDialog from '../components/CheckoutDialog.vue';
 import FormField      from '../components/FormField.vue';
 import { formatDateTime } from '../utils/datetime';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 
 const queue   = ref([]);
 const loading = ref(true);

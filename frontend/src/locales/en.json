@@ -64,7 +64,8 @@
     "notes_hint": "Allergies, conditions, medication",
     "empty": "No patients yet. Add the first one to get started.",
     "search_placeholder": "Search by name or phone…",
-    "smoker_badge": "🚬 Smoker"
+    "smoker_badge": "🚬 Smoker",
+    "whatsapp_tooltip": "Open WhatsApp chat with {phone}"
   },
   "queue": {
     "title": "Today's Queue",

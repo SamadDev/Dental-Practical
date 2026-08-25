@@ -107,7 +107,13 @@
         </template>
 
         <template #cell(phone)="{ row }">
-          <span class="font-mono text-slate-600" dir="ltr">{{ row.patient?.phone || '—' }}</span>
+          <a v-if="row.patient?.phone" :href="formatPhoneForWhatsApp(row.patient.phone)" target="_blank" rel="noopener noreferrer"
+             class="font-mono text-slate-600 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+             dir="ltr" :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.patient.phone) })">
+            <span class="text-brand-600" aria-hidden="true">💬</span>
+            {{ formatPhoneForDisplay(row.patient.phone) }}
+          </a>
+          <span v-else class="text-slate-400">—</span>
         </template>
 
         <template #cell(created_at)="{ row }">
@@ -177,8 +183,14 @@
             <span class="font-semibold text-slate-900">{{ row.patient?.name || '—' }}</span>
             <StatusBadge kind="visit_type" :value="row.visit_type" />
           </div>
-          <div class="mt-1 font-mono text-xs text-slate-500" dir="ltr">
-            {{ row.patient?.phone || '—' }}
+          <div class="mt-1" dir="ltr">
+            <a v-if="row.patient?.phone" :href="formatPhoneForWhatsApp(row.patient.phone)" target="_blank" rel="noopener noreferrer"
+               class="font-mono text-xs text-slate-500 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+               :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.patient.phone) })">
+              <span class="text-brand-600" aria-hidden="true">💬</span>
+              {{ formatPhoneForDisplay(row.patient.phone) }}
+            </a>
+            <span v-else class="text-slate-400 text-xs">—</span>
           </div>
           <div class="mt-1 text-xs text-slate-500">{{ formatDateTime(row.created_at) }}</div>
           <dl class="mt-2 grid grid-cols-3 gap-2 text-xs">
@@ -232,6 +244,7 @@ import StatusBadge   from '../components/StatusBadge.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime } from '../utils/datetime';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 
 const { t } = useI18n();
 
@@ -257,19 +270,15 @@ const format = (v) => formatIQD(v || 0);
 const print = () => window.print();
 
 const columns = computed(() => [
-  { key: 'patient',         label: t('patient.name'),             sortable: true, skeleton: 'lg' },
-  { key: 'phone',           label: t('patient.phone'),            skeleton: 'md' },
-  { key: 'total_cost',      label: t('common.total'),             sortable: true, skeleton: 'md',
-    initialDir: 'desc' },
-  { key: 'amount_paid',     label: t('checkout.amount_paid'),     sortable: true, skeleton: 'md',
-    initialDir: 'desc' },
-  { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, skeleton: 'md',
-    initialDir: 'desc' },
-  { key: 'created_at',      label: t('archive.checkout_date'),    sortable: true, skeleton: 'md' },
-  { key: 'visit_type',      label: t('table.visit_type'),         sortable: true, skeleton: 'sm' },
+  { key: 'patient',         label: t('patient.name'),             sortable: true, skeleton: 'lg', sticky: 'start', width: '180px' },
+  { key: 'phone',           label: t('patient.phone'),            skeleton: 'md', width: '160px' },
+  { key: 'total_cost',      label: t('common.total'),             sortable: true, skeleton: 'md', initialDir: 'desc', width: '120px', align: 'end' },
+  { key: 'amount_paid',     label: t('checkout.amount_paid'),     sortable: true, skeleton: 'md', initialDir: 'desc', width: '120px', align: 'end' },
+  { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, skeleton: 'md', initialDir: 'desc', width: '130px', align: 'end' },
+  { key: 'created_at',      label: t('archive.checkout_date'),    sortable: true, skeleton: 'md', width: '160px' },
+  { key: 'visit_type',      label: t('table.visit_type'),         sortable: true, skeleton: 'sm', width: '100px' },
   { key: 'treatment_notes', label: t('visit.treatment_notes'),    skeleton: 'lg' },
-  { key: 'actions',         label: t('common.actions'), align: 'end', printHidden: true,
-    skeleton: 'md' },
+  { key: 'actions',         label: t('common.actions'), align: 'end', printHidden: true, skeleton: 'md', sticky: 'end', width: '120px' },
 ]);
 
 /** Which date preset the current from/to happens to match, if any. */

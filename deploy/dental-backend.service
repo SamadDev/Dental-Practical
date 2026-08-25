@@ -1,0 +1,25 @@
+# Systemd service for Laravel backend
+# Save as /etc/systemd/system/dental-backend.service on the server
+
+[Unit]
+Description=Dental Practi-Smart Laravel Server
+After=network.target
+
+[Service]
+Type=simple
+User=dental
+WorkingDirectory=/home/dental/dental-practismart/backend
+ExecStart=/usr/bin/php artisan serve --host=127.0.0.1 --port=8000
+Restart=on-failure
+RestartSec=3
+Environment=APP_ENV=production
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/dental/dental-practismart/backend/storage /home/dental/dental-practismart/backend/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

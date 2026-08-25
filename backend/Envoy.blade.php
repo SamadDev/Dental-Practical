@@ -1,57 +1,66 @@
 @setup
-    $repository = 'git@github.com:SamadDev/Dental-Practical.git';
     $branch = 'main';
-    $deployPath = '/home/dental/dental-practismart';
-    $backendPath = $deployPath . '/backend';
-    $frontendPath = $deployPath . '/frontend';
+    $repoPath = '/home/dental/dental-practismart';
+    $backendPath = '/home/dental/public_html';
 @endsetup
 
-@servers(['web' => 'dental@176.9.120.84'])
+@servers(['web' => 'dentail'])
 
 @task('deploy', ['on' => 'web'])
-    cd {{ $deployPath }}
-    
-    # Pull latest
+    # Pull latest into working copy
+    cd {{ $repoPath }}
     git fetch origin
     git reset --hard origin/{{ $branch }}
-    
-    # Backend
+
+    # Sync backend into web root (keeps live .env and storage)
+    rsync -a --delete \
+        --exclude '.env' \
+        --exclude 'storage' \
+        --exclude '.git' \
+        {{ $repoPath }}/backend/ {{ $backendPath }}/
+
+    # Dependencies
     cd {{ $backendPath }}
-    composer install --no-dev --optimize-autoloader --no-interaction
-    
+    {{ $backendPath }}/../bin/composer install --no-dev --optimize-autoloader --no-interaction
+
     # Migrations & seed
     php artisan migrate --force
     php artisan db:seed --force || true
-    
+
     # Cache
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
-    
+
     # Storage link
-    php artisan storage:link
-    
-    # Frontend
-    cd {{ $frontendPath }}
-    npm ci
-    npm run build
-    
+    php artisan storage:link || true
+
     # Permissions
-    chown -R dental:dental {{ $deployPath }}
     chmod -R 775 {{ $backendPath }}/storage {{ $backendPath }}/bootstrap/cache
-    
-    # Restart services
-    sudo systemctl reload dental-backend || sudo systemctl restart dental-backend
-    sudo nginx -t && sudo systemctl reload nginx
-    
+
     echo "✅ Deploy complete"
 @endtask
 
 @task('rollback', ['on' => 'web'])
-    cd {{ $deployPath }}
-    git fetch origin
+    cd {{ $repoPath }}
     git reset --hard HEAD~1
-    @task('deploy')
+
+    rsync -a --delete \
+        --exclude '.env' \
+        --exclude 'storage' \
+        --exclude '.git' \
+        {{ $repoPath }}/backend/ {{ $backendPath }}/
+
+    cd {{ $backendPath }}
+    {{ $backendPath }}/../bin/composer install --no-dev --optimize-autoloader --no-interaction
+    php artisan migrate --force
+    php artisan db:seed --force || true
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan storage:link || true
+    chmod -R 775 {{ $backendPath }}/storage {{ $backendPath }}/bootstrap/cache
+    echo "✅ Rollback & redeploy complete"
 @endtask
 
 @task('logs', ['on' => 'web'])

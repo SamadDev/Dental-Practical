@@ -39,7 +39,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->unique(['payment_plan_id', 'installment_number']);
+            $table->unique(['payment_plan_id', 'installment_number'], 'payment_plan_installments_unique');
             $table->index(['due_date', 'status']);
         });
     }

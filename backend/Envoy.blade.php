@@ -38,6 +38,9 @@
     # Permissions
     chmod -R 775 {{ $backendPath }}/storage {{ $backendPath }}/bootstrap/cache
 
+    # Record deploy info for /api/v1/health
+    printf '{"commit":"%s","deployed_at":"%s"}\n' "$(cd {{ $repoPath }} && git rev-parse --short HEAD)" "$(date -Iseconds)" > {{ $backendPath }}/storage/app/deploy.json
+
     echo "✅ Deploy complete"
 @endtask
 

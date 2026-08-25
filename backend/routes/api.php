@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health / deploy check
+    Route::get('health', [\App\Http\Controllers\Api\HealthController::class, 'check']);
+
     // Auth
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

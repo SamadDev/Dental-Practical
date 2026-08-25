@@ -101,31 +101,31 @@ body { background: #f6f7fb; }
     border-radius: 999px;
     background: #cbd5e1;
   }
-  /* Header: quiet grey band, small uppercase labels, single bottom rule. */
+  /* Header: clean white band, muted labels, single bottom rule. */
   .data-table-head {
-    @apply bg-slate-50/80;
+    @apply bg-white;
   }
   .data-table-head tr {
     @apply border-b border-slate-200;
   }
   .data-table-head th {
-    @apply whitespace-nowrap px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400;
+    @apply whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500;
   }
   .data-table-head button {
     @apply min-h-7 rounded-md px-1.5 py-1 transition-colors;
   }
   .data-table-head button:hover {
-    @apply bg-slate-200/60 text-slate-600;
+    @apply bg-slate-100 text-slate-800;
   }
-  /* Rows: hairline divider, gentle zebra, clear hover, no cell borders. */
+  /* Rows: hairline divider, clear hover, no cell borders, taller rows. */
   .data-table-row {
-    @apply border-b border-slate-100 transition-colors duration-100 hover:bg-brand-50/40;
+    @apply border-b border-slate-100 transition-colors duration-100 hover:bg-slate-50;
   }
   .data-table-row:last-child {
     @apply border-b-0;
   }
   .data-table-row td {
-    @apply px-4 py-3 text-slate-700;
+    @apply px-4 py-3.5 text-[13px] text-slate-600;
     overflow-wrap: anywhere;
   }
   .data-table-row td:first-child {

@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{vue,js}'],
+  // 'class' means the dark: variants only activate when something adds a
+  // `.dark` class — which this app never does. Light mode only.
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {

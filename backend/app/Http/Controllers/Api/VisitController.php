@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesDataTableQueries;
 use App\Http\Controllers\Controller;
 use App\Models\AqsatContract;
+use App\Models\Patient;
 use App\Models\Visit;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +15,18 @@ use Illuminate\Support\Facades\Storage;
 
 class VisitController extends Controller
 {
+    use HandlesDataTableQueries;
+
+    /** Archive sort keys => columns. `patient` sorts via a correlated subquery. */
+    private const ARCHIVE_SORTABLE = [
+        'created_at'      => 'visits.created_at',
+        'total_cost'      => 'visits.total_cost',
+        'amount_paid'     => 'visits.amount_paid',
+        'short_term_debt' => 'visits.short_term_debt',
+        'visit_type'      => 'visits.visit_type',
+        'patient'         => 'patient_name',
+    ];
+
     /** Today's unified queue: pending + active. Completed visits leave the queue. */
     public function queue(): JsonResponse
     {
@@ -191,21 +206,82 @@ class VisitController extends Controller
     /** Treatment Archive — completed visits with smart filters. */
     public function archive(Request $request): JsonResponse
     {
-        $q = Visit::with('patient:id,name,phone')
-            ->where('queue_status', 'completed');
+        $q = $this->archiveQuery($request)
+            ->select('visits.*')
+            ->with('patient:id,name,phone')
+            // Selected as an alias so the table can sort by patient name
+            // without a join that would complicate the totals query.
+            ->addSelect([
+                'patient_name' => Patient::select('name')
+                    ->whereColumn('patients.id', 'visits.patient_id'),
+            ]);
 
-        if ($from = $request->query('from')) {
-            $q->whereDate('created_at', '>=', $from);
+        $this->applySort($q, $request, self::ARCHIVE_SORTABLE, 'created_at');
+
+        $page = $q->paginate($this->perPage($request));
+
+        // Grand totals over every matching row, not just the current page —
+        // the printed ledger's bottom line has to cover the whole filter set.
+        $totals = $this->archiveQuery($request)
+            ->selectRaw('COALESCE(SUM(total_cost), 0) as total')
+            ->selectRaw('COALESCE(SUM(amount_paid), 0) as paid')
+            ->selectRaw('COALESCE(SUM(short_term_debt), 0) as debt')
+            ->first();
+
+        return response()->json([
+            ...$page->toArray(),
+            'totals' => [
+                'total' => (int) $totals->total,
+                'paid'  => (int) $totals->paid,
+                'debt'  => (int) $totals->debt,
+            ],
+        ]);
+    }
+
+    /**
+     * The archive's filtered base query. Built twice per request — once for the
+     * page of rows, once for the totals — so it must stay side-effect free.
+     */
+    private function archiveQuery(Request $request): Builder
+    {
+        $q = Visit::query()->where('visits.queue_status', 'completed');
+
+        if ($s = trim((string) $request->query('search'))) {
+            $q->where(function ($w) use ($s) {
+                $w->where('visits.treatment_notes', 'like', "%{$s}%")
+                    ->orWhereHas('patient', fn ($p) => $p
+                        ->where('name', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%"));
+            });
         }
-        if ($to = $request->query('to')) {
-            $q->whereDate('created_at', '<=', $to);
-        }
+
+        $this->applyDateRange($q, $request, 'visits.created_at');
+        $this->applyAmountRange($q, $request, 'visits.total_cost', 'min_total', 'max_total');
+
         if ($request->boolean('with_debt')) {
-            $q->where('short_term_debt', '>', 0);
+            $q->where('visits.short_term_debt', '>', 0);
         }
 
-        return response()->json(
-            $q->orderByDesc('created_at')->paginate((int) $request->query('per_page', 25))
-        );
+        // Settlement state is derived, not stored — express it as a predicate
+        // on short_term_debt rather than adding a column that could drift.
+        match ((string) $request->query('settlement')) {
+            'settled'     => $q->where('visits.short_term_debt', '=', 0),
+            'outstanding' => $q->where('visits.short_term_debt', '>', 0),
+            default       => null,
+        };
+
+        if ($type = $request->query('visit_type')) {
+            $q->where('visits.visit_type', $type);
+        }
+
+        if ($request->boolean('has_xray')) {
+            $q->whereNotNull('visits.xray_path');
+        }
+
+        if ($request->filled('patient_id')) {
+            $q->where('visits.patient_id', (int) $request->query('patient_id'));
+        }
+
+        return $q;
     }
 }

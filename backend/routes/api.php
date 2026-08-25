@@ -8,7 +8,8 @@ use App\Http\Controllers\Api\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    // Patients
+    // Patients — /stats is declared first so /patients/{patient} doesn't swallow it.
+    Route::get   ('patients/stats', [PatientController::class, 'stats']);
     Route::apiResource('patients', PatientController::class);
 
     // Aqsat contracts

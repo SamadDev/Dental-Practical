@@ -51,74 +51,12 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # ----- Deploy -----
-      - name: Deploy to server
-        run: |
-          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} << 'ENDSSH'
-          set -e
-
-          DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
-          BACKEND_DIR="$DEPLOY_DIR/backend"
-          FRONTEND_DIR="$DEPLOY_DIR/frontend"
-
-          echo "=== Pulling latest code ==="
-          if [ -d "$DEPLOY_DIR/.git" ]; then
-            cd "$DEPLOY_DIR"
-            git fetch origin
-            git reset --hard origin/main
-          else
-            git clone https://github.com/${{ github.repository }}.git "$DEPLOY_DIR"
-            cd "$DEPLOY_DIR"
-          fi
-
-          echo "=== Backend: Install dependencies ==="
-          cd "$BACKEND_DIR"
-          composer install --no-dev --optimize-autoloader --no-interaction
-
-          echo "=== Backend: Environment ==="
-          if [ ! -f .env ]; then
-            cp .env.example .env
-            php artisan key:generate --force
-          fi
-
-          echo "=== Backend: Database migrations ==="
-          # SQLite (adjust if using MySQL/PostgreSQL)
-          touch database/database.sqlite
-          php artisan migrate --force
-
-          echo "=== Backend: Seed (safe) ==="
-          php artisan db:seed --force || true
-
-          echo "=== Backend: Storage link ==="
-          php artisan storage:link
-
-          echo "=== Backend: Cache ==="
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-
-          echo "=== Frontend: Copy built assets ==="
-          # Frontend was built in GitHub Actions, copy dist folder
-          # We'll copy from the repo's frontend/dist (built above) to server
-          # But since we cloned fresh, we need to build on server OR copy from artifact
-          # Option: Build on server (simpler, no artifact transfer)
-          cd "$FRONTEND_DIR"
-          npm ci
-          npm run build
-
-          echo "=== Permissions ==="
-          chown -R ${{ env.SERVER_USER }}:${{ env.SERVER_USER }} "$DEPLOY_DIR"
-          chmod -R 755 "$DEPLOY_DIR"
-          chmod -R 775 "$BACKEND_DIR/storage" "$BACKEND_DIR/bootstrap/cache"
-
-          echo "=== Restart backend service ==="
-          sudo systemctl reload dental-backend || sudo systemctl restart dental-backend || true
-
-          echo "=== Reload Nginx ==="
-          sudo nginx -t && sudo systemctl reload nginx || true
-
-          echo "=== Deploy complete ==="
-          ENDSSH
+      # ----- Deploy via Envoy -----
+      - name: Deploy via Envoy
+        working-directory: ./backend
+        run: ./vendor/bin/envoy run deploy
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       # ----- Notify (optional) -----
       - name: Notify success

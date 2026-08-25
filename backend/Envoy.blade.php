@@ -21,6 +21,7 @@
 
     # Dependencies
     cd {{ $backendPath }}
+    mkdir -p storage/app/public storage/framework/{cache/data,sessions,testing,views} storage/logs
     {{ $backendPath }}/../bin/composer install --no-dev --optimize-autoloader --no-interaction
 
     # Migrations & seed

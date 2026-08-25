@@ -57,11 +57,11 @@
             </thead>
 
             <!-- Loading Skeletons -->
-            <tbody v-if="loading" class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="n in skeletonRows" :key="`sk-${n}`">
+            <tbody v-if="loading">
+              <tr v-for="n in skeletonRows" :key="`sk-${n}`" class="data-table-row">
                 <td v-for="col in columns" :key="col.key" class="px-4 py-4">
                   <div
-                    class="h-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700"
+                    class="h-4 animate-pulse rounded bg-slate-200"
                     :style="{ width: skeletonWidth(col), maxWidth: '100%' }"
                   ></div>
                 </td>
@@ -89,29 +89,23 @@
             </tbody>
 
             <!-- Data Rows -->
-            <tbody v-else class="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody v-else>
               <tr
                 v-for="(row, i) in rows" :key="rowKey(row, i)"
-                class="data-table-row group transition-all duration-150
-                       bg-white dark:bg-slate-900
-                       hover:bg-slate-50 dark:hover:bg-slate-800/50
-                       even:bg-slate-50/30 dark:even:bg-slate-800/30
-                       odd:bg-white dark:odd:bg-slate-900"
+                class="data-table-row group"
                 :class="[
                   rowClickable ? 'cursor-pointer' : '',
-                  rowHighlight && rowHighlight(row) ? 'bg-brand-50/50 dark:bg-brand-900/20 ring-1 ring-brand-200 dark:ring-brand-800' : ''
+                  rowHighlight && rowHighlight(row) ? 'bg-brand-50/60' : ''
                 ]"
                 @click="rowClickable && $emit('row-click', row)"
               >
                 <td
                   v-for="col in columns" :key="col.key"
-                  class="px-4 py-3.5 align-middle whitespace-nowrap border-l border-transparent group-hover:border-slate-100 dark:group-hover:border-slate-800"
+                  class="align-middle whitespace-nowrap"
                   :class="[
                     col.align === 'end' ? 'text-right' : 'text-left',
                     col.tdClass,
                     col.printHidden ? 'no-print' : '',
-                    col.sticky === 'start' ? 'sticky left-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-[inset_-8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
-                    col.sticky === 'end' ? 'sticky right-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-[inset_8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
                   ]"
                   :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
                 >

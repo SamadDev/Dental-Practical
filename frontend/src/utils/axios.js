@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/auth';
 
 /**
  * Local-network Axios instance. Base URL is set at runtime so the same build
@@ -14,12 +15,35 @@ const api = axios.create({
   headers: { Accept: 'application/json' },
 });
 
+// Attach the Sanctum token to every request. Read lazily so login/logout
+// never needs to touch this module directly.
+api.interceptors.request.use((config) => {
+  const auth = useAuthStore();
+  if (auth.token) config.headers.Authorization = `Bearer ${auth.token}`;
+  return config;
+});
+
 api.interceptors.response.use(
   (r) => r,
   (err) => {
+    const status = err.response?.status;
+
+    if (status === 401) {
+      // Dead or missing token — drop the session and send them to login.
+      const auth = useAuthStore();
+      auth.token = '';
+      auth.user = null;
+      localStorage.removeItem('dps_token');
+      localStorage.removeItem('dps_user');
+      if (!location.hash.startsWith('#/login')) location.hash = '#/login';
+    }
+
     // Surface a single readable message for the UI.
-    const msg = err.response?.data?.message || err.message || 'Network error';
-    err.userMessage = msg;
+    err.userMessage =
+      err.response?.data?.message ||
+      (err.response?.status === 422 ? Object.values(err.response.data.errors ?? {}).flat().join(' ') : '') ||
+      err.message ||
+      'Network error';
     return Promise.reject(err);
   },
 );

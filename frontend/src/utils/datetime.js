@@ -24,6 +24,14 @@ export function nowLocalInput() {
   return toLocalInput(d);
 }
 
+/** Human-readable date only (no time). Falls back to the raw value. */
+export function formatDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' });
+}
+
 /** Human-readable date+time. Falls back to the raw value if unparseable. */
 export function formatDateTime(value) {
   if (!value) return '—';

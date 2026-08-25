@@ -32,12 +32,19 @@
         </router-link>
       </nav>
 
-      <div class="mt-auto border-t border-slate-100 p-4">
+      <div class="mt-auto space-y-2 border-t border-slate-100 p-4">
         <button type="button" class="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-start text-sm font-medium text-slate-600 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
                 @click="toggleLang">
           <span class="grid h-7 w-7 place-items-center rounded-md bg-white text-xs shadow-sm" aria-hidden="true">文</span>
           <span class="flex-1">{{ lang.current === 'en' ? $t('lang.kurdish') : $t('lang.english') }}</span>
           <span class="text-xs text-slate-400" aria-hidden="true">⇄</span>
+        </button>
+        <button v-if="auth.isLoggedIn" type="button"
+                class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm font-medium text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                @click="logout">
+          <span class="grid h-7 w-7 place-items-center rounded-md bg-white text-xs shadow-sm" aria-hidden="true">⏻</span>
+          <span class="flex-1">{{ $t('auth.sign_out') }}</span>
+          <span v-if="auth.user" class="text-[10px] uppercase tracking-wide">{{ auth.user.name }}</span>
         </button>
       </div>
     </aside>
@@ -64,6 +71,10 @@
         </router-link>
       </nav>
       <div class="flex items-center gap-3">
+        <button type="button" class="no-print grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-500 shadow-sm transition-colors hover:border-brand-200 hover:text-brand-600"
+                :title="$t('lang.kurdish')" @click="toggleLang">
+          {{ lang.current === 'en' ? 'کو' : 'EN' }}
+        </button>
         <span class="hidden items-center gap-2 text-xs font-medium text-slate-500 sm:flex">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Online
         </span>
@@ -75,20 +86,27 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useLangStore } from '../store/lang';
+import { useAuthStore } from '../store/auth';
 
 const { locale, t } = useI18n();
-const route = useRoute();
-const lang = useLangStore();
+const route   = useRoute();
+const router  = useRouter();
+const lang    = useLangStore();
+const auth    = useAuthStore();
 const mobileOpen = ref(false);
 
 const routes = [
-  { name: 'queue',     path: '/queue',     icon: '⌁' },
-  { name: 'patients',  path: '/patients',  icon: '◉' },
-  { name: 'archive',   path: '/archive',   icon: '▤' },
-  { name: 'expenses',  path: '/expenses',  icon: '◇' },
-  { name: 'dashboard', path: '/dashboard', icon: '▦' },
+  { name: 'queue',     path: '/queue',         icon: '⌁' },
+  { name: 'patients',  path: '/patients',      icon: '◉' },
+  { name: 'archive',   path: '/archive',       icon: '▤' },
+  { name: 'plans',     path: '/payment-plans', icon: '💳' },
+  { name: 'inventory', path: '/inventory',     icon: '📦' },
+  { name: 'vendors',   path: '/vendors',       icon: '🏭' },
+  { name: 'cashflow',  path: '/cash-flow',     icon: '📈' },
+  { name: 'expenses',  path: '/expenses',      icon: '◇' },
+  { name: 'dashboard', path: '/dashboard',     icon: '▦' },
 ];
 
 const currentTitle = computed(() => {
@@ -99,5 +117,10 @@ function toggleLang() {
   const next = lang.current === 'en' ? 'ku' : 'en';
   lang.set(next);
   locale.value = next;
+}
+
+async function logout() {
+  await auth.logout();
+  router.push({ name: 'login' });
 }
 </script>

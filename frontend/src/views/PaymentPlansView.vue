@@ -1,0 +1,383 @@
+<template>
+  <section>
+    <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight">{{ $t('plans.title') }}</h2>
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
+          {{ meta.total }} {{ $t('common.results') }}
+        </p>
+      </div>
+      <button class="btn-primary no-print" @click="openCreate">+ {{ $t('plans.new') }}</button>
+    </header>
+
+    <p v-if="error" role="alert"
+       class="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50
+              px-3 py-2 text-sm text-red-700">
+      <span aria-hidden="true">⚠</span>{{ error }}
+    </p>
+
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('plans.search_placeholder')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    >
+      <template #chips>
+        <button type="button" :class="filters.status === 'active' ? 'filter-chip-on' : 'filter-chip-off'"
+                @click="toggleStatus('active')">{{ $t('plans.status.active') }}</button>
+        <button type="button" :class="filters.status === 'completed' ? 'filter-chip-on' : 'filter-chip-off'"
+                @click="toggleStatus('completed')">{{ $t('plans.status.completed') }}</button>
+        <button type="button" :class="filters.status === 'defaulted' ? 'filter-chip-on' : 'filter-chip-off'"
+                @click="toggleStatus('defaulted')">{{ $t('plans.status.defaulted') }}</button>
+        <button type="button" :class="overdueOnly ? 'filter-chip-on' : 'filter-chip-off'"
+                @click="loadOverdue">{{ $t('table.past') }}</button>
+      </template>
+    </DataTableFilters>
+
+    <DataTable
+      :columns="columns"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered || overdueOnly"
+      :empty-text="$t('plans.empty')"
+      empty-icon="💳"
+      row-clickable
+      @sort="toggleSort"
+      @reset="resetFilters"
+      @row-click="openDetail"
+    >
+      <template #cell(patient)="{ row }">
+        <div class="leading-tight">
+          <div>{{ row.patient?.name ?? '—' }}</div>
+          <div class="text-xs text-slate-400">{{ row.patient?.phone || '' }}</div>
+        </div>
+      </template>
+
+      <template #cell(name)="{ row }">
+        <span class="text-slate-700">{{ row.name }}</span>
+      </template>
+
+      <template #cell(total_amount)="{ row }">
+        <span class="font-mono font-medium tabular-nums text-slate-900">{{ fmt(row.total_amount) }}</span>
+      </template>
+
+      <template #cell(remaining)="{ row }">
+        <span class="font-mono tabular-nums" :class="remaining(row) > 0 ? 'text-amber-600' : 'text-emerald-600'">
+          {{ fmt(remaining(row)) }}
+        </span>
+      </template>
+
+      <template #cell(installments)="{ row }">
+        <span class="tabular-nums text-slate-600">
+          {{ settledCount(row) }}/{{ row.installment_count }}
+        </span>
+      </template>
+
+      <template #cell(start_date)="{ row }">
+        <span class="whitespace-nowrap text-slate-600">{{ formatDate(row.start_date) }}</span>
+      </template>
+
+      <template #cell(status)="{ row }">
+        <StatusChip :value="row.status" />
+      </template>
+
+      <template #card="{ row }">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="font-medium text-slate-900">{{ row.patient?.name }}</p>
+            <p class="text-xs text-slate-500">{{ row.name }}</p>
+          </div>
+          <StatusChip :value="row.status" />
+        </div>
+        <p class="mt-2 text-sm font-mono tabular-nums text-slate-700">
+          {{ fmt(row.installment_amount) }} × {{ row.installment_count }}
+          — {{ settledCount(row) }}/{{ $t('plans.settled_of') }}
+        </p>
+      </template>
+    </DataTable>
+
+    <DataTablePagination :meta="meta" :per-page="perPage"
+                         @go="goToPage" @update:per-page="perPage = $event" />
+
+    <!-- Plan detail: installments -->
+    <Modal v-model="showDetail" :title="detail ? `${detail.patient?.name} — ${detail.name}` : ''" max-w-2xl>
+      <div v-if="detail">
+        <div class="mb-4 grid grid-cols-3 gap-3 text-center">
+          <div class="rounded-lg bg-slate-50 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ $t('plans.total') }}</div>
+            <div class="font-mono font-bold tabular-nums text-slate-900">{{ fmt(detail.total_amount) }}</div>
+          </div>
+          <div class="rounded-lg bg-emerald-50 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">{{ $t('plans.paid') }}</div>
+            <div class="font-mono font-bold tabular-nums text-emerald-700">{{ fmt(paidSum(detail)) }}</div>
+          </div>
+          <div class="rounded-lg bg-amber-50 p-3">
+            <div class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">{{ $t('plans.remaining') }}</div>
+            <div class="font-mono font-bold tabular-nums text-amber-700">{{ fmt(remaining(detail)) }}</div>
+          </div>
+        </div>
+
+        <ul class="space-y-2">
+          <li v-for="ins in detail.installments" :key="ins.id"
+              class="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+              :class="installmentClass(ins)">
+            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-bold shadow-sm">#{{ ins.installment_number }}</span>
+            <div class="min-w-0 flex-1 leading-tight">
+              <div class="text-sm font-mono tabular-nums text-slate-900">
+                {{ fmt(ins.amount - ins.amount_paid) }} <span class="text-xs font-normal text-slate-400">{{ $t('currency') }}</span>
+              </div>
+              <div class="text-xs text-slate-400">{{ formatDate(ins.due_date) }}</div>
+            </div>
+            <StatusChipInstallment :value="ins.status" />
+            <div class="flex shrink-0 gap-1.5" v-if="auth.can('payment_plans.pay') && ins.status !== 'paid' && ins.status !== 'waived'">
+              <button class="btn-success btn-sm" @click="askPay(ins)">✓ {{ $t('plans.pay') }}</button>
+              <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')">⊘</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <template #footer>
+        <button class="btn-ghost" @click="showDetail = false">{{ $t('common.close') }}</button>
+      </template>
+    </Modal>
+
+    <!-- Pay installment -->
+    <Modal v-model="showPay" :title="$t('plans.pay_title')">
+      <FormField v-slot="{ id }" :label="$t('checkout.amount_paying_now')" required>
+        <IqdInput :id="id" v-model="payForm.amount" />
+      </FormField>
+      <div class="mt-4">
+        <FormField v-slot="{ id }" :label="$t('plans.paid_date')">
+          <input :id="id" v-model="payForm.paid_date" type="date" class="field" />
+        </FormField>
+      </div>
+      <p class="help-text mt-3">{{ $t('plans.remaining_now') }}:
+        <b class="font-mono">{{ fmt(payTarget ? payTarget.amount - payTarget.amount_paid : 0) }} {{ $t('currency') }}</b>
+      </p>
+      <template #footer>
+        <button class="btn-ghost" @click="showPay = false">{{ $t('common.cancel') }}</button>
+        <button class="btn-success" :disabled="busy" @click="confirmPay">{{ $t('checkout.confirm_payment') }}</button>
+      </template>
+    </Modal>
+
+    <!-- New plan -->
+    <Modal v-model="showCreate" :title="$t('plans.new')" max-w-xl>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <FormField v-slot="{ id }" :label="$t('patient.title')" required class="sm:col-span-2">
+          <select :id="id" v-model="form.patient_id" class="field-select">
+            <option :value="''" disabled>{{ $t('queue.select_patient') }}</option>
+            <option v-for="p in patients" :key="p.id" :value="p.id">{{ p.name }} ({{ p.phone || '—' }})</option>
+          </select>
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.plan_name')" required class="sm:col-span-2">
+          <input :id="id" v-model="form.name" class="field" placeholder="Root Canal Treatment Plan" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.total')" required>
+          <IqdInput :id="id" v-model="form.total_amount" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.down_payment')">
+          <IqdInput :id="id" v-model="form.down_payment" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.per_installment')" required>
+          <IqdInput :id="id" v-model="form.installment_amount" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.count')" required>
+          <input :id="id" v-model.number="form.installment_count" type="number" min="1" max="120" class="field font-mono" />
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.frequency')">
+          <select :id="id" v-model.number="form.frequency_days" class="field-select">
+            <option :value="7">{{ $t('plans.weekly') }}</option>
+            <option :value="30">{{ $t('plans.monthly') }}</option>
+          </select>
+        </FormField>
+        <FormField v-slot="{ id }" :label="$t('plans.start_date')" required>
+          <input :id="id" v-model="form.start_date" type="date" class="field" />
+        </FormField>
+      </div>
+      <p v-if="formError" role="alert"
+         class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ formError }}</p>
+      <template #footer>
+        <button class="btn-ghost" @click="showCreate = false">{{ $t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="busy" @click="create">{{ $t('common.save') }}</button>
+      </template>
+    </Modal>
+
+    <ConfirmDialog v-model="showConfirmWaive" :title="$t('plans.waive')"
+                   :message="$t('plans.waive_confirm')" :danger="true" @confirmed="doWaive" />
+  </section>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import api from '../utils/axios';
+import { useAuthStore } from '../store/auth';
+import DataTable           from '../components/DataTable.vue';
+import DataTableFilters    from '../components/DataTableFilters.vue';
+import DataTablePagination from '../components/DataTablePagination.vue';
+import Modal         from '../components/Modal.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
+import FormField     from '../components/FormField.vue';
+import IqdInput      from '../components/IqdInput.vue';
+import StatusChip          from '../components/PlanStatusChip.vue';
+import StatusChipInstallment from '../components/InstallmentStatusChip.vue';
+import { useDataTable } from '../composables/useDataTable';
+import { formatIQD } from '../utils/iqd';
+import { formatDate } from '../utils/datetime';
+
+const { t } = useI18n();
+const auth = useAuthStore();
+
+const {
+  rows, loading, error, search, filters, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/payment-plans', { filters: { status: '' }, sort: 'created_at', dir: 'desc' });
+
+const fmt = (v) => formatIQD(v || 0);
+
+const columns = computed(() => [
+  { key: 'patient',       label: t('patient.name'),             skeleton: 'md' },
+  { key: 'name',          label: t('plans.plan_name'),          skeleton: 'lg' },
+  { key: 'total_amount',  label: t('plans.total'), sortable: true, skeleton: 'md', initialDir: 'desc' },
+  { key: 'remaining',     label: t('plans.remaining'),          skeleton: 'md' },
+  { key: 'installments',  label: t('plans.progress'),           skeleton: 'sm' },
+  { key: 'start_date',    label: t('plans.start_date'), sortable: true, skeleton: 'md' },
+  { key: 'status',        label: t('aqsat.status'),             skeleton: 'md' },
+]);
+
+const remaining = (plan) =>
+  Math.max(0, plan.total_amount - plan.down_payment -
+    (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0));
+const paidSum = (plan) =>
+  plan.down_payment + (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0);
+const settledCount = (plan) =>
+  (plan.installments ?? []).filter((i) => i.status === 'paid' || i.status === 'waived').length;
+
+function toggleStatus(s) {
+  filters.status = filters.status === s ? '' : s;
+  reload();
+}
+
+// ---- Overdue quick view ----
+const overdueOnly = ref(false);
+const overdueRows = ref([]);
+async function loadOverdue() {
+  if (overdueOnly.value) { overdueOnly.value = false; await load(); return; }
+  overdueOnly.value = true;
+  loading.value = true;
+  try {
+    const { data } = await api.get('/payment-plans/overdue');
+    // Group by plan so each plan appears once with its worst installment.
+    const byPlan = new Map();
+    for (const r of data) {
+      const pid = r.installment.payment_plan_id;
+      if (!byPlan.has(pid) || r.days_overdue > byPlan.get(pid).days_overdue) byPlan.set(pid, r);
+    }
+    overdueRows.value = [...byPlan.values()].map((r) => ({
+      ...r.installment.plan,
+      patient: r.patient ?? r.installment.plan.patient,
+    }));
+  } finally { loading.value = false; }
+}
+
+// ---- Detail ----
+const showDetail = ref(false);
+const detail = ref(null);
+async function openDetail(plan) {
+  detail.value = plan;
+  showDetail.value = true;
+  try {
+    const { data } = await api.get(`/payment-plans/${plan.id}`);
+    detail.value = data;
+    const idx = rows.value.findIndex((r) => r.id === plan.id);
+    if (idx !== -1) rows.value[idx] = data;
+  } catch { /* keep the list version */ }
+}
+function installmentClass(ins) {
+  return {
+    pending:  'border-slate-200',
+    partial:  'border-amber-300 bg-amber-50/60',
+    paid:     'border-emerald-300 bg-emerald-50/60',
+    overdue:  'border-red-300 bg-red-50/60',
+    waived:   'border-slate-200 opacity-60',
+  }[ins.status] ?? 'border-slate-200';
+}
+
+// ---- Pay / waive ----
+const showPay   = ref(false);
+const payTarget = ref(null);
+const payForm   = ref({ amount: 0, paid_date: new Date().toISOString().slice(0, 10) });
+const busy      = ref(false);
+
+function askPay(ins) {
+  payTarget.value = ins;
+  payForm.value.amount = ins.amount - ins.amount_paid;
+  showPay.value = true;
+}
+async function confirmPay() {
+  busy.value = true;
+  try {
+    await api.post(`/payment-plans/installments/${payTarget.value.id}/pay`, {
+      amount: Number(payForm.value.amount),
+      paid_date: payForm.value.paid_date,
+    });
+    showPay.value = false;
+    await openDetail(detail.value);
+  } catch (e) {
+    error.value = e.userMessage;
+  } finally { busy.value = false; }
+}
+
+const showConfirmWaive = ref(false);
+const waiveTarget = ref(null);
+function waive(ins) { waiveTarget.value = ins; showConfirmWaive.value = true; }
+async function doWaive() {
+  try {
+    await api.post(`/payment-plans/installments/${waiveTarget.value.id}/waive`);
+    await openDetail(detail.value);
+  } catch (e) { error.value = e.userMessage; }
+}
+
+// ---- Create ----
+const showCreate = ref(false);
+const patients   = ref([]);
+const formError  = ref('');
+const form = ref({});
+
+async function openCreate() {
+  form.value = {
+    patient_id: '', name: '', total_amount: 0, down_payment: 0,
+    installment_amount: 0, installment_count: 1, frequency_days: 30,
+    start_date: new Date().toISOString().slice(0, 10),
+  };
+  formError.value = '';
+  showCreate.value = true;
+  if (!patients.value.length) {
+    try {
+      const { data } = await api.get('/patients', { params: { per_page: 200 } });
+      patients.value = data.data ?? data;
+    } catch { /* dropdown stays empty */ }
+  }
+}
+async function create() {
+  busy.value = true;
+  formError.value = '';
+  try {
+    await api.post('/payment-plans', {
+      ...form.value,
+      total_amount: Number(form.value.total_amount),
+      down_payment: Number(form.value.down_payment),
+      installment_amount: Number(form.value.installment_amount),
+    });
+    showCreate.value = false;
+    reload();
+  } catch (e) { formError.value = e.userMessage; }
+  finally { busy.value = false; }
+}
+
+onMounted(load);
+</script>

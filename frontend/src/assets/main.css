@@ -87,62 +87,75 @@ body { background: #f1f2f7; }
 
   .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card; }
 
-  /* ----- DataTable chrome — modern borderless design -----
-     Hairline row dividers only, soft header band, generous row height.
-     No vertical borders: the eye tracks rows, not cells. */
+  /* ----- DataTable — Vristo-style clean table -----
+     Airy rows, quiet dividers, sticky header, no vertical borders. */
   .table-shell {
-    @apply rounded-xl border border-slate-200/90 bg-white shadow-card;
+    @apply rounded-xl border border-slate-200/70 bg-white shadow-card;
   }
   .table-filters {
-    @apply rounded-xl border border-slate-200/90 bg-white shadow-sm;
+    @apply rounded-xl border border-slate-200/70 bg-white shadow-sm;
   }
   .table-toolbar {
-    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3;
+    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-4 py-3;
   }
   .data-table-scroll {
-    max-height: calc(100vh - 23rem);
+    max-height: calc(100vh - 22rem);
     min-height: 12rem;
     scrollbar-color: #cbd5e1 transparent;
     scrollbar-width: thin;
   }
-  .data-table-scroll::-webkit-scrollbar { width: 8px; }
+  .data-table-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
   .data-table-scroll::-webkit-scrollbar-thumb {
     border-radius: 999px;
     background: #cbd5e1;
   }
-  /* Header: clean white band, muted labels, single bottom rule. */
+  .data-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  /* Header: soft grey band, dark readable labels, sticky while scrolling. */
   .data-table-head {
-    @apply bg-white;
+    @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm;
   }
   .data-table-head tr {
-    @apply border-b border-slate-200/80;
+    @apply border-b border-slate-200;
   }
-  .data-table-head th {
-    @apply whitespace-nowrap px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-400;
+  .data-table-th {
+    @apply whitespace-nowrap px-5 py-3 text-[13px] font-bold text-slate-600;
   }
-  .data-table-head button {
-    @apply min-h-7 rounded-md px-1.5 py-1 transition-colors;
+  .dt-sort {
+    @apply inline-flex min-h-7 items-center gap-1 rounded-md px-1.5 py-0.5 transition-colors
+           hover:bg-slate-200/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
   }
-  .data-table-head button:hover {
-    @apply bg-slate-100 text-slate-800;
+  .dt-sort-arrow {
+    @apply text-[11px] leading-none text-slate-300 transition-colors;
   }
-  /* Rows: hairline divider, clear hover, no cell borders, taller rows. */
+  .dt-sort-arrow.is-on {
+    @apply font-bold text-brand-600;
+  }
+  /* Rows: hairline dividers, calm hover, generous height. */
   .data-table-row {
-    @apply border-b border-slate-100 transition-colors duration-100 hover:bg-slate-50;
+    @apply border-b border-slate-100 transition-colors duration-100 hover:bg-brand-50/50;
   }
   .data-table-row:last-child {
     @apply border-b-0;
   }
-  .data-table-row td {
-    @apply px-4 py-3.5 text-[13px] text-slate-600;
+  .data-table-row.is-highlighted {
+    @apply bg-brand-50/70;
+  }
+  .data-table-td {
+    @apply px-5 py-3.5 text-sm text-slate-600;
     overflow-wrap: anywhere;
   }
   .data-table-row td:first-child {
-    @apply font-medium text-slate-900;
+    @apply font-semibold text-slate-800;
   }
-  .data-table {
-    border-collapse: separate;
-    border-spacing: 0;
+  /* Totals row: emphasised top rule, grey band. */
+  .data-table-foot {
+    @apply border-t-2 border-slate-200 bg-slate-50/70 text-sm font-bold text-slate-700;
+  }
+  .data-table-foot td {
+    @apply px-5 py-3;
   }
   .table-note-expand {
     display: -webkit-box;

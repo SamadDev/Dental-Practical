@@ -69,7 +69,7 @@
       @reset="resetFilters"
     />
 
-    <DataTable
+    <AppDataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -78,7 +78,10 @@
       :is-filtered="isFiltered"
       :empty-text="$t('vendors.empty')"
       empty-icon="🏭"
+      :meta="meta"
+      :per-page="perPage"
       @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
       @reset="resetFilters"
     >
       <template #cell(name)="{ row }">
@@ -109,10 +112,8 @@
         <p class="font-medium text-slate-900">{{ row.name }} <span class="text-xs font-normal text-slate-400">{{ row.contact_person }}</span></p>
         <p class="mt-1 text-xs text-slate-500">{{ row.phone || '—' }} · {{ $t('vendors.net', { n: row.payment_terms_days }) }}</p>
       </template>
-    </DataTable>
+    </AppDataTable>
 
-    <DataTablePagination :meta="meta" :per-page="perPage"
-                         @go="goToPage" @update:per-page="perPage = $event" />
 
     <!-- New vendor -->
     <Modal v-model="showCreate" :title="$t('vendors.new')">
@@ -255,9 +256,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import { useAuthStore } from '../store/auth';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';

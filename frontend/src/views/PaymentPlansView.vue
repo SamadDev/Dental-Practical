@@ -35,7 +35,7 @@
       </template>
     </DataTableFilters>
 
-    <DataTable
+    <AppDataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -45,7 +45,10 @@
       :empty-text="$t('plans.empty')"
       empty-icon="💳"
       row-clickable
+      :meta="meta"
+      :per-page="perPage"
       @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
       @reset="resetFilters"
       @row-click="openDetail"
     >
@@ -97,10 +100,8 @@
           — {{ settledCount(row) }}/{{ $t('plans.settled_of') }}
         </p>
       </template>
-    </DataTable>
+    </AppDataTable>
 
-    <DataTablePagination :meta="meta" :per-page="perPage"
-                         @go="goToPage" @update:per-page="perPage = $event" />
 
     <!-- Plan detail: installments -->
     <Modal v-model="showDetail" :title="detail ? `${detail.patient?.name} — ${detail.name}` : ''" max-w-2xl>
@@ -215,9 +216,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import { useAuthStore } from '../store/auth';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';

@@ -84,7 +84,7 @@
       </template>
     </DataTableFilters>
 
-    <DataTable
+    <AppDataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -94,7 +94,10 @@
       row-clickable
       :empty-text="$t('patient.empty')"
       empty-icon="🦷"
+      :meta="meta"
+      :per-page="perPage"
       @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
       @reset="resetFilters"
       @row-click="(p) => $router.push(`/patients/${p.id}`)"
     >
@@ -227,14 +230,8 @@
           <button class="btn-danger btn-sm" @click="askDelete(row)">🗑</button>
         </div>
       </template>
-    </DataTable>
+    </AppDataTable>
 
-    <DataTablePagination
-      :meta="meta"
-      :per-page="perPage"
-      @go="goToPage"
-      @update:per-page="perPage = $event"
-    />
 
     <!-- Add / Edit form -->
     <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')">
@@ -316,9 +313,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';

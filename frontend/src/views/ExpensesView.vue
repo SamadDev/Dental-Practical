@@ -109,7 +109,7 @@
       </template>
     </DataTableFilters>
 
-    <DataTable
+    <AppDataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -118,7 +118,10 @@
       :is-filtered="isFiltered"
       :empty-text="$t('expense.empty')"
       empty-icon="🧾"
+      :meta="meta"
+      :per-page="perPage"
       @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
       @reset="resetFilters"
     >
       <template #cell(created_at)="{ row }">
@@ -164,14 +167,8 @@
         <p class="mt-1 text-sm text-slate-700">{{ row.description }}</p>
         <p class="mt-1 text-xs text-slate-400">{{ formatDateTime(row.created_at) }}</p>
       </template>
-    </DataTable>
+    </AppDataTable>
 
-    <DataTablePagination
-      :meta="meta"
-      :per-page="perPage"
-      @go="goToPage"
-      @update:per-page="perPage = $event"
-    />
 
     <ConfirmDialog
       v-model="showConfirmAdd"
@@ -195,9 +192,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';

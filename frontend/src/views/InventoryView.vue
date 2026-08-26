@@ -40,7 +40,7 @@
       </template>
     </DataTableFilters>
 
-    <DataTable
+    <AppDataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -49,7 +49,10 @@
       :is-filtered="isFiltered"
       :empty-text="$t('inventory.empty')"
       empty-icon="📦"
+      :meta="meta"
+      :per-page="perPage"
       @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
       @reset="resetFilters"
     >
       <template #cell(name)="{ row }">
@@ -97,10 +100,8 @@
         </div>
         <p class="mt-1 text-xs text-slate-500">{{ row.vendor?.name ?? '—' }} · {{ fmt(row.unit_cost) }} {{ $t('currency') }}</p>
       </template>
-    </DataTable>
+    </AppDataTable>
 
-    <DataTablePagination :meta="meta" :per-page="perPage"
-                         @go="goToPage" @update:per-page="perPage = $event" />
 
     <!-- Move stock -->
     <Modal v-model="showMove" :title="$t('inventory.move_title', { item: moveTarget?.name })">
@@ -187,9 +188,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import { useAuthStore } from '../store/auth';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';

@@ -76,7 +76,7 @@
         {{ $t('archive.title') }}
       </h3>
 
-      <DataTable
+      <AppDataTable
         :columns="columns"
         :rows="rows"
         :loading="loading"
@@ -85,7 +85,10 @@
         :is-filtered="isFiltered"
         :empty-text="$t('archive.empty')"
         empty-icon="🗂"
-        @sort="toggleSort"
+        :meta="meta"
+      :per-page="perPage"
+      @sort="toggleSort"
+      @page="(p, r) => { perPage = r; goToPage(p); }"
         @reset="resetFilters"
       >
         <template #toolbar>
@@ -218,15 +221,9 @@
             💳 {{ $t('checkout.pay_debt') }}
           </button>
         </template>
-      </DataTable>
+      </AppDataTable>
     </div>
 
-    <DataTablePagination
-      :meta="meta"
-      :per-page="perPage"
-      @go="goToPage"
-      @update:per-page="perPage = $event"
-    />
 
     <PayDebtDialog v-model="showPay" :visit="payVisit" @completed="onPaid" />
   </section>
@@ -235,9 +232,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import DataTable           from '../components/DataTable.vue';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import DataTablePagination from '../components/DataTablePagination.vue';
+import AppDataTable       from '../components/AppDataTable.vue';
 import PayDebtDialog from '../components/PayDebtDialog.vue';
 import FormField     from '../components/FormField.vue';
 import StatusBadge   from '../components/StatusBadge.vue';

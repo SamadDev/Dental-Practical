@@ -10,7 +10,9 @@
         v-for="m in modules" :key="m.to" :to="m.to"
         class="home-tile group"
       >
-        <span class="home-tile-icon" :style="{ background: m.bg }" aria-hidden="true">{{ m.icon }}</span>
+        <span class="home-tile-icon" :style="{ background: m.bg, color: m.fg }" aria-hidden="true">
+          <Icon :name="m.icon" :size="34" :stroke-width="1.75" />
+        </span>
         <span class="home-tile-label">{{ $t(`nav.${m.name}`) }}</span>
       </router-link>
     </div>
@@ -18,16 +20,18 @@
 </template>
 
 <script setup>
+import Icon from '../components/Icon.vue';
+
 const modules = [
-  { name: 'queue',     to: '/queue',         icon: '📅', bg: '#e0f2fe' },
-  { name: 'patients',  to: '/patients',      icon: '🗂️', bg: '#dbeafe' },
-  { name: 'archive',   to: '/archive',       icon: '🦷', bg: '#fce7f3' },
-  { name: 'plans',     to: '/payment-plans', icon: '💳', bg: '#d1fae5' },
-  { name: 'inventory', to: '/inventory',     icon: '📦', bg: '#fef3c7' },
-  { name: 'vendors',   to: '/vendors',       icon: '🏭', bg: '#ede9fe' },
-  { name: 'cashflow',  to: '/cash-flow',     icon: '📈', bg: '#dcfce7' },
-  { name: 'expenses',  to: '/expenses',      icon: '🧾', bg: '#ffedd5' },
-  { name: 'dashboard', to: '/dashboard',     icon: '📊', bg: '#e0e7ff' },
+  { name: 'queue',     to: '/queue',         icon: 'calendar',     bg: '#eef2ff', fg: '#4361ee' },
+  { name: 'patients',  to: '/patients',      icon: 'folder',       bg: '#e0f2fe', fg: '#0369a1' },
+  { name: 'archive',   to: '/archive',       icon: 'archive',      bg: '#fdf2f8', fg: '#be185d' },
+  { name: 'plans',     to: '/payment-plans', icon: 'credit-card',  bg: '#ecfdf5', fg: '#047857' },
+  { name: 'inventory', to: '/inventory',     icon: 'package',      bg: '#fefce8', fg: '#a16207' },
+  { name: 'vendors',   to: '/vendors',       icon: 'factory',      bg: '#f5f3ff', fg: '#6d28d9' },
+  { name: 'cashflow',  to: '/cash-flow',     icon: 'trending-up',  bg: '#f0fdf4', fg: '#15803d' },
+  { name: 'expenses',  to: '/expenses',      icon: 'receipt',      bg: '#fff7ed', fg: '#c2410c' },
+  { name: 'dashboard', to: '/dashboard',     icon: 'bar-chart',    bg: '#eff6ff', fg: '#1d4ed8' },
 ];
 </script>
 
@@ -39,7 +43,7 @@ const modules = [
          focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
 }
 .home-tile-icon {
-  @apply grid h-20 w-20 place-items-center rounded-2xl text-4xl shadow-sm
+  @apply grid h-20 w-20 place-items-center rounded-2xl shadow-sm
          transition-transform duration-200 group-hover:scale-110;
 }
 .home-tile-label {

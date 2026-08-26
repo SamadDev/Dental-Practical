@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 /* Direction-aware root font selection driven by [dir] attribute. */
-html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
-html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
-body { background: #f6f7fb; }
+html[dir='rtl'] body { font-family: 'Nunito', 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
+html[dir='ltr'] body { font-family: 'Nunito', system-ui, sans-serif; }
+body { background: #f1f2f7; }
 
 /* Custom utilities */
 @layer utilities {
@@ -18,25 +18,34 @@ body { background: #f6f7fb; }
 }
 
 @layer components {
-  .app-shell { background: #f6f7fb; }
+  .app-shell { background: #f1f2f7; }
+  /* Vristo-style sidebar: white, full height, permanent on lg+. */
   .app-sidebar {
     @apply fixed inset-y-0 start-0 z-40 flex w-64 -translate-x-full flex-col border-e border-slate-200/80 bg-white transition-transform duration-200;
   }
   [dir='rtl'] .app-sidebar { transform: translateX(100%); }
   [dir='rtl'] .app-sidebar.is-open { transform: translateX(0); }
   .app-sidebar.is-open { transform: translateX(0); }
+  @media (min-width: 1024px) {
+    .app-sidebar { transform: translateX(0); }
+    [dir='rtl'] .app-sidebar { transform: translateX(0); }
+  }
   .app-topbar {
     @apply sticky top-0 z-20 flex min-h-[4.5rem] items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8;
   }
   .app-content { margin-inline-start: 0; }
+  @media (min-width: 1024px) {
+    .app-content { margin-inline-start: 16rem; }
+  }
+  /* Nav links: Vristo's rounded pill with soft tinted active state. */
   .app-nav-link.is-active {
-    @apply bg-brand-50 text-brand-700 shadow-sm;
+    @apply bg-brand-600/10 font-bold text-brand-600 shadow-none;
   }
   .app-nav-link.is-active .app-nav-icon {
-    @apply bg-brand-600 text-white shadow-sm shadow-brand-600/20;
+    @apply bg-brand-600 text-white shadow-sm shadow-brand-600/30;
   }
   .app-nav-icon {
-    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-sm text-slate-400 transition-colors group-hover:bg-slate-100 group-hover:text-slate-700;
+    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm text-slate-500 transition-colors group-hover:bg-slate-200/70 group-hover:text-slate-700;
   }
 }
 
@@ -47,9 +56,9 @@ body { background: #f6f7fb; }
   /* .form-* come from @tailwindcss/forms (class strategy) and restore the
      border that preflight removes. */
   .field {
-    @apply form-input block w-full rounded-lg border-slate-300 text-sm text-slate-900
-           shadow-sm transition-colors placeholder:text-slate-400
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
+    @apply form-input block w-full rounded-lg border-slate-200 bg-white text-sm text-slate-900
+           shadow-none transition-colors placeholder:text-slate-400
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
   }
   .field-select   { @apply field form-select pe-9; }
   .field-textarea { @apply field form-textarea leading-relaxed; }
@@ -66,17 +75,17 @@ body { background: #f6f7fb; }
 
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg
-           px-4 py-2 text-sm font-semibold transition-colors focus:outline-none
+           px-4 py-2 text-sm font-bold transition-colors focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
            disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-primary { @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700; }
-  .btn-ghost   { @apply btn border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50; }
+  .btn-primary { @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/30 hover:bg-brand-700; }
+  .btn-ghost   { @apply btn border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900; }
   .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50; }
-  .btn-success { @apply btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700; }
+  .btn-success { @apply btn bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 hover:bg-emerald-700; }
   .btn-sm      { @apply px-3 py-1.5 text-xs; }
 
-  .card { @apply rounded-xl border border-slate-200 bg-white shadow-card; }
+  .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card; }
 
   /* ----- DataTable chrome — modern borderless design -----
      Hairline row dividers only, soft header band, generous row height.
@@ -106,10 +115,10 @@ body { background: #f6f7fb; }
     @apply bg-white;
   }
   .data-table-head tr {
-    @apply border-b border-slate-200;
+    @apply border-b border-slate-200/80;
   }
   .data-table-head th {
-    @apply whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500;
+    @apply whitespace-nowrap px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-400;
   }
   .data-table-head button {
     @apply min-h-7 rounded-md px-1.5 py-1 transition-colors;

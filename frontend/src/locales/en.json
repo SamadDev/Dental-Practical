@@ -3,6 +3,7 @@
     "title": "Dental Practi-Smart"
   },
   "nav": {
+    "workspace": "Menu",
     "home": "Main Menu",
     "queue": "Daily Queue",
     "patients": "Patients",

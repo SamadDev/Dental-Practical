@@ -33,9 +33,9 @@ const modules = [
 
 <style scoped>
 .home-tile {
-  @apply flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-sky-100
+  @apply flex flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200/70
          bg-white px-4 py-8 shadow-card transition-all duration-200
-         hover:-translate-y-1 hover:border-sky-200 hover:shadow-card-hov
+         hover:-translate-y-1 hover:border-brand-300 hover:shadow-card-hov
          focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
 }
 .home-tile-icon {
@@ -43,6 +43,6 @@ const modules = [
          transition-transform duration-200 group-hover:scale-110;
 }
 .home-tile-label {
-  @apply text-sm font-bold text-slate-700 group-hover:text-slate-900;
+  @apply text-sm font-extrabold text-slate-600 group-hover:text-brand-600;
 }
 </style>

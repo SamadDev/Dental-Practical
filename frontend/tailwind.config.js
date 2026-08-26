@@ -7,22 +7,24 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Bundled locally — see src/assets/fonts/fonts.css
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        ku:   ['Vazirmatn', 'Noto Sans Arabic', 'sans-serif'],
+        // Nunito — Vristo's rounded, friendly UI font. Bundled via Google
+        // Fonts in index.html with system fallbacks here.
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        ku:   ['Nunito', 'Vazirmatn', 'Noto Sans Arabic', 'sans-serif'],
       },
       colors: {
+        // Vristo primary — vivid indigo-blue.
         brand: {
-          50:  '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50:  '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#5a6ef0',
+          600: '#4361ee',
+          700: '#374cd1',
+          800: '#2f3fa8',
+          900: '#2b3a85',
         },
       },
       boxShadow: {

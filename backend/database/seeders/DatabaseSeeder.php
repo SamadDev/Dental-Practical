@@ -20,6 +20,10 @@ class DatabaseSeeder extends Seeder
             $this->call(UserSeeder::class);
         }
 
+        // Realistic operating data: vendors, stock, POs, payment plans,
+        // cash-flow ledger. Idempotent — safe on every deploy.
+        $this->call(OperationsSeeder::class);
+
         $patients = [
             [
                 'name' => 'شیلان ئەحمەد (Shilan Ahmad)',

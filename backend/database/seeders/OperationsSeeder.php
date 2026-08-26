@@ -135,7 +135,7 @@ class OperationsSeeder extends Seeder
                     'installment_count' => $spec['count'],
                     'start_date' => $spec['start']->toDateString(),
                     'status' => $spec['status'],
-                    'notes' => 'Seeded demo plan',
+                    'notes' => null,
                 ],
             );
 

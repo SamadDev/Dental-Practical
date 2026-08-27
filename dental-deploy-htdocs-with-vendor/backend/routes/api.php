@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health check
+    Route::get('health', fn () => response()->json([
+        'status' => 'ok',
+        'commit' => file_exists(storage_path('app/deploy.json')) ? json_decode(file_get_contents(storage_path('app/deploy.json')), true) : null,
+    ]));
+
     // Patients — /stats is declared first so /patients/{patient} doesn't swallow it.
     Route::get   ('patients/stats', [PatientController::class, 'stats']);
     Route::apiResource('patients', PatientController::class);

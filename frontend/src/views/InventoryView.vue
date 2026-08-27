@@ -187,7 +187,6 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
-import { useAuthStore } from '../store/auth';
 import DataTableFilters    from '../components/DataTableFilters.vue';
 import AppDataTable       from '../components/AppDataTable.vue';
 import Modal     from '../components/Modal.vue';
@@ -198,7 +197,6 @@ import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
-const auth = useAuthStore();
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,

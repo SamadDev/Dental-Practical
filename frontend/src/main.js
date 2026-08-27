@@ -11,7 +11,6 @@ import ku from './locales/ku.json';
 import { useLangStore } from './store/lang';
 import './assets/main.css';
 
-// PrimeVue theme — Aura preset recolored to the app's indigo brand.
 const VristoPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -47,7 +46,6 @@ const app = createApp(App)
     },
   });
 
-// Sync <html dir/lang> once on boot so the very first paint is already correct.
 const lang = useLangStore();
 lang.set(lang.current);
 i18n.global.locale.value = lang.current;

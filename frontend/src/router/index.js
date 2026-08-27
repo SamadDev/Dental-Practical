@@ -8,16 +8,11 @@ import ExpensesView       from '../views/ExpensesView.vue';
 import PaymentPlansView   from '../views/PaymentPlansView.vue';
 import InventoryView      from '../views/InventoryView.vue';
 import VendorsView        from '../views/VendorsView.vue';
-import CashFlowView       from '../views/CashFlowView.vue';
-import LoginView          from '../views/LoginView.vue';
 import HomeView           from '../views/HomeView.vue';
-import { useAuthStore } from '../store/auth';
 
-// Hash history works perfectly when serving a static dist/ from any local file path.
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/login',           component: LoginView,         name: 'login', meta: { public: true } },
     { path: '/',                redirect: '/home' },
     { path: '/home',            component: HomeView,          name: 'home' },
     { path: '/queue',           component: QueueView,         name: 'queue' },
@@ -29,14 +24,7 @@ const router = createRouter({
     { path: '/payment-plans',   component: PaymentPlansView,  name: 'plans' },
     { path: '/inventory',       component: InventoryView,     name: 'inventory' },
     { path: '/vendors',         component: VendorsView,       name: 'vendors' },
-    { path: '/cash-flow',       component: CashFlowView,      name: 'cashflow' },
   ],
-});
-
-router.beforeEach((to) => {
-  const auth = useAuthStore();
-  if (!to.meta.public && !auth.isLoggedIn) return { name: 'login' };
-  if (to.name === 'login' && auth.isLoggedIn) return { path: '/' };
 });
 
 export default router;

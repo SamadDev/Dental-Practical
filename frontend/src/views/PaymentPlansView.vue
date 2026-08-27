@@ -215,21 +215,61 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
-import { useAuthStore } from '../store/auth';
 import DataTableFilters    from '../components/DataTableFilters.vue';
 import AppDataTable       from '../components/AppDataTable.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import IqdInput      from '../components/IqdInput.vue';
-import StatusChip          from '../components/PlanStatusChip.vue';
-import StatusChipInstallment from '../components/InstallmentStatusChip.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
-const auth = useAuthStore();
+
+// Inline status chip components
+const StatusChip = {
+  props: ['value'],
+  template: `
+    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border" :class="cls">
+      {{ $t('plans.status.' + value) }}
+    </span>
+  `,
+  setup(props) {
+    const cls = computed(() => {
+      const palettes = {
+        active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
+        completed: 'bg-blue-50 text-blue-700 border-blue-200',
+        defaulted: 'bg-red-50 text-red-700 border-red-200',
+        cancelled: 'bg-slate-100 text-slate-500 border-slate-200',
+      };
+      return palettes[props.value] ?? 'bg-slate-100 text-slate-600 border-slate-200';
+    });
+    return { cls };
+  }
+};
+
+const StatusChipInstallment = {
+  props: ['value'],
+  template: `
+    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border" :class="cls">
+      {{ $t('plans.installment_status.' + value) }}
+    </span>
+  `,
+  setup(props) {
+    const cls = computed(() => {
+      const palettes = {
+        pending:  'bg-slate-100 text-slate-600 border-slate-200',
+        partial:  'bg-amber-50 text-amber-700 border-amber-200',
+        paid:     'bg-emerald-50 text-emerald-700 border-emerald-200',
+        overdue:  'bg-red-50 text-red-700 border-red-200',
+        waived:   'bg-slate-100 text-slate-400 border-slate-200',
+      };
+      return palettes[props.value] ?? 'bg-slate-100 text-slate-600 border-slate-200';
+    });
+    return { cls };
+  }
+};
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,

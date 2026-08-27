@@ -46,14 +46,6 @@
           </span>
           <span class="flex-1">{{ lang.current === 'en' ? $t('lang.kurdish') : $t('lang.english') }}</span>
         </button>
-        <button v-if="auth.isLoggedIn" type="button"
-                class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-semibold text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                @click="logout">
-          <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400" aria-hidden="true">
-            <Icon name="log-out" :size="15" />
-          </span>
-          <span class="flex-1">{{ $t('auth.sign_out') }}</span>
-        </button>
       </div>
     </aside>
 
@@ -82,29 +74,20 @@
         <span class="hidden items-center gap-2 text-xs font-bold text-slate-500 sm:flex">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Online
         </span>
-        <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pe-3 ps-1 shadow-sm">
-          <span class="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-xs font-extrabold text-white">
-            {{ initials }}
-          </span>
-          <span class="hidden text-xs font-bold text-slate-600 md:block">{{ auth.user?.name ?? '—' }}</span>
-        </div>
       </div>
-  </header>
+    </header>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useLangStore } from '../store/lang';
-import { useAuthStore } from '../store/auth';
 import Icon from './Icon.vue';
 
 const { locale, t } = useI18n();
 const route   = useRoute();
-const router  = useRouter();
 const lang    = useLangStore();
-const auth    = useAuthStore();
 const mobileOpen = ref(false);
 
 const routes = [
@@ -115,7 +98,6 @@ const routes = [
   { name: 'plans',     path: '/payment-plans', icon: 'credit-card' },
   { name: 'inventory', path: '/inventory',     icon: 'package' },
   { name: 'vendors',   path: '/vendors',       icon: 'factory' },
-  { name: 'cashflow',  path: '/cash-flow',     icon: 'trending-up' },
   { name: 'expenses',  path: '/expenses',      icon: 'receipt' },
   { name: 'dashboard', path: '/dashboard',     icon: 'bar-chart' },
 ];
@@ -124,19 +106,9 @@ const currentTitle = computed(() => {
   return route.name ? t(`nav.${route.name}`) : t('app.title');
 });
 
-const initials = computed(() => {
-  const name = auth.user?.name ?? '';
-  return name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
-});
-
 function toggleLang() {
   const next = lang.current === 'en' ? 'ku' : 'en';
   lang.set(next);
   locale.value = next;
-}
-
-async function logout() {
-  await auth.logout();
-  router.push({ name: 'login' });
 }
 </script>

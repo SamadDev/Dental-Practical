@@ -6,8 +6,8 @@
         <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
       <div class="flex gap-2 no-print">
-        <button v-if="auth.can('vendors.po')" class="btn-ghost" @click="openPO" :title="$t('po.new')"><Icon name="plus" :size="16" /></button>
-        <button v-if="auth.can('vendors.create')" class="btn-primary" @click="openCreate" :title="$t('vendors.new')"><Icon name="plus" :size="16" /></button>
+        <button class="btn-ghost" @click="openPO" :title="$t('po.new')"><Icon name="plus" :size="16" /></button>
+        <button class="btn-primary" @click="openCreate" :title="$t('vendors.new')"><Icon name="plus" :size="16" /></button>
       </div>
     </header>
 
@@ -18,7 +18,7 @@
     </p>
 
     <!-- Purchase orders -->
-    <div v-if="auth.can('vendors.view')" class="card mb-6 overflow-hidden">
+    <div class="card mb-6 overflow-hidden">
       <div class="flex min-h-12 items-center justify-between border-b border-slate-200 px-4 py-3">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">{{ $t('po.title') }}</h3>
         <select v-model="poStatus" class="field-select !w-auto !py-1 text-xs" @change="loadPOs">
@@ -305,7 +305,7 @@ async function loadPOs() {
 }
 
 function canReceive(po) {
-  return auth.can('vendors.po') && ['draft', 'sent', 'confirmed', 'partial'].includes(po.status);
+  return ['draft', 'sent', 'confirmed', 'partial'].includes(po.status);
 }
 function poStatusClass(s) {
   return {

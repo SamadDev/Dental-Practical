@@ -10,7 +10,7 @@
           </template>
         </p>
       </div>
-      <button v-if="auth.can('inventory.move')" class="btn-primary no-print" @click="openCreate" :title="$t('inventory.new')"><Icon name="plus" :size="16" /></button>
+      <button class="btn-primary no-print" @click="openCreate" :title="$t('inventory.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -81,7 +81,7 @@
       </template>
 
       <template #cell(actions)="{ row }">
-        <div v-if="auth.can('inventory.move')" class="flex justify-end gap-1.5 no-print">
+        <div class="flex justify-end gap-1.5 no-print">
           <button class="btn-ghost btn-sm" @click="openMove(row)" :title="$t('inventory.move')"><Icon name="repeat" :size="14" /></button>
         </div>
       </template>

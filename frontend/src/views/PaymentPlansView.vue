@@ -133,7 +133,7 @@
               <div class="text-xs text-slate-400">{{ formatDate(ins.due_date) }}</div>
             </div>
             <StatusChipInstallment :value="ins.status" />
-            <div class="flex shrink-0 gap-1.5" v-if="auth.can('payment_plans.pay') && ins.status !== 'paid' && ins.status !== 'waived'">
+            <div class="flex shrink-0 gap-1.5" v-if="ins.status !== 'paid' && ins.status !== 'waived'">
               <button class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
               <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')"><Icon name="x" :size="14" /></button>
             </div>

@@ -7,7 +7,7 @@
           {{ meta.total }} {{ $t('common.results') }}
         </p>
       </div>
-      <button class="btn-primary no-print" @click="openCreate">+ {{ $t('plans.new') }}</button>
+      <button class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -134,8 +134,8 @@
             </div>
             <StatusChipInstallment :value="ins.status" />
             <div class="flex shrink-0 gap-1.5" v-if="auth.can('payment_plans.pay') && ins.status !== 'paid' && ins.status !== 'waived'">
-              <button class="btn-success btn-sm" @click="askPay(ins)">✓ {{ $t('plans.pay') }}</button>
-              <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')">⊘</button>
+              <button class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
+              <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')"><Icon name="x" :size="14" /></button>
             </div>
           </li>
         </ul>
@@ -212,7 +212,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
@@ -221,11 +221,13 @@ import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import IqdInput      from '../components/IqdInput.vue';
+import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
+const auth = inject('auth');
 
 // Inline status chip components
 const StatusChip = {

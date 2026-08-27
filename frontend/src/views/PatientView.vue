@@ -42,9 +42,7 @@
       <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="font-semibold text-slate-900">{{ $t('patient.title') }}</h3>
-          <button class="btn-ghost btn-sm" @click="openEdit">
-            ✏️ {{ $t('common.edit') }}
-          </button>
+          <button class="btn-ghost btn-sm" @click="openEdit" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
         </div>
         <dl class="space-y-3 text-sm">
           <div class="flex justify-between gap-4 border-b border-slate-100 pb-3">
@@ -208,6 +206,7 @@ import api from '../utils/axios';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
+import Icon from '../components/Icon.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';

@@ -10,9 +10,7 @@
           </template>
         </p>
       </div>
-      <button v-if="auth.can('inventory.move')" class="btn-primary no-print" @click="openCreate">
-        + {{ $t('inventory.new') }}
-      </button>
+      <button v-if="auth.can('inventory.move')" class="btn-primary no-print" @click="openCreate" :title="$t('inventory.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -84,7 +82,7 @@
 
       <template #cell(actions)="{ row }">
         <div v-if="auth.can('inventory.move')" class="flex justify-end gap-1.5 no-print">
-          <button class="btn-ghost btn-sm" @click="openMove(row)">⇄ {{ $t('inventory.move') }}</button>
+          <button class="btn-ghost btn-sm" @click="openMove(row)" :title="$t('inventory.move')"><Icon name="repeat" :size="14" /></button>
         </div>
       </template>
 
@@ -184,7 +182,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
@@ -192,11 +190,13 @@ import AppDataTable       from '../components/AppDataTable.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';
+import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
+const auth = inject('auth');
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,

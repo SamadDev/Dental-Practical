@@ -6,8 +6,8 @@
         <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
       <div class="flex gap-2 no-print">
-        <button v-if="auth.can('vendors.po')" class="btn-ghost" @click="openPO">＋ {{ $t('po.new') }}</button>
-        <button v-if="auth.can('vendors.create')" class="btn-primary" @click="openCreate">+ {{ $t('vendors.new') }}</button>
+        <button v-if="auth.can('vendors.po')" class="btn-ghost" @click="openPO" :title="$t('po.new')"><Icon name="plus" :size="16" /></button>
+        <button v-if="auth.can('vendors.create')" class="btn-primary" @click="openCreate" :title="$t('vendors.new')"><Icon name="plus" :size="16" /></button>
       </div>
     </header>
 
@@ -51,7 +51,7 @@
               </td>
               <td class="no-print px-4 py-3 text-end">
                 <button v-if="canReceive(po)" class="btn-success btn-sm"
-                        @click.stop="openReceive(po)">↓ {{ $t('po.receive') }}</button>
+                        @click.stop="openReceive(po)" :title="$t('po.receive')"><Icon name="download" :size="14" /></button>
               </td>
             </tr>
           </tbody>
@@ -179,7 +179,7 @@
         </FormField>
         <button type="button" class="btn-danger btn-sm h-9" @click="poForm.items.splice(idx, 1)">✕</button>
       </div>
-      <button type="button" class="btn-ghost btn-sm mt-1" @click="addPOLine">+ {{ $t('po.add_line') }}</button>
+      <button type="button" class="btn-ghost btn-sm mt-1" @click="addPOLine" :title="$t('po.add_line')"><Icon name="plus" :size="14" /></button>
 
       <p class="mt-4 text-end text-sm text-slate-600">
         {{ $t('plans.total') }}:
@@ -245,14 +245,14 @@
          class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ receiveError }}</p>
       <template #footer>
         <button class="btn-ghost" @click="showReceive = false">{{ $t('common.cancel') }}</button>
-        <button class="btn-success" :disabled="busy" @click="confirmReceive">↓ {{ $t('po.receive') }}</button>
+        <button class="btn-success" :disabled="busy" @click="confirmReceive" :title="$t('po.receive')"><Icon name="download" :size="14" /></button>
       </template>
     </Modal>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
@@ -260,11 +260,13 @@ import AppDataTable       from '../components/AppDataTable.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';
+import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
+const auth = inject('auth');
 
 const fmt = (v) => formatIQD(v || 0);
 const busy = ref(false);

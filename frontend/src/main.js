@@ -9,6 +9,7 @@ import router from './router';
 import en from './locales/en.json';
 import ku from './locales/ku.json';
 import { useLangStore } from './store/lang';
+import { useAuth } from './composables/useAuth';
 import './assets/main.css';
 
 const VristoPreset = definePreset(Aura, {
@@ -45,6 +46,9 @@ const app = createApp(App)
       options: { darkModeSelector: '.never-dark' },
     },
   });
+
+const { can } = useAuth();
+app.provide('auth', { can });
 
 const lang = useLangStore();
 lang.set(lang.current);

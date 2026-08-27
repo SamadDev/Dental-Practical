@@ -7,9 +7,7 @@
           {{ queue.length }} {{ $t('common.results') }}
         </p>
       </div>
-      <button class="btn-primary" @click="openAdd">
-        <span aria-hidden="true">+</span> {{ $t('queue.add_walk_in') }}
-      </button>
+      <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <div v-if="loading" class="card divide-y divide-slate-100">
@@ -26,9 +24,7 @@
          class="card flex flex-col items-center gap-3 p-12 text-center">
       <span class="text-4xl" aria-hidden="true">🪑</span>
       <p class="text-slate-500">{{ $t('queue.empty') }}</p>
-      <button class="btn-primary" @click="openAdd">
-        <span aria-hidden="true">+</span> {{ $t('queue.add_walk_in') }}
-      </button>
+      <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </div>
 
     <ul v-else class="card divide-y divide-slate-200 overflow-hidden">
@@ -196,6 +192,7 @@ import Modal          from '../components/Modal.vue';
 import ConfirmDialog  from '../components/ConfirmDialog.vue';
 import CheckoutDialog from '../components/CheckoutDialog.vue';
 import FormField      from '../components/FormField.vue';
+import Icon from '../components/Icon.vue';
 import { formatDateTime } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 

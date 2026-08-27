@@ -149,9 +149,7 @@
         </template>
 
         <template #cell(actions)="{ row }">
-          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm" @click="openPay(row)">
-            💳 {{ $t('checkout.pay_debt') }}
-          </button>
+          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm" @click="openPay(row)" :title="$t('checkout.pay_debt')"><Icon name="credit-card" :size="14" /></button>
         </template>
 
         <!--
@@ -217,9 +215,7 @@
             {{ row.treatment_notes }}
           </p>
           <button v-if="row.short_term_debt > 0" class="btn-success btn-sm mt-3"
-                  @click="openPay(row)">
-            💳 {{ $t('checkout.pay_debt') }}
-          </button>
+                  @click="openPay(row)" :title="$t('checkout.pay_debt')"><Icon name="credit-card" :size="14" /></button>
         </template>
       </AppDataTable>
     </div>
@@ -237,6 +233,7 @@ import AppDataTable       from '../components/AppDataTable.vue';
 import PayDebtDialog from '../components/PayDebtDialog.vue';
 import FormField     from '../components/FormField.vue';
 import StatusBadge   from '../components/StatusBadge.vue';
+import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime } from '../utils/datetime';

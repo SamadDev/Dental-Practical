@@ -7,9 +7,7 @@
           {{ meta.total }} {{ $t('common.results') }}
         </p>
       </div>
-      <button class="btn-primary" @click="openAdd">
-        <span aria-hidden="true">+</span> {{ $t('patient.new') }}
-      </button>
+      <button class="btn-primary" @click="openAdd" :title="$t('patient.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -169,12 +167,8 @@
                        bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
-          <button class="btn-ghost btn-sm" @click="openEdit(row)">
-            ✏️ {{ $t('common.edit') }}
-          </button>
-          <button class="btn-danger btn-sm" @click="askDelete(row)">
-            🗑 {{ $t('common.delete') }}
-          </button>
+          <button class="btn-ghost btn-sm" @click="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button class="btn-danger btn-sm" @click="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
       </template>
 
@@ -226,8 +220,8 @@
                               bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
-          <button class="btn-ghost btn-sm ms-auto" @click="openEdit(row)">✏️</button>
-          <button class="btn-danger btn-sm" @click="askDelete(row)">🗑</button>
+          <button class="btn-ghost btn-sm ms-auto" @click="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button class="btn-danger btn-sm" @click="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
       </template>
     </AppDataTable>
@@ -319,6 +313,7 @@ import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import SmokerBadge   from '../components/SmokerBadge.vue';
+import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';

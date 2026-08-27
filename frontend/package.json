@@ -9,10 +9,9 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "@primevue/themes": "^4.5.4",
     "axios": "^1.7.0",
     "pinia": "^2.2.0",
-    "primevue": "^5.0.1",
+    "primevue": "^4.3.0",
     "vue": "^3.4.0",
     "vue-i18n": "^9.13.0",
     "vue-router": "^4.4.0"

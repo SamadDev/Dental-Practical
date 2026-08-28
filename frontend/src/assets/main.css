@@ -87,16 +87,16 @@ body { background: #f1f2f7; }
 
   .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card; }
 
-  /* ----- DataTable — Vristo-style clean table -----
-     Airy rows, quiet dividers, sticky header, no vertical borders. */
+/* ----- DataTable — Vristo-style clean table -----
+   Airy rows, quiet dividers, sticky header, no vertical borders. */
   .table-shell {
-    @apply rounded-xl border border-slate-200/70 bg-white shadow-card;
+    @apply rounded-xl border-2 border-slate-300 bg-white shadow-card;
   }
   .table-filters {
-    @apply rounded-xl border border-slate-200/70 bg-white shadow-sm;
+    @apply rounded-xl border-2 border-slate-300 bg-white shadow-sm;
   }
   .table-toolbar {
-    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-4 py-3;
+    @apply flex min-h-14 items-center justify-between gap-3 border-b-2 border-slate-300 bg-white px-4 py-3;
   }
   .data-table-scroll {
     max-height: calc(100vh - 22rem);
@@ -110,18 +110,21 @@ body { background: #f1f2f7; }
     background: #cbd5e1;
   }
   .data-table {
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
   }
   /* Header: soft grey band, dark readable labels, sticky while scrolling. */
   .data-table-head {
     @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm;
   }
   .data-table-head tr {
-    @apply border-b border-slate-200;
+    @apply border-b-2 border-slate-300;
   }
   .data-table-th {
-    @apply whitespace-nowrap px-5 py-3 text-[13px] font-bold text-slate-600;
+    @apply whitespace-nowrap px-5 py-3 text-[13px] font-bold text-slate-600 border-r border-slate-300;
+  }
+  .data-table-th:last-child {
+    @apply border-r-0;
   }
   .dt-sort {
     @apply inline-flex min-h-7 items-center gap-1 rounded-md px-1.5 py-0.5 transition-colors
@@ -133,9 +136,9 @@ body { background: #f1f2f7; }
   .dt-sort-arrow.is-on {
     @apply font-bold text-brand-600;
   }
-  /* Rows: hairline dividers, calm hover, generous height. */
+  /* Rows: thick dividers, calm hover, generous height. */
   .data-table-row {
-    @apply border-b border-slate-100 transition-colors duration-100 hover:bg-brand-50/50;
+    @apply border-b-2 border-slate-200 transition-colors duration-100 hover:bg-brand-50/50;
   }
   .data-table-row:last-child {
     @apply border-b-0;
@@ -144,18 +147,24 @@ body { background: #f1f2f7; }
     @apply bg-brand-50/70;
   }
   .data-table-td {
-    @apply px-5 py-3.5 text-sm text-slate-600;
+    @apply px-5 py-3.5 text-sm text-slate-600 border-r border-slate-200;
     overflow-wrap: anywhere;
+  }
+  .data-table-row td:last-child {
+    @apply border-r-0;
   }
   .data-table-row td:first-child {
     @apply font-semibold text-slate-800;
   }
   /* Totals row: emphasised top rule, grey band. */
   .data-table-foot {
-    @apply border-t-2 border-slate-200 bg-slate-50/70 text-sm font-bold text-slate-700;
+    @apply border-t-2 border-slate-300 bg-slate-50/70 text-sm font-bold text-slate-700;
   }
   .data-table-foot td {
-    @apply px-5 py-3;
+    @apply px-5 py-3 border-r border-slate-300;
+  }
+  .data-table-foot td:last-child {
+    @apply border-r-0;
   }
   .table-note-expand {
     display: -webkit-box;
@@ -216,16 +225,16 @@ body { background: #f1f2f7; }
   body               { background: white !important; color: black !important; }
   /* The app shell paints a slate background on screen — force it white for paper. */
   body *             { background-color: transparent !important; }
-  .print-container   { box-shadow: none !important; border: none !important; }
+  .print-container   { box-shadow: none !important; border: 2px solid #333 !important; }
   /* KPI cards keep a hairline rule so they stay visually grouped in print.
      Scoped to the dashboard's grid — a table container must not get boxed. */
-  .print-container.grid > * { box-shadow: none !important; border: 1px solid #999 !important; }
+  .print-container.grid > * { box-shadow: none !important; border: 2px solid #333 !important; }
   /* Horizontal scroll wrappers must not clip columns on paper. */
   .overflow-x-auto   { overflow: visible !important; }
   table              { width: 100%; border-collapse: collapse; }
-  th, td             { border: 1px solid #999; padding: 6px 10px; font-size: 12px; }
+  th, td             { border: 2px solid #333; padding: 6px 10px; font-size: 12px; }
   /* Totals row carries the ledger's bottom line — keep it emphasised. */
   tfoot              { font-weight: 700; }
-  tfoot td           { border-top: 2px solid #333 !important; }
+  tfoot td           { border-top: 3px solid #000 !important; }
   @page              { margin: 1.2cm; }
 }

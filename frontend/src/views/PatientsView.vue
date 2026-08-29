@@ -3,9 +3,6 @@
     <header class="mb-3 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('patient.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
-          {{ meta.total }} {{ $t('common.results') }}
-        </p>
       </div>
       <button class="btn-primary" @click="openAdd" :title="$t('patient.new')"><Icon name="plus" :size="16" /></button>
     </header>
@@ -15,217 +12,147 @@
       <span aria-hidden="true">⚠</span> {{ error }}
     </p>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('patient.search_placeholder')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
+    <DataTable
+      ref="dataTable"
+      :url="url"
+      :columns="columns"
+      :showHeaderCard="true"
+      :hasCheckbox="false"
+      reloadTableEvent="reloadPatients"
+      :defaultOrder="true"
+      :orderByColumnIndex="5"
+      :orderByColumnName="'created_at'"
+      :orderByColumnDir="'desc'"
+      @datatable:draw="onDraw"
     >
-      <template #chips>
-        <button
-          type="button"
-          :class="filters.has_debt ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.has_debt = !filters.has_debt; reload()"
-        >
-          💰 {{ $t('archive.filter_with_debt') }}
-          <span v-if="stats.with_debt != null" class="chip-count"
-                :class="filters.has_debt ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.with_debt }}
-          </span>
-        </button>
-        <button
-          type="button"
-          :class="filters.appointment === 'upcoming' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="toggleAppointment('upcoming')"
-        >
-          📅 {{ $t('table.upcoming') }}
-          <span v-if="stats.upcoming != null" class="chip-count"
-                :class="filters.appointment === 'upcoming' ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.upcoming }}
-          </span>
-        </button>
-        <button
-          type="button"
-          :class="filters.is_smoker === '1' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.is_smoker = filters.is_smoker === '1' ? '' : '1'; reload()"
-        >
-          🚬 {{ $t('table.smokers') }}
-          <span v-if="stats.smokers != null" class="chip-count"
-                :class="filters.is_smoker === '1' ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.smokers }}
-          </span>
-        </button>
-      </template>
+      <template #external-filters="{ onFilterChange }">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            :class="filters.has_debt ? 'filter-chip-on' : 'filter-chip-off'"
+            @click="filters.has_debt = !filters.has_debt; onFilterChange('has_debt', filters.has_debt)"
+          >
+            💰 {{ $t('archive.filter_with_debt') }}
+            <span v-if="stats.with_debt != null" class="chip-count"
+                  :class="filters.has_debt ? 'bg-white/20' : 'bg-slate-100'">
+              {{ stats.with_debt }}
+            </span>
+          </button>
+          <button
+            type="button"
+            :class="filters.appointment === 'upcoming' ? 'filter-chip-on' : 'filter-chip-off'"
+            @click="toggleAppointment('upcoming', onFilterChange)"
+          >
+            📅 {{ $t('table.upcoming') }}
+            <span v-if="stats.upcoming != null" class="chip-count"
+                  :class="filters.appointment === 'upcoming' ? 'bg-white/20' : 'bg-slate-100'">
+              {{ stats.upcoming }}
+            </span>
+          </button>
+          <button
+            type="button"
+            :class="filters.is_smoker === '1' ? 'filter-chip-on' : 'filter-chip-off'"
+            @click="filters.is_smoker = filters.is_smoker === '1' ? '' : '1'; onFilterChange('is_smoker', filters.is_smoker)"
+          >
+            🚬 {{ $t('table.smokers') }}
+            <span v-if="stats.smokers != null" class="chip-count"
+                  :class="filters.is_smoker === '1' ? 'bg-white/20' : 'bg-slate-100'">
+              {{ stats.smokers }}
+            </span>
+          </button>
 
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('table.age_min')">
-          <input :id="id" v-model="filters.age_min" type="number" min="0" max="120"
-                 inputmode="numeric" class="field" placeholder="0" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.age_max')">
-          <input :id="id" v-model="filters.age_max" type="number" min="0" max="120"
-                 inputmode="numeric" class="field" placeholder="120" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('patient.appointment_date')">
-          <select :id="id" v-model="filters.appointment" class="field-select" @change="reload">
-            <option value="">{{ $t('common.all') }}</option>
+          <span class="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700"></span>
+
+          <input v-model="filters.age_min" type="number" min="0" max="120" class="field field-sm !w-20"
+                 :placeholder="$t('table.age_min')"
+                 @change="onFilterChange('age_min', filters.age_min)" />
+          <input v-model="filters.age_max" type="number" min="0" max="120" class="field field-sm !w-20"
+                 :placeholder="$t('table.age_max')"
+                 @change="onFilterChange('age_max', filters.age_max)" />
+
+          <select v-model="filters.appointment" class="field-select !w-auto !py-1 text-xs"
+                  @change="onFilterChange('appointment', filters.appointment)">
+            <option value="">{{ $t('patient.appointment_date') }}: {{ $t('common.all') }}</option>
             <option value="upcoming">{{ $t('table.upcoming') }}</option>
             <option value="past">{{ $t('table.past') }}</option>
             <option value="none">{{ $t('table.no_appointment') }}</option>
           </select>
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.registered_from')">
-          <input :id="id" v-model="filters.created_from" type="date" class="field"
-                 @change="reload" />
-        </FormField>
-      </template>
-    </DataTableFilters>
 
-    <AppDataTable
-      :columns="columns"
-      :rows="rows"
-      :loading="loading"
-      :sort="sort"
-      :dir="dir"
-      :is-filtered="isFiltered"
-      row-clickable
-      :empty-text="$t('patient.empty')"
-      empty-icon="🦷"
-      :meta="meta"
-      :per-page="perPage"
-      @sort="toggleSort"
-      @page="(p, r) => { perPage = r; goToPage(p); }"
-      @reset="resetFilters"
-      @row-click="(p) => $router.push(`/patients/${p.id}`)"
-    >
-      <template #cell(name)="{ row }">
-        <span class="font-medium text-slate-900">{{ row.name }}</span>
-        <SmokerBadge :show="!!row.is_smoker" class="ms-1.5" />
+          <input v-model="filters.created_from" type="date" class="field field-sm !w-auto"
+                 :placeholder="$t('table.registered_from')"
+                 @change="onFilterChange('created_from', filters.created_from)" />
+        </div>
       </template>
 
-      <template #cell(phone)="{ row }">
-        <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
-           class="font-mono text-slate-600 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
-           dir="ltr" :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.phone) })">
+      <template #name="{ data }">
+        <span class="font-medium text-slate-900 dark:text-slate-100">{{ data.row.name }}</span>
+        <SmokerBadge :show="!!data.row.is_smoker" class="ms-1.5" />
+      </template>
+
+      <template #phone="{ data }">
+        <a v-if="data.row.phone" :href="formatPhoneForWhatsApp(data.row.phone)" target="_blank" rel="noopener noreferrer"
+           class="font-mono text-slate-600 dark:text-slate-400 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+           dir="ltr" :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(data.row.phone) })">
           <span class="text-brand-600" aria-hidden="true">💬</span>
-          {{ formatPhoneForDisplay(row.phone) }}
+          {{ formatPhoneForDisplay(data.row.phone) }}
         </a>
         <span v-else class="text-slate-400">—</span>
       </template>
 
-      <template #cell(age)="{ row }">
-        <span class="tabular-nums text-slate-600">{{ row.age ?? '—' }}</span>
+      <template #age="{ data }">
+        <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ data.row.age ?? '—' }}</span>
       </template>
 
-      <template #cell(appointment_date)="{ row }">
-        <span v-if="row.appointment_date" class="chip-date">
-          <span aria-hidden="true">📅</span> {{ formatDateTime(row.appointment_date) }}
+      <template #appointment_date="{ data }">
+        <span v-if="data.row.appointment_date" class="chip-date">
+          <span aria-hidden="true">📅</span> {{ formatDateTime(data.row.appointment_date) }}
         </span>
         <span v-else class="text-slate-400">—</span>
       </template>
 
-      <template #cell(outstanding_debt)="{ row }">
-        <span v-if="row.outstanding_debt > 0" class="font-mono tabular-nums text-red-700">
-          {{ formatIQD(row.outstanding_debt) }}
+      <template #outstanding_debt="{ data }">
+        <span v-if="data.row.outstanding_debt > 0" class="font-mono tabular-nums text-red-700 dark:text-red-400">
+          {{ formatIQD(data.row.outstanding_debt) }}
         </span>
         <span v-else class="text-slate-400">—</span>
       </template>
 
-      <template #cell(visits_count)="{ row }">
-        <span class="tabular-nums text-slate-600">{{ row.visits_count ?? 0 }}</span>
+      <template #visits_count="{ data }">
+        <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ data.row.visits_count ?? 0 }}</span>
       </template>
 
-      <template #cell(last_visit_at)="{ row }">
-        <span v-if="row.last_visit_at" class="whitespace-nowrap text-slate-600">
-          {{ formatDateTime(row.last_visit_at) }}
+      <template #last_visit_at="{ data }">
+        <span v-if="data.row.last_visit_at" class="whitespace-nowrap text-slate-600 dark:text-slate-400">
+          {{ formatDateTime(data.row.last_visit_at) }}
         </span>
         <span v-else class="text-slate-400">—</span>
       </template>
 
-      <template #cell(actions)="{ row }">
-        <div class="flex flex-wrap justify-end gap-2" @click.stop>
-          <!--
-            Patients with an outstanding short-term debt cannot be queued
-            again until they settle it from the Treatment Archive.
-          -->
-          <span v-if="row.outstanding_debt > 0"
-                class="inline-flex items-center rounded-lg border border-red-200
-                       bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+      <template #actions="{ data }">
+        <div class="flex flex-wrap justify-end gap-1.5">
+          <span v-if="data.row.outstanding_debt > 0"
+                class="inline-flex items-center rounded-lg border border-red-200 dark:border-red-800
+                       bg-red-50 dark:bg-red-900/30 px-2 py-1 text-[11px] font-medium text-red-700 dark:text-red-400">
             {{ $t('patient.outstanding_debt') }}
           </span>
           <button
-            v-else-if="!inQueue(row.id)"
+            v-else-if="!inQueue(data.row.id)"
             class="btn-success btn-sm"
-            :disabled="addingId === row.id"
-            @click="askAddToQueue(row)"
+            :disabled="addingId === data.row.id"
+            @click="askAddToQueue(data.row)"
           >
-            {{ addingId === row.id ? '✓' : '➕ ' + $t('queue.add_walk_in') }}
+            <Icon name="plus" :size="14" /> {{ addingId === data.row.id ? '✓' : '' }}
           </button>
           <span v-else
-                class="inline-flex items-center rounded-lg border border-slate-200
-                       bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                class="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700
+                       bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[11px] font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
-          <button class="btn-ghost btn-sm" @click="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
-          <button class="btn-danger btn-sm" @click="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
+          <button class="btn-ghost btn-sm" @click.stop="openEdit(data.row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button class="btn-danger btn-sm" @click.stop="askDelete(data.row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
       </template>
-
-      <!-- Below md a 7-column table is unusable, so rows render as cards. -->
-      <template #card="{ row }">
-        <div class="cursor-pointer" @click="$router.push(`/patients/${row.id}`)">
-          <div class="flex items-start justify-between gap-3">
-            <span class="font-semibold text-slate-900">
-              {{ row.name }}
-              <SmokerBadge :show="!!row.is_smoker" class="ms-1" />
-            </span>
-            <span v-if="row.age" class="shrink-0 text-xs text-slate-400">{{ row.age }}</span>
-          </div>
-          <div class="mt-1" dir="ltr">
-          <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
-             class="font-mono text-sm text-slate-600 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
-             :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.phone) })">
-            <span class="text-brand-600" aria-hidden="true">💬</span>
-            {{ formatPhoneForDisplay(row.phone) }}
-          </a>
-          <span v-else class="text-slate-400">—</span>
-        </div>
-          <span v-if="row.appointment_date" class="chip-date mt-2">
-            <span aria-hidden="true">📅</span> {{ formatDateTime(row.appointment_date) }}
-          </span>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-            <span v-if="row.outstanding_debt > 0" class="font-mono text-red-700">
-              {{ formatIQD(row.outstanding_debt) }}
-            </span>
-            <span class="text-slate-500">
-              {{ row.visits_count ?? 0 }} {{ $t('patient.total_visits') }}
-            </span>
-            <span v-if="row.last_visit_at" class="text-slate-500">
-              · {{ formatDateTime(row.last_visit_at) }}
-            </span>
-          </div>
-        </div>
-        <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-          <span v-if="row.outstanding_debt > 0"
-                class="inline-flex items-center rounded-lg border border-red-200 bg-red-50
-                       px-2.5 py-1 text-xs font-medium text-red-700">
-            {{ formatIQD(row.outstanding_debt) }}
-          </span>
-          <button v-else-if="!inQueue(row.id)" class="btn-success btn-sm"
-                  :disabled="addingId === row.id" @click="askAddToQueue(row)">
-            ➕ {{ $t('queue.add_walk_in') }}
-          </button>
-          <span v-else class="inline-flex items-center rounded-lg border border-slate-200
-                              bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
-            ✓ {{ $t('queue.in_queue') }}
-          </span>
-          <button class="btn-ghost btn-sm ms-auto" @click="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
-          <button class="btn-danger btn-sm" @click="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
-        </div>
-      </template>
-    </AppDataTable>
-
+    </DataTable>
 
     <!-- Add / Edit form -->
     <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')">
@@ -251,7 +178,7 @@
                  :aria-invalid="!!errors.age || undefined" placeholder="—" />
         </FormField>
 
-        <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm text-slate-700">
+        <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input type="checkbox" v-model="form.is_smoker" class="field-check" />
           🚬 {{ $t('table.smoker') }}
         </label>
@@ -304,78 +231,71 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import api from '../utils/axios';
-import DataTableFilters    from '../components/DataTableFilters.vue';
-import AppDataTable       from '../components/AppDataTable.vue';
-import Modal         from '../components/Modal.vue';
+import DataTable from '../components/DataTable.vue';
+import Modal from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import FormField     from '../components/FormField.vue';
-import SmokerBadge   from '../components/SmokerBadge.vue';
+import FormField from '../components/FormField.vue';
+import SmokerBadge from '../components/SmokerBadge.vue';
 import Icon from '../components/Icon.vue';
-import { useDataTable } from '../composables/useDataTable';
+import eventBus from '../eventBus.js';
 import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
-import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneForTel } from '../utils/phone';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 
 const { t } = useI18n();
+const router = useRouter();
 
-const {
-  rows, loading, error, search, filters, sort, dir, perPage, meta,
-  activeFilterCount, isFiltered,
-  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
-} = useDataTable('/patients', {
-  filters: {
-    has_debt: false,
-    is_smoker: '',
-    appointment: '',
-    age_min: '',
-    age_max: '',
-    created_from: '',
-  },
-  sort: 'created_at',
-  dir: 'desc',
+const url = '/patients';
+const dataTable = ref(null);
+const error = ref('');
+
+const columns = [
+  { label: t('patient.name'), field: 'name', sortable: true, width: '200px', template: true },
+  { label: t('patient.phone'), field: 'phone', sortable: true, width: '160px', template: true },
+  { label: t('patient.age'), field: 'age', sortable: true, width: '70px', template: true },
+  { label: t('patient.appointment_date'), field: 'appointment_date', sortable: true, width: '160px', template: true },
+  { label: t('patient.outstanding_debt'), field: 'outstanding_debt', sortable: true, width: '140px', template: true },
+  { label: t('patient.total_visits'), field: 'visits_count', sortable: true, width: '80px', template: true },
+  { label: t('patient.last_visit'), field: 'last_visit_at', sortable: true, width: '160px', template: true },
+  { label: t('common.actions'), field: 'actions', sortable: false, width: '180px', template: true },
+];
+
+const stats = ref({});
+const filters = ref({
+  has_debt: false,
+  is_smoker: '',
+  appointment: '',
+  age_min: '',
+  age_max: '',
+  created_from: '',
 });
 
-const columns = computed(() => [
-  { key: 'name',             label: t('patient.name'),             sortable: true, skeleton: 'lg', sticky: 'start', width: '200px' },
-  { key: 'phone',            label: t('patient.phone'),            sortable: true, skeleton: 'md', width: '160px' },
-  { key: 'age',              label: t('patient.age'),              sortable: true, skeleton: 'sm', width: '70px', align: 'end' },
-  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, skeleton: 'md', width: '160px' },
-  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, skeleton: 'md', initialDir: 'desc', width: '140px', align: 'end' },
-  { key: 'visits_count',     label: t('patient.total_visits'),     sortable: true, skeleton: 'sm', initialDir: 'desc', width: '80px', align: 'end' },
-  { key: 'last_visit_at',    label: t('patient.last_visit'),       sortable: true, skeleton: 'md', initialDir: 'desc', width: '160px' },
-  { key: 'actions',          label: t('common.actions'), align: 'end', skeleton: 'lg', sticky: 'end', width: '200px' },
-]);
-
-/** Quick-filter counts, over the unfiltered table. */
-const stats = ref({});
-
-const showForm   = ref(false);
-const editingId  = ref(null);
-const addingId   = ref(null);
-const queueIds   = ref(new Set());
-
+const showForm = ref(false);
+const editingId = ref(null);
+const addingId = ref(null);
+const queueIds = ref(new Set());
 const pendingPatient = ref(null);
 
-const showConfirmSave   = ref(false);
-const showConfirmQueue  = ref(false);
+const showConfirmSave = ref(false);
+const showConfirmQueue = ref(false);
 const showConfirmDelete = ref(false);
-const confirmQueueMsg   = ref('');
-const confirmDeleteMsg  = ref('');
+const confirmQueueMsg = ref('');
+const confirmDeleteMsg = ref('');
 
 const emptyForm = () => ({
   name: '', phone: '', age: null, medical_notes: '', is_smoker: false,
   appointment_date: nowLocalInput(),
 });
-const form   = ref(emptyForm());
+const form = ref(emptyForm());
 const errors = ref({});
 
 function validate() {
   const e = {};
   if (!form.value.name?.trim()) e.name = t('patient.name_required');
-  // Permissive on formatting (spaces, dashes, +964) but require enough digits.
   const digits = String(form.value.phone || '').replace(/\D/g, '');
   if (form.value.phone && (digits.length < 7 || digits.length > 15)) {
     e.phone = t('patient.phone_invalid');
@@ -392,13 +312,11 @@ function inQueue(patientId) {
   return queueIds.value.has(patientId);
 }
 
-/** The chip and the advanced <select> drive the same param — keep them in step. */
-function toggleAppointment(value) {
-  filters.appointment = filters.appointment === value ? '' : value;
-  reload();
+function toggleAppointment(value, onFilterChange) {
+  filters.value.appointment = filters.value.appointment === value ? '' : value;
+  onFilterChange('appointment', filters.value.appointment);
 }
 
-/** Queue membership and chip counts are independent of the table's query. */
 async function loadSidecars() {
   try {
     const [queueRes, statsRes] = await Promise.all([
@@ -408,10 +326,13 @@ async function loadSidecars() {
     queueIds.value = new Set((queueRes.data || []).map((v) => v.patient_id));
     stats.value = statsRes.data || {};
   } catch {
-    // Non-fatal: the table itself still renders. Chips just lose their counts.
     queueIds.value = new Set();
     stats.value = {};
   }
+}
+
+function onDraw(data) {
+  // Totals are not used here, but could be if needed
 }
 
 function openAdd() {
@@ -424,12 +345,11 @@ function openAdd() {
 function openEdit(p) {
   editingId.value = p.id;
   form.value = {
-    name:             p.name,
-    phone:            p.phone || '',
-    age:              p.age || null,
-    medical_notes:    p.medical_notes || '',
-    is_smoker:        !!p.is_smoker,
-    // Local time — toISOString() would shift this by the UTC offset.
+    name: p.name,
+    phone: p.phone || '',
+    age: p.age || null,
+    medical_notes: p.medical_notes || '',
+    is_smoker: !!p.is_smoker,
     appointment_date: toLocalInput(p.appointment_date),
   };
   errors.value = {};
@@ -448,7 +368,8 @@ async function save() {
     await api.post('/patients', form.value);
   }
   showForm.value = false;
-  await Promise.all([load(), loadSidecars()]);
+  dataTable.value?.reload?.();
+  loadSidecars();
 }
 
 function askDelete(p) {
@@ -460,7 +381,8 @@ function askDelete(p) {
 async function deletePatient() {
   await api.delete(`/patients/${pendingPatient.value.id}`);
   pendingPatient.value = null;
-  await Promise.all([load(), loadSidecars()]);
+  dataTable.value?.reload?.();
+  loadSidecars();
 }
 
 function askAddToQueue(p) {
@@ -482,7 +404,7 @@ async function addToQueue() {
 }
 
 onMounted(() => {
-  load();
+  dataTable.value?.reload?.();
   loadSidecars();
 });
 </script>

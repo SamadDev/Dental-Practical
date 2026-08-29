@@ -7,10 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Nunito — Vristo's rounded, friendly UI font. Bundled via Google
-        // Fonts in index.html with system fallbacks here.
-        sans: ['Nunito', 'system-ui', 'sans-serif'],
-        ku:   ['Nunito', 'Vazirmatn', 'Noto Sans Arabic', 'sans-serif'],
+        sans: ['Noto Sans Arabic', 'system-ui', 'sans-serif'],
       },
       colors: {
         // Vristo primary — vivid indigo-blue.

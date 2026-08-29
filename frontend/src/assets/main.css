@@ -1,12 +1,12 @@
+@import './css/datatable.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import './css/datatable.css';
-
 /* Direction-aware root font selection driven by [dir] attribute. */
-html[dir='rtl'] body { font-family: 'Nunito', 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
-html[dir='ltr'] body { font-family: 'Nunito', system-ui, sans-serif; }
+html[dir='rtl'] body { font-family: 'Noto Sans Arabic', 'Vazirmatn', sans-serif; }
+html[dir='ltr'] body { font-family: 'Noto Sans Arabic', system-ui, sans-serif; }
 body { 
   @apply bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100;
   @apply dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950;

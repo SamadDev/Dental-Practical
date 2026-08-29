@@ -2,26 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './css/datatable.css';
+
 /* Direction-aware root font selection driven by [dir] attribute. */
 html[dir='rtl'] body { font-family: 'Nunito', 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
 html[dir='ltr'] body { font-family: 'Nunito', system-ui, sans-serif; }
-body { background: #f1f2f7; }
+body { 
+  @apply bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100;
+  @apply dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950;
+}
 
 /* Custom utilities */
 @layer utilities {
   .shadow-card {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
   }
   .shadow-card-hover {
-    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+    box-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05);
   }
 }
 
 @layer components {
-  .app-shell { background: #f1f2f7; }
+  .app-shell { 
+    @apply bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100;
+    @apply dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950;
+  }
   /* Vristo-style sidebar: white, full height, permanent on lg+. */
   .app-sidebar {
-    @apply fixed inset-y-0 start-0 z-40 flex w-64 -translate-x-full flex-col border-e border-slate-200/80 bg-white transition-transform duration-200;
+    @apply fixed inset-y-0 start-0 z-40 flex w-64 -translate-x-full flex-col border-e border-slate-200/80 bg-white dark:border-slate-700/80 dark:bg-slate-900 transition-transform duration-200;
   }
   [dir='rtl'] .app-sidebar { transform: translateX(100%); }
   [dir='rtl'] .app-sidebar.is-open { transform: translateX(0); }
@@ -31,7 +39,7 @@ body { background: #f1f2f7; }
     [dir='rtl'] .app-sidebar { transform: translateX(0); }
   }
   .app-topbar {
-    @apply sticky top-0 z-20 flex min-h-[4.5rem] items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8;
+    @apply sticky top-0 z-20 flex min-h-[4.5rem] items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8 dark:border-slate-700/80 dark:bg-slate-900/90;
   }
   .app-content { margin-inline-start: 0; }
   @media (min-width: 1024px) {
@@ -45,7 +53,7 @@ body { background: #f1f2f7; }
     @apply bg-brand-600 text-white shadow-sm shadow-brand-600/30;
   }
   .app-nav-icon {
-    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm text-slate-500 transition-colors group-hover:bg-slate-200/70 group-hover:text-slate-700;
+    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm text-slate-500 transition-colors group-hover:bg-slate-200/70 group-hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/70 dark:group-hover:text-slate-200;
   }
 }
 
@@ -58,20 +66,23 @@ body { background: #f1f2f7; }
   .field {
     @apply form-input block w-full rounded-lg border-slate-200 bg-white text-sm text-slate-900
            shadow-none transition-colors placeholder:text-slate-400
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500;
   }
   .field-select   { @apply field form-select pe-9; }
   .field-textarea { @apply field form-textarea leading-relaxed; }
   .field-check {
     @apply form-checkbox h-4 w-4 rounded border-slate-300 text-brand-600
-           transition focus:ring-2 focus:ring-brand-500/30;
+           transition focus:ring-2 focus:ring-brand-500/30
+           dark:border-slate-600;
   }
+  .field-sm { @apply py-1 px-2.5 text-xs; }
   /* Invalid state — paired with aria-invalid so it is not colour-only. */
   .field-error { @apply border-red-400 focus:border-red-500 focus:ring-red-500/30; }
 
-  .label     { @apply mb-1.5 block text-sm font-medium text-slate-700; }
-  .help-text { @apply mt-1 text-xs text-slate-500; }
-  .error-text{ @apply mt-1 flex items-center gap-1 text-xs font-medium text-red-600; }
+  .label     { @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300; }
+  .help-text { @apply mt-1 text-xs text-slate-500 dark:text-slate-400; }
+  .error-text{ @apply mt-1 flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400; }
 
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg
@@ -80,22 +91,22 @@ body { background: #f1f2f7; }
            disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary { @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/30 hover:bg-brand-700; }
-  .btn-ghost   { @apply btn border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900; }
-  .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50; }
+  .btn-ghost   { @apply btn border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100; }
+  .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30; }
   .btn-success { @apply btn bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 hover:bg-emerald-700; }
   .btn-sm      { @apply px-3 py-1.5 text-xs; }
 
-  .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card; }
+  .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card dark:border-slate-700/70 dark:bg-slate-900 dark:shadow-card; }
 
-/* ----- DataTable — Professional tables ----- */
+  /* ----- Professional tables ----- */
   .table-shell {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
   }
   .table-filters {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
   }
   .table-toolbar {
-    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3;
+    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900;
   }
   .data-table-scroll {
     max-height: calc(100vh - 22rem);
@@ -115,13 +126,13 @@ body { background: #f1f2f7; }
   }
   /* Header: clean, professional, sticky */
   .data-table-head {
-    @apply sticky top-0 z-10 bg-white;
+    @apply sticky top-0 z-10 bg-white dark:bg-slate-900;
   }
   .data-table-head tr {
-    @apply border-b border-slate-200;
+    @apply border-b border-slate-200 dark:border-slate-700;
   }
   .data-table-th {
-    @apply whitespace-nowrap px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-50/50;
+    @apply whitespace-nowrap px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400;
   }
   .data-table-th:first-child {
     @apply rounded-l-lg;
@@ -131,7 +142,8 @@ body { background: #f1f2f7; }
   }
   .dt-sort {
     @apply inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
-           hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
+           hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1
+           dark:hover:bg-slate-800/50;
     user-select: none;
   }
   .dt-sort-arrow {
@@ -142,24 +154,24 @@ body { background: #f1f2f7; }
   }
   /* Rows: clean, readable, subtle hover */
   .data-table-row {
-    @apply border-b border-slate-100 transition-colors duration-150 hover:bg-slate-50/50;
+    @apply border-b border-slate-100 transition-colors duration-150 hover:bg-slate-50/50 dark:border-slate-800 dark:hover:bg-slate-800/40;
   }
   .data-table-row:last-child {
     @apply border-b-0;
   }
   .data-table-row.is-highlighted {
-    @apply bg-brand-50/30;
+    @apply bg-brand-50/30 dark:bg-brand-900/20;
   }
   .data-table-td {
-    @apply px-4 py-3 text-sm text-slate-700;
+    @apply px-4 py-3 text-sm text-slate-700 dark:text-slate-300;
     overflow-wrap: anywhere;
   }
   .data-table-row td:first-child {
-    @apply font-medium text-slate-900;
+    @apply font-medium text-slate-900 dark:text-slate-100;
   }
   /* Totals row: subtle emphasis */
   .data-table-foot {
-    @apply border-t border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-700;
+    @apply border-t border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300;
   }
   .data-table-foot td {
     @apply px-4 py-3;
@@ -192,7 +204,8 @@ body { background: #f1f2f7; }
            border-slate-300 bg-white px-2 text-sm font-medium text-slate-700
            transition-colors hover:bg-slate-50 focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1
-           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white
+           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
   }
 
   /* Count badge on a quick-filter chip. */
@@ -206,14 +219,15 @@ body { background: #f1f2f7; }
            text-xs font-medium transition-colors focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
   }
-  .filter-chip-off { @apply filter-chip border-slate-300 bg-white text-slate-600 hover:bg-slate-50; }
+  .filter-chip-off { @apply filter-chip border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700; }
   .filter-chip-on  { @apply filter-chip border-brand-600 bg-brand-600 text-white hover:bg-brand-700; }
 
   /* Appointment timestamp pill. inline-flex so it sits inline in tables
      but can take a margin when stacked in the mobile cards. */
   .chip-date {
     @apply inline-flex items-center gap-1 whitespace-nowrap rounded-md border
-           border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700;
+           border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700
+           dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300;
   }
 }
 

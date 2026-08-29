@@ -10,68 +10,67 @@
       <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </header>
 
-    <div v-if="loading" class="card divide-y divide-slate-100">
+    <div v-if="loading" class="card divide-y divide-slate-100 dark:divide-slate-700/50">
       <div v-for="n in 4" :key="n" class="flex items-center gap-4 p-4">
         <div class="flex-1 space-y-2">
-          <div class="h-4 w-44 animate-pulse rounded bg-slate-200"></div>
-          <div class="h-3 w-28 animate-pulse rounded bg-slate-100"></div>
+          <div class="h-4 w-44 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
+          <div class="h-3 w-28 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
         </div>
-        <div class="h-8 w-40 animate-pulse rounded bg-slate-100"></div>
+        <div class="h-8 w-40 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
       </div>
     </div>
 
     <div v-else-if="!queue.length"
          class="card flex flex-col items-center gap-3 p-12 text-center">
-      <span class="text-4xl" aria-hidden="true">🪑</span>
-      <p class="text-slate-500">{{ $t('queue.empty') }}</p>
+      <span class="text-4xl opacity-30" aria-hidden="true">🪑</span>
+      <p class="text-slate-500 dark:text-slate-400">{{ $t('queue.empty') }}</p>
       <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </div>
 
-    <ul v-else class="card divide-y divide-slate-200 overflow-hidden">
+    <ul v-else class="card divide-y divide-slate-200 dark:divide-slate-700/50 overflow-hidden">
       <li
         v-for="(v, i) in queue" :key="v.id"
-        class="flex flex-wrap items-center gap-3 p-4 transition-colors hover:bg-slate-50"
+        class="flex flex-wrap items-center gap-3 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
       >
-        <!-- Position marker: the queue is ordered, so make that visible. -->
-        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100
-                     text-xs font-semibold tabular-nums text-slate-500">
+        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-800
+                     text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
           {{ i + 1 }}
         </span>
 
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="truncate font-semibold text-slate-900">{{ v.patient.name }}</span>
+            <span class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ v.patient.name }}</span>
             <StatusBadge kind="queue_status" :value="v.queue_status" />
             <span v-if="v.patient.appointment_date" class="chip-date">
-              <span aria-hidden="true">📅</span> {{ formatDateTime(v.patient.appointment_date) }}
+              <Icon name="calendar" :size="12" /> {{ formatDateTime(v.patient.appointment_date) }}
             </span>
           </div>
           <div class="mt-1" dir="ltr">
             <a v-if="v.patient.phone" :href="formatPhoneForWhatsApp(v.patient.phone)" target="_blank" rel="noopener noreferrer"
-               class="font-mono text-xs text-slate-500 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+               class="font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
                :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(v.patient.phone) })">
-              <span class="text-brand-600" aria-hidden="true">💬</span>
+              <span class="text-brand-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
               {{ formatPhoneForDisplay(v.patient.phone) }}
             </a>
-            <span v-else class="text-slate-400 text-xs">—</span>
+            <span v-else class="text-slate-400 dark:text-slate-500 text-xs">—</span>
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-1.5">
           <button v-if="v.queue_status === 'pending'" class="btn-success btn-sm"
                   @click="askSetActive(v)">
-            ▶ {{ $t('queue.status.active') }}
+            <Icon name="play" :size="14" /> {{ $t('queue.status.active') }}
           </button>
           <button v-if="v.queue_status === 'active'" class="btn-primary btn-sm"
                   @click="openCheckout(v)">
-            💰 {{ $t('visit.checkout') }}
+            <Icon name="credit-card" :size="14" /> {{ $t('visit.checkout') }}
           </button>
           <router-link :to="`/patients/${v.patient_id}`" class="btn-ghost btn-sm"
                        :aria-label="$t('patient.title')">
-            📋
+            <Icon name="user" :size="14" />
           </router-link>
           <button class="btn-danger btn-sm" @click="askRemove(v)">
-            ✕ {{ $t('queue.remove') }}
+            <Icon name="x" :size="14" /> {{ $t('queue.remove') }}
           </button>
         </div>
       </li>
@@ -83,7 +82,7 @@
         <FormField v-slot="{ id }" :label="$t('common.search')" :hint="$t('queue.search_hint')">
           <div class="relative">
             <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center
-                         text-slate-400" aria-hidden="true">🔍</span>
+                         text-slate-400" aria-hidden="true"><Icon name="search" :size="14" /></span>
             <input
               :id="id" v-model="addForm.search" type="search" autocomplete="off"
               class="field ps-9" :placeholder="$t('patient.search_placeholder')"
@@ -95,52 +94,52 @@
         <!-- Selected patient confirmation -->
         <div v-if="addForm.patient_id"
              class="flex items-center justify-between gap-3 rounded-lg border
-                    border-emerald-200 bg-emerald-50 px-3 py-2.5">
-          <span class="flex min-w-0 items-center gap-2 text-sm font-medium text-emerald-900">
-            <span aria-hidden="true">✓</span>
+                    border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/30 px-3 py-2.5">
+          <span class="flex min-w-0 items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-300">
+            <span aria-hidden="true"><Icon name="check" :size="14" /></span>
             <span class="truncate">{{ addForm.patientName }}</span>
           </span>
           <button type="button"
-                  class="shrink-0 text-xs font-medium text-emerald-700 underline
-                         underline-offset-2 hover:text-emerald-900"
+                  class="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-400 underline
+                         underline-offset-2 hover:text-emerald-900 dark:hover:text-emerald-200"
                   @click="clearSelection">
             {{ $t('common.clear') }}
           </button>
         </div>
 
-        <p v-else-if="searching" class="text-sm text-slate-500">{{ $t('queue.searching') }}</p>
+        <p v-else-if="searching" class="text-sm text-slate-500 dark:text-slate-400">{{ $t('queue.searching') }}</p>
 
         <ul v-else-if="results.length"
-            class="max-h-56 divide-y divide-slate-100 overflow-y-auto rounded-lg
-                   border border-slate-200">
+            class="max-h-56 divide-y divide-slate-100 dark:divide-slate-700 overflow-y-auto rounded-lg
+                   border border-slate-200 dark:border-slate-700">
           <li v-for="p in results" :key="p.id">
             <button
               type="button"
               class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-start
-                     transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                     transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:outline-none"
               @click="selectPatient(p)"
             >
               <span class="min-w-0">
-                <span class="block truncate text-sm font-medium text-slate-900">{{ p.name }}</span>
-                <span v-if="p.phone" class="block font-mono text-xs text-slate-500" dir="ltr">
+                <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ p.name }}</span>
+                <span v-if="p.phone" class="block font-mono text-xs text-slate-500 dark:text-slate-400" dir="ltr">
                   <a :href="formatPhoneForWhatsApp(p.phone)" target="_blank" rel="noopener noreferrer"
                      class="flex items-center gap-1 hover:text-brand-600 transition-colors"
                      :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(p.phone) })">
-                    <span class="text-brand-600" aria-hidden="true">💬</span>
+                    <span class="text-brand-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
                     {{ formatPhoneForDisplay(p.phone) }}
                   </a>
                 </span>
               </span>
               <span v-if="p.appointment_date" class="chip-date shrink-0">
-                <span aria-hidden="true">📅</span> {{ formatDateTime(p.appointment_date) }}
+                <Icon name="calendar" :size="12" /> {{ formatDateTime(p.appointment_date) }}
               </span>
             </button>
           </li>
         </ul>
 
         <p v-else-if="addForm.search.trim().length >= 2"
-           class="rounded-lg border border-dashed border-slate-300 px-3 py-6 text-center
-                  text-sm text-slate-500">
+           class="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 px-3 py-6 text-center
+                  text-sm text-slate-500 dark:text-slate-400">
           {{ $t('common.no_results') }}
         </p>
       </div>
@@ -241,7 +240,6 @@ function openAdd() {
 
 let searchTimer;
 function onSearchInput() {
-  // Typing a new query invalidates any prior selection.
   addForm.value.patient_id  = null;
   addForm.value.patientName = '';
   clearTimeout(searchTimer);

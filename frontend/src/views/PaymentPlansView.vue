@@ -3,8 +3,8 @@
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('plans.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
-          {{ meta.total }} {{ $t('common.results') }}
+        <p v-if="!table.isLoading" class="mt-0.5 text-sm text-slate-500">
+          {{ table.totalRecordCount }} {{ $t('common.results') }}
         </p>
       </div>
       <button class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
@@ -12,45 +12,21 @@
 
     <p v-if="error" role="alert"
        class="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50
-              px-3 py-2 text-sm text-red-700">
+             px-3 py-2 text-sm text-red-700">
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('plans.search_placeholder')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button type="button" :class="filters.status === 'active' ? 'filter-chip-on' : 'filter-chip-off'"
-                @click="toggleStatus('active')">{{ $t('plans.status.active') }}</button>
-        <button type="button" :class="filters.status === 'completed' ? 'filter-chip-on' : 'filter-chip-off'"
-                @click="toggleStatus('completed')">{{ $t('plans.status.completed') }}</button>
-        <button type="button" :class="filters.status === 'defaulted' ? 'filter-chip-on' : 'filter-chip-off'"
-                @click="toggleStatus('defaulted')">{{ $t('plans.status.defaulted') }}</button>
-        <button type="button" :class="overdueOnly ? 'filter-chip-on' : 'filter-chip-off'"
-                @click="loadOverdue">{{ $t('table.past') }}</button>
-      </template>
-    </DataTableFilters>
-
-    <AppDataTable
+    <DataTable
+      ref="dataTable"
+      :url="url"
       :columns="columns"
-      :rows="rows"
-      :loading="loading"
-      :sort="sort"
-      :dir="dir"
-      :is-filtered="isFiltered || overdueOnly"
-      :empty-text="$t('plans.empty')"
-      empty-icon="💳"
-      row-clickable
-      :meta="meta"
-      :per-page="perPage"
-      @sort="toggleSort"
-      @page="(p, r) => { perPage = r; goToPage(p); }"
-      @reset="resetFilters"
-      @row-click="openDetail"
+      :showHeaderCard="false"
+      :hasCheckbox="false"
+      reloadTableEvent="reloadPaymentPlans"
+      :defaultOrder="true"
+      :orderByColumnIndex="5"
+      :orderByColumnName="'created_at'"
+      :orderByColumnDir="'desc'"
     >
       <template #cell(patient)="{ row }">
         <div class="leading-tight">
@@ -87,11 +63,17 @@
         <StatusChip :value="row.status" />
       </template>
 
+      <template #cell(actions)="{ row }">
+        <div class="flex items-center gap-1.5 no-print">
+          <button class="btn-ghost btn-sm" @click="openDetail(row)" :title="$t('common.view')"><Icon name="eye" :size="14" /></button>
+        </div>
+      </template>
+
       <template #card="{ row }">
         <div class="flex items-start justify-between gap-2">
           <div>
             <p class="font-medium text-slate-900">{{ row.patient?.name }}</p>
-            <p class="text-xs text-slate-500">{{ row.name }}</p>
+            <p class="text-xs text-slate-400">{{ row.name }}</p>
           </div>
           <StatusChip :value="row.status" />
         </div>
@@ -100,8 +82,7 @@
           — {{ settledCount(row) }}/{{ $t('plans.settled_of') }}
         </p>
       </template>
-    </AppDataTable>
-
+    </DataTable>
 
     <!-- Plan detail: installments -->
     <Modal v-model="showDetail" :title="detail ? `${detail.patient?.name} — ${detail.name}` : ''" max-w-2xl>
@@ -215,19 +196,51 @@
 import { computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
-import DataTableFilters    from '../components/DataTableFilters.vue';
-import AppDataTable       from '../components/AppDataTable.vue';
+import DataTable from '../components/DataTable.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
-import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
+import { debounce } from '../utils/datetime';
 
 const { t } = useI18n();
 const auth = inject('auth');
+
+const url = '/payment-plans';
+
+const columns = [
+  { label: t('patient.name'), field: 'patient', sortable: false, width: '15%' },
+  { label: t('plans.plan_name'), field: 'name', sortable: true, searchable: true, width: '15%' },
+  { label: t('plans.total'), field: 'total_amount', sortable: true, searchable: true, width: '12%' },
+  { label: t('plans.remaining'), field: 'remaining', sortable: false, width: '12%' },
+  { label: t('plans.progress'), field: 'installments', sortable: false, width: '10%' },
+  { label: t('plans.start_date'), field: 'start_date', sortable: true, width: '12%' },
+  { label: t('aqsat.status'), field: 'status', sortable: false, width: '12%' },
+  { label: t('common.actions'), field: 'actions', sortable: false, width: '8%', template: true },
+];
+
+const fmt = (v) => formatIQD(v || 0);
+
+const remaining = (plan) =>
+  Math.max(0, plan.total_amount - plan.down_payment -
+    (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0));
+const paidSum = (plan) =>
+  plan.down_payment + (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0);
+const settledCount = (plan) =>
+  (plan.installments ?? []).filter((i) => i.status === 'paid' || i.status === 'waived').length;
+
+function installmentClass(ins) {
+  return {
+    pending:  'border-slate-200',
+    partial:  'border-amber-300 bg-amber-50/60',
+    paid:     'border-emerald-300 bg-emerald-50/60',
+    overdue:  'border-red-300 bg-red-50/60',
+    waived:   'border-slate-200 opacity-60',
+  }[ins.status] ?? 'border-slate-200';
+}
 
 // Inline status chip components
 const StatusChip = {
@@ -273,59 +286,6 @@ const StatusChipInstallment = {
   }
 };
 
-const {
-  rows, loading, error, search, filters, sort, dir, perPage, meta,
-  activeFilterCount, isFiltered,
-  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
-} = useDataTable('/payment-plans', { filters: { status: '' }, sort: 'created_at', dir: 'desc' });
-
-const fmt = (v) => formatIQD(v || 0);
-
-const columns = computed(() => [
-  { key: 'patient',       label: t('patient.name'),             skeleton: 'md' },
-  { key: 'name',          label: t('plans.plan_name'),          skeleton: 'lg' },
-  { key: 'total_amount',  label: t('plans.total'), sortable: true, skeleton: 'md', initialDir: 'desc' },
-  { key: 'remaining',     label: t('plans.remaining'),          skeleton: 'md' },
-  { key: 'installments',  label: t('plans.progress'),           skeleton: 'sm' },
-  { key: 'start_date',    label: t('plans.start_date'), sortable: true, skeleton: 'md' },
-  { key: 'status',        label: t('aqsat.status'),             skeleton: 'md' },
-]);
-
-const remaining = (plan) =>
-  Math.max(0, plan.total_amount - plan.down_payment -
-    (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0));
-const paidSum = (plan) =>
-  plan.down_payment + (plan.installments ?? []).reduce((s, i) => s + i.amount_paid, 0);
-const settledCount = (plan) =>
-  (plan.installments ?? []).filter((i) => i.status === 'paid' || i.status === 'waived').length;
-
-function toggleStatus(s) {
-  filters.status = filters.status === s ? '' : s;
-  reload();
-}
-
-// ---- Overdue quick view ----
-const overdueOnly = ref(false);
-const overdueRows = ref([]);
-async function loadOverdue() {
-  if (overdueOnly.value) { overdueOnly.value = false; await load(); return; }
-  overdueOnly.value = true;
-  loading.value = true;
-  try {
-    const { data } = await api.get('/payment-plans/overdue');
-    // Group by plan so each plan appears once with its worst installment.
-    const byPlan = new Map();
-    for (const r of data) {
-      const pid = r.installment.payment_plan_id;
-      if (!byPlan.has(pid) || r.days_overdue > byPlan.get(pid).days_overdue) byPlan.set(pid, r);
-    }
-    overdueRows.value = [...byPlan.values()].map((r) => ({
-      ...r.installment.plan,
-      patient: r.patient ?? r.installment.plan.patient,
-    }));
-  } finally { loading.value = false; }
-}
-
 // ---- Detail ----
 const showDetail = ref(false);
 const detail = ref(null);
@@ -335,18 +295,7 @@ async function openDetail(plan) {
   try {
     const { data } = await api.get(`/payment-plans/${plan.id}`);
     detail.value = data;
-    const idx = rows.value.findIndex((r) => r.id === plan.id);
-    if (idx !== -1) rows.value[idx] = data;
   } catch { /* keep the list version */ }
-}
-function installmentClass(ins) {
-  return {
-    pending:  'border-slate-200',
-    partial:  'border-amber-300 bg-amber-50/60',
-    paid:     'border-emerald-300 bg-emerald-50/60',
-    overdue:  'border-red-300 bg-red-50/60',
-    waived:   'border-slate-200 opacity-60',
-  }[ins.status] ?? 'border-slate-200';
 }
 
 // ---- Pay / waive ----
@@ -369,6 +318,7 @@ async function confirmPay() {
     });
     showPay.value = false;
     await openDetail(detail.value);
+    dataTable.value?.reload?.();
   } catch (e) {
     error.value = e.userMessage;
   } finally { busy.value = false; }
@@ -381,6 +331,7 @@ async function doWaive() {
   try {
     await api.post(`/payment-plans/installments/${waiveTarget.value.id}/waive`);
     await openDetail(detail.value);
+    dataTable.value?.reload?.();
   } catch (e) { error.value = e.userMessage; }
 }
 
@@ -416,10 +367,11 @@ async function create() {
       installment_amount: Number(form.value.installment_amount),
     });
     showCreate.value = false;
-    reload();
+    dataTable.value?.reload?.();
   } catch (e) { formError.value = e.userMessage; }
   finally { busy.value = false; }
 }
 
-onMounted(load);
+const dataTable = ref(null);
+const error = ref('');
 </script>

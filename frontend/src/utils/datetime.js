@@ -8,6 +8,11 @@
 
 const pad = (n) => String(n).padStart(2, '0');
 
+export function debounce(fn, ms = 300) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
 /** Date -> 'YYYY-MM-DDTHH:mm' in LOCAL time, for datetime-local inputs. */
 export function toLocalInput(value) {
   if (!value) return '';

@@ -1,59 +1,76 @@
-@import './css/datatable.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Direction-aware root font selection driven by [dir] attribute. */
-html[dir='rtl'] body { font-family: 'Noto Sans Arabic', 'Vazirmatn', sans-serif; }
-html[dir='ltr'] body { font-family: 'Noto Sans Arabic', system-ui, sans-serif; }
-body { 
-  @apply bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100;
-  @apply dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950;
-}
+html[dir='rtl'] body { font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif; }
+html[dir='ltr'] body { font-family: 'Inter', system-ui, sans-serif; }
+body { background: #f6f7fb; }
 
 /* Custom utilities */
 @layer utilities {
   .shadow-card {
-    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
   }
   .shadow-card-hover {
-    box-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.08);
   }
 }
 
 @layer components {
-  .app-shell { 
-    @apply bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100;
-    @apply dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-slate-950;
-  }
-  /* Vristo-style sidebar: white, full height, permanent on lg+. */
-  .app-sidebar {
-    @apply fixed inset-y-0 start-0 z-40 flex w-64 -translate-x-full flex-col border-e border-slate-200/80 bg-white dark:border-slate-700/80 dark:bg-slate-900 transition-transform duration-200;
-  }
-  [dir='rtl'] .app-sidebar { transform: translateX(100%); }
-  [dir='rtl'] .app-sidebar.is-open { transform: translateX(0); }
-  .app-sidebar.is-open { transform: translateX(0); }
-  @media (min-width: 1024px) {
-    .app-sidebar { transform: translateX(0); }
-    [dir='rtl'] .app-sidebar { transform: translateX(0); }
-  }
-  .app-topbar {
-    @apply sticky top-0 z-20 flex min-h-[4.5rem] items-center justify-between gap-4 border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8 dark:border-slate-700/80 dark:bg-slate-900/90;
-  }
+  .app-shell { background: #f6f7fb; }
   .app-content { margin-inline-start: 0; }
-  @media (min-width: 1024px) {
-    .app-content { margin-inline-start: 16rem; }
+
+  /* ----- Top navigation — button-first, no slide-out drawer ----- */
+  .app-topbar {
+    @apply sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur;
   }
-  /* Nav links: Vristo's rounded pill with soft tinted active state. */
-  .app-nav-link.is-active {
-    @apply bg-brand-600/10 font-bold text-brand-600 shadow-none;
+  .app-topbar-inner {
+    @apply mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8;
   }
-  .app-nav-link.is-active .app-nav-icon {
-    @apply bg-brand-600 text-white shadow-sm shadow-brand-600/30;
+  .app-topbar-top {
+    @apply flex items-center justify-between gap-4;
   }
-  .app-nav-icon {
-    @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-sm text-slate-500 transition-colors group-hover:bg-slate-200/70 group-hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/70 dark:group-hover:text-slate-200;
+  .app-logo {
+    @apply grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700
+           text-xl text-white shadow-lg shadow-brand-600/25;
+  }
+  .app-eyebrow {
+    @apply truncate text-[10px] font-bold uppercase tracking-[0.16em] text-brand-600;
+  }
+  .app-title {
+    @apply mt-0.5 truncate text-lg font-bold tracking-tight text-slate-900;
+  }
+  .app-status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50
+           px-2.5 py-1.5 text-xs font-semibold text-emerald-700;
+  }
+  .app-lang-btn {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2
+           text-xs font-semibold text-slate-600 shadow-sm transition-colors
+           hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
+  }
+  .app-avatar {
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600
+           text-sm font-bold text-white shadow-sm shadow-brand-600/25;
+  }
+
+  /* Horizontally scrollable button bar — replaces the old slide-in sidebar.
+     Works identically at every breakpoint, so there is no separate mobile drawer. */
+  .app-nav-row {
+    @apply mt-3 flex items-center gap-1.5 overflow-x-auto;
+    scrollbar-width: none;
+  }
+  .app-nav-row::-webkit-scrollbar { display: none; }
+  .app-nav-btn {
+    @apply inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-transparent
+           px-3.5 py-2 text-sm font-semibold text-slate-500 transition-all duration-150
+           hover:bg-slate-100 hover:text-slate-900
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
+  }
+  .app-nav-btn.is-active {
+    @apply border-brand-700/10 bg-brand-600 text-white shadow-md shadow-brand-600/25 hover:bg-brand-600 hover:text-white;
   }
 }
 
@@ -64,117 +81,95 @@ body {
   /* .form-* come from @tailwindcss/forms (class strategy) and restore the
      border that preflight removes. */
   .field {
-    @apply form-input block w-full rounded-lg border-slate-200 bg-white text-sm text-slate-900
-           shadow-none transition-colors placeholder:text-slate-400
-           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20
-           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500;
+    @apply form-input block w-full rounded-lg border-slate-300 text-sm text-slate-900
+           shadow-sm transition-colors placeholder:text-slate-400
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
   }
   .field-select   { @apply field form-select pe-9; }
   .field-textarea { @apply field form-textarea leading-relaxed; }
   .field-check {
     @apply form-checkbox h-4 w-4 rounded border-slate-300 text-brand-600
-           transition focus:ring-2 focus:ring-brand-500/30
-           dark:border-slate-600;
+           transition focus:ring-2 focus:ring-brand-500/30;
   }
-  .field-sm { @apply py-1 px-2.5 text-xs; }
   /* Invalid state — paired with aria-invalid so it is not colour-only. */
   .field-error { @apply border-red-400 focus:border-red-500 focus:ring-red-500/30; }
 
-  .label     { @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300; }
-  .help-text { @apply mt-1 text-xs text-slate-500 dark:text-slate-400; }
-  .error-text{ @apply mt-1 flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400; }
+  .label     { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .help-text { @apply mt-1 text-xs text-slate-500; }
+  .error-text{ @apply mt-1 flex items-center gap-1 text-xs font-medium text-red-600; }
 
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg
-           px-4 py-2 text-sm font-bold transition-colors focus:outline-none
+           px-4 py-2 text-sm font-semibold transition-colors focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
            disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-primary { @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/30 hover:bg-brand-700; }
-  .btn-ghost   { @apply btn border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100; }
-  .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30; }
-  .btn-success { @apply btn bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 hover:bg-emerald-700; }
+  .btn-primary { @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700; }
+  .btn-ghost   { @apply btn border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50; }
+  .btn-danger  { @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50; }
+  .btn-success { @apply btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700; }
   .btn-sm      { @apply px-3 py-1.5 text-xs; }
 
-  .card { @apply rounded-xl border border-slate-200/70 bg-white shadow-card dark:border-slate-700/70 dark:bg-slate-900 dark:shadow-card; }
+  .card { @apply rounded-xl border border-slate-200 bg-white shadow-card; }
 
-  /* ----- Professional tables ----- */
+  /* ----- DataTable chrome ----- */
   .table-shell {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
+    @apply rounded-xl border border-slate-200/90 bg-white shadow-card;
   }
   .table-filters {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
+    @apply rounded-xl border border-slate-200/90 bg-white shadow-sm;
   }
   .table-toolbar {
-    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900;
+    @apply flex min-h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3;
   }
   .data-table-scroll {
-    max-height: calc(100vh - 22rem);
+    max-height: calc(100vh - 23rem);
     min-height: 12rem;
     scrollbar-color: #cbd5e1 transparent;
     scrollbar-width: thin;
   }
-  .data-table-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .data-table-scroll::-webkit-scrollbar { width: 8px; }
   .data-table-scroll::-webkit-scrollbar-thumb {
     border-radius: 999px;
     background: #cbd5e1;
   }
-  .data-table {
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 14px;
-  }
-  /* Header: clean, professional, sticky */
   .data-table-head {
-    @apply sticky top-0 z-10 bg-white dark:bg-slate-900;
+    @apply border-b border-slate-200 bg-slate-100/80;
   }
-  .data-table-head tr {
-    @apply border-b border-slate-200 dark:border-slate-700;
+  .data-table-head th {
+    @apply border border-slate-300 whitespace-normal text-[11px] font-bold tracking-wider text-slate-500;
   }
-  .data-table-th {
-    @apply whitespace-nowrap px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400;
+  .data-table-head button {
+    @apply min-h-7 rounded-md px-1.5 py-1;
   }
-  .data-table-th:first-child {
-    @apply rounded-l-lg;
+  .data-table-head button:hover {
+    @apply bg-white text-slate-900 shadow-sm;
   }
-  .data-table-th:last-child {
-    @apply rounded-r-lg;
+  .data-table-row:nth-child(even) {
+    @apply bg-slate-50/45;
   }
-  .dt-sort {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded transition-colors
-           hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1
-           dark:hover:bg-slate-800/50;
-    user-select: none;
-  }
-  .dt-sort-arrow {
-    @apply text-[10px] leading-none text-slate-300 transition-colors;
-  }
-  .dt-sort-arrow.is-on {
-    @apply text-brand-600;
-  }
-  /* Rows: clean, readable, subtle hover */
-  .data-table-row {
-    @apply border-b border-slate-100 transition-colors duration-150 hover:bg-slate-50/50 dark:border-slate-800 dark:hover:bg-slate-800/40;
-  }
-  .data-table-row:last-child {
-    @apply border-b-0;
-  }
-  .data-table-row.is-highlighted {
-    @apply bg-brand-50/30 dark:bg-brand-900/20;
-  }
-  .data-table-td {
-    @apply px-4 py-3 text-sm text-slate-700 dark:text-slate-300;
+  .data-table-row td {
+    @apply border border-slate-200 text-slate-700;
     overflow-wrap: anywhere;
   }
   .data-table-row td:first-child {
-    @apply font-medium text-slate-900 dark:text-slate-100;
+    @apply font-medium text-slate-900;
   }
-  /* Totals row: subtle emphasis */
-  .data-table-foot {
-    @apply border-t border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300;
+  .data-table {
+    table-layout: fixed;
+    border-collapse: collapse;
   }
-  .data-table-foot td {
-    @apply px-4 py-3;
+  .data-table th,
+  .data-table td {
+    border-width: 1px;
+  }
+  .data-table th:first-child,
+  .data-table td:first-child {
+    border-inline-start: 0;
+  }
+  .data-table th:last-child,
+  .data-table td:last-child {
+    border-inline-end: 0;
   }
   .table-note-expand {
     display: -webkit-box;
@@ -204,8 +199,7 @@ body {
            border-slate-300 bg-white px-2 text-sm font-medium text-slate-700
            transition-colors hover:bg-slate-50 focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1
-           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white
-           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
   }
 
   /* Count badge on a quick-filter chip. */
@@ -219,30 +213,33 @@ body {
            text-xs font-medium transition-colors focus:outline-none
            focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
   }
-  .filter-chip-off { @apply filter-chip border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700; }
+  .filter-chip-off { @apply filter-chip border-slate-300 bg-white text-slate-600 hover:bg-slate-50; }
   .filter-chip-on  { @apply filter-chip border-brand-600 bg-brand-600 text-white hover:bg-brand-700; }
 
   /* Appointment timestamp pill. inline-flex so it sits inline in tables
      but can take a margin when stacked in the mobile cards. */
   .chip-date {
     @apply inline-flex items-center gap-1 whitespace-nowrap rounded-md border
-           border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700
-           dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300;
+           border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700;
   }
 }
 
-/* ----- Print Media Rules — clean PDFs ----- */
+/* ----- Print Media Rules — clean PDFs for the cash register ledger ----- */
 @media print {
   .no-print          { display: none !important; }
   body               { background: white !important; color: black !important; }
+  /* The app shell paints a slate background on screen — force it white for paper. */
   body *             { background-color: transparent !important; }
-  .print-container   { box-shadow: none !important; border: 1px solid #ccc !important; }
-  .print-container.grid > * { box-shadow: none !important; border: 1px solid #ccc !important; }
+  .print-container   { box-shadow: none !important; border: none !important; }
+  /* KPI cards keep a hairline rule so they stay visually grouped in print.
+     Scoped to the dashboard's grid — a table container must not get boxed. */
+  .print-container.grid > * { box-shadow: none !important; border: 1px solid #999 !important; }
+  /* Horizontal scroll wrappers must not clip columns on paper. */
   .overflow-x-auto   { overflow: visible !important; }
   table              { width: 100%; border-collapse: collapse; }
-  th, td             { border: 1px solid #ccc; padding: 6px 10px; font-size: 11px; }
-  th                 { background: #f5f5f5 !important; font-weight: 600; }
-  tfoot              { font-weight: 600; }
+  th, td             { border: 1px solid #999; padding: 6px 10px; font-size: 12px; }
+  /* Totals row carries the ledger's bottom line — keep it emphasised. */
+  tfoot              { font-weight: 700; }
   tfoot td           { border-top: 2px solid #333 !important; }
-  @page              { margin: 1cm; }
+  @page              { margin: 1.2cm; }
 }

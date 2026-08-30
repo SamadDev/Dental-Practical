@@ -2,7 +2,7 @@
   <!-- no-print: page controls are meaningless on paper. -->
   <nav
     v-if="meta.total > 0"
-    class="no-print mt-4 flex flex-wrap items-center justify-between gap-3"
+    class="no-print flex flex-wrap items-center justify-between gap-3"
     :aria-label="$t('table.pagination')"
   >
     <!-- "Showing 1–25 of 340" -->

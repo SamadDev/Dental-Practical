@@ -3,9 +3,7 @@
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('plans.title') }}</h2>
-        <p v-if="!table.isLoading" class="mt-0.5 text-sm text-slate-500">
-          {{ table.totalRecordCount }} {{ $t('common.results') }}
-        </p>
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
       <button class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
     </header>
@@ -16,21 +14,53 @@
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
 
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('plans.title')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    >
+      <template #chips>
+        <button
+          type="button"
+          :class="filters.with_overdue ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.with_overdue = !filters.with_overdue; reload()"
+        >⏰ {{ $t('plans.installment_status.overdue') }}</button>
+      </template>
+
+      <template #advanced>
+        <FormField v-slot="{ id }" :label="$t('aqsat.status')">
+          <select :id="id" v-model="filters.status" class="field-select" @change="reload">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="active">{{ $t('plans.status.active') }}</option>
+            <option value="completed">{{ $t('plans.status.completed') }}</option>
+            <option value="defaulted">{{ $t('plans.status.defaulted') }}</option>
+            <option value="cancelled">{{ $t('plans.status.cancelled') }}</option>
+          </select>
+        </FormField>
+      </template>
+    </DataTableFilters>
+
     <DataTable
-      ref="dataTable"
-      :url="url"
       :columns="columns"
-      :showHeaderCard="false"
-      :hasCheckbox="false"
-      reloadTableEvent="reloadPaymentPlans"
-      :defaultOrder="true"
-      :orderByColumnIndex="5"
-      :orderByColumnName="'created_at'"
-      :orderByColumnDir="'desc'"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered"
+      :empty-text="$t('plans.title')"
+      empty-icon="🗓"
+      :meta="meta"
+      :per-page="perPage"
+      @sort="toggleSort"
+      @page="goToPage"
+      @update:per-page="(n) => (perPage = n)"
+      @reset="resetFilters"
     >
       <template #cell(patient)="{ row }">
         <div class="leading-tight">
-          <div>{{ row.patient?.name ?? '—' }}</div>
+          <div class="font-medium text-slate-900">{{ row.patient?.name ?? '—' }}</div>
           <div class="text-xs text-slate-400">{{ row.patient?.phone || '' }}</div>
         </div>
       </template>
@@ -65,7 +95,7 @@
 
       <template #cell(actions)="{ row }">
         <div class="flex items-center gap-1.5 no-print">
-          <button class="btn-ghost btn-sm" @click="openDetail(row)" :title="$t('common.view')"><Icon name="eye" :size="14" /></button>
+          <button class="btn-ghost btn-sm" @click="openDetail(row)" :title="$t('common.view')"><Icon name="folder" :size="14" /></button>
         </div>
       </template>
 
@@ -193,34 +223,42 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
+import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
-import { debounce } from '../utils/datetime';
 
 const { t } = useI18n();
-const auth = inject('auth');
 
-const url = '/payment-plans';
+const {
+  rows, loading, error, search, filters, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/payment-plans', {
+  filters: { status: '', with_overdue: false },
+  sort: 'created_at',
+  dir: 'desc',
+});
 
-const columns = [
-  { label: t('patient.name'), field: 'patient', sortable: false, width: '15%' },
-  { label: t('plans.plan_name'), field: 'name', sortable: true, searchable: true, width: '15%' },
-  { label: t('plans.total'), field: 'total_amount', sortable: true, searchable: true, width: '12%' },
-  { label: t('plans.remaining'), field: 'remaining', sortable: false, width: '12%' },
-  { label: t('plans.progress'), field: 'installments', sortable: false, width: '10%' },
-  { label: t('plans.start_date'), field: 'start_date', sortable: true, width: '12%' },
-  { label: t('aqsat.status'), field: 'status', sortable: false, width: '12%' },
-  { label: t('common.actions'), field: 'actions', sortable: false, width: '8%', template: true },
-];
+const columns = computed(() => [
+  { key: 'patient', label: t('patient.name'), sortable: false, width: '15%' },
+  { key: 'name', label: t('plans.plan_name'), sortable: true, width: '15%' },
+  { key: 'total_amount', label: t('plans.total'), sortable: true, width: '12%', align: 'end' },
+  { key: 'remaining', label: t('plans.remaining'), sortable: false, width: '12%', align: 'end' },
+  { key: 'installments', label: t('plans.progress'), sortable: false, width: '10%' },
+  { key: 'start_date', label: t('plans.start_date'), sortable: true, width: '12%' },
+  { key: 'status', label: t('aqsat.status'), sortable: true, width: '12%' },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: '8%', align: 'end', printHidden: true },
+]);
 
 const fmt = (v) => formatIQD(v || 0);
 
@@ -318,7 +356,7 @@ async function confirmPay() {
     });
     showPay.value = false;
     await openDetail(detail.value);
-    dataTable.value?.reload?.();
+    reload();
   } catch (e) {
     error.value = e.userMessage;
   } finally { busy.value = false; }
@@ -331,7 +369,7 @@ async function doWaive() {
   try {
     await api.post(`/payment-plans/installments/${waiveTarget.value.id}/waive`);
     await openDetail(detail.value);
-    dataTable.value?.reload?.();
+    reload();
   } catch (e) { error.value = e.userMessage; }
 }
 
@@ -367,11 +405,10 @@ async function create() {
       installment_amount: Number(form.value.installment_amount),
     });
     showCreate.value = false;
-    dataTable.value?.reload?.();
+    reload();
   } catch (e) { formError.value = e.userMessage; }
   finally { busy.value = false; }
 }
 
-const dataTable = ref(null);
-const error = ref('');
+onMounted(load);
 </script>

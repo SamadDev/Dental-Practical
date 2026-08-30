@@ -3,8 +3,8 @@
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('inventory.title') }}</h2>
-        <p v-if="!table.isLoading" class="mt-0.5 text-sm text-slate-500">
-          {{ table.totalRecordCount }} {{ $t('common.results') }}
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">
+          {{ meta.total }} {{ $t('common.results') }}
           <template v-if="stockValue"> · {{ $t('inventory.stock_value') }}:
             <b class="font-mono">{{ fmt(stockValue) }}</b> {{ $t('currency') }}
           </template>
@@ -19,57 +19,65 @@
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
 
-    <DataTable
-      ref="dataTable"
-      :url="url"
-      :columns="columns"
-      :showHeaderCard="false"
-      :hasCheckbox="false"
-      reloadTableEvent="reloadInventory"
-      :defaultOrder="true"
-      :orderByColumnIndex="0"
-      :orderByColumnName="'name'"
-      :orderByColumnDir="'asc'"
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('inventory.title')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
     >
-      <template #external-filters="{ onFilterChange }">
-        <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ $t('inventory.low_stock') }}</label>
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="form-checkbox" :value="true"
-                     v-model="lowStockFilter"
-                     @change="onFilterChange('low_stock', lowStockFilter)">
-              <span class="ms-2">{{ $t('inventory.low_stock') }}</span>
-            </label>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ $t('inventory.expiring') }}</label>
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="form-checkbox" :value="true"
-                     v-model="expiringFilter"
-                     @change="onFilterChange('expiring', expiringFilter)">
-              <span class="ms-2">{{ $t('inventory.expiring') }}</span>
-            </label>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ $t('inventory.category') }}</label>
-            <select v-model="categoryFilter" class="field-select !w-auto !py-1.5 text-xs" @change="onFilterChange('category', categoryFilter)">
-              <option value="">{{ $t('common.all') }} — {{ $t('inventory.categories') }}</option>
-              <option v-for="c in categories" :key="c.category" :value="c.category">{{ c.category }}</option>
-            </select>
-          </div>
-        </div>
+      <template #chips>
+        <button
+          type="button"
+          :class="filters.low_stock ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.low_stock = !filters.low_stock; reload()"
+        >📉 {{ $t('inventory.low_stock') }}</button>
+        <button
+          type="button"
+          :class="filters.expiring ? 'filter-chip-on' : 'filter-chip-off'"
+          @click="filters.expiring = !filters.expiring; reload()"
+        >⏳ {{ $t('inventory.expiring') }}</button>
       </template>
 
+      <template #advanced>
+        <FormField v-slot="{ id }" :label="$t('inventory.category')">
+          <select :id="id" v-model="filters.category" class="field-select" @change="reload">
+            <option value="">{{ $t('common.all') }} — {{ $t('inventory.categories') }}</option>
+            <option v-for="c in categories" :key="c.category" :value="c.category">{{ c.category }}</option>
+          </select>
+        </FormField>
+      </template>
+    </DataTableFilters>
+
+    <DataTable
+      :columns="columns"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered"
+      :empty-text="$t('inventory.title')"
+      empty-icon="📦"
+      :meta="meta"
+      :per-page="perPage"
+      @sort="toggleSort"
+      @page="goToPage"
+      @update:per-page="(n) => (perPage = n)"
+      @reset="resetFilters"
+    >
       <template #cell(name)="{ row }">
         <div class="leading-tight">
-          <div>{{ row.name }}</div>
+          <div class="font-medium text-slate-900">{{ row.name }}</div>
           <div class="font-mono text-xs text-slate-400">{{ row.sku }}</div>
         </div>
       </template>
 
+      <template #cell(category)="{ row }">
+        <span class="text-slate-600">{{ row.category }}</span>
+      </template>
+
       <template #cell(vendor)="{ row }">
-        <span class="text-slate-600 dark:text-slate-400">{{ row.vendor?.name ?? '—' }}</span>
+        <span class="text-slate-600">{{ row.vendor?.name ?? '—' }}</span>
       </template>
 
       <template #cell(quantity_on_hand)="{ row }">
@@ -80,12 +88,12 @@
       </template>
 
       <template #cell(unit_cost)="{ row }">
-        <span class="whitespace-nowrap font-mono tabular-nums text-slate-700 dark:text-slate-300">{{ fmt(row.unit_cost) }}</span>
+        <span class="whitespace-nowrap font-mono tabular-nums text-slate-700">{{ fmt(row.unit_cost) }}</span>
       </template>
 
       <template #cell(expiry_date)="{ row }">
         <span v-if="row.track_expiry && row.expiry_date" class="chip-date">{{ formatDate(row.expiry_date) }}</span>
-        <span v-else class="text-slate-300 dark:text-slate-600">—</span>
+        <span v-else class="text-slate-300">—</span>
       </template>
 
       <template #cell(actions)="{ row }">
@@ -97,14 +105,17 @@
       <template #card="{ row }">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="font-medium text-slate-900 dark:text-slate-100">{{ row.name }}</p>
+            <p class="font-medium text-slate-900">{{ row.name }}</p>
             <p class="text-xs text-slate-400 font-mono">{{ row.sku }} · {{ row.category }}</p>
           </div>
           <span class="rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums" :class="qtyClass(row)">
             {{ row.quantity_on_hand }}
           </span>
         </div>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ row.vendor?.name ?? '—' }} · {{ fmt(row.unit_cost) }} {{ $t('currency') }}</p>
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <p class="text-xs text-slate-500">{{ row.vendor?.name ?? '—' }} · {{ fmt(row.unit_cost) }} {{ $t('currency') }}</p>
+          <button class="btn-ghost btn-sm" @click.stop="openMove(row)"><Icon name="repeat" :size="14" /></button>
+        </div>
       </template>
     </DataTable>
 
@@ -173,7 +184,7 @@
         <FormField v-slot="{ id }" :label="$t('inventory.expiry_date')" class="sm:col-span-2">
           <div class="flex items-center gap-3">
             <input :id="'track-' + id" v-model="form.track_expiry" type="checkbox" class="field-check" />
-            <label :for="'track-' + id" class="text-sm text-slate-600 dark:text-slate-400">{{ $t('inventory.track_expiry') }}</label>
+            <label :for="'track-' + id" class="text-sm text-slate-600">{{ $t('inventory.track_expiry') }}</label>
             <input :id="id" v-model="form.expiry_date" type="date" class="field !w-auto" />
           </div>
         </FormField>
@@ -189,48 +200,53 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
+import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
-const auth = inject('auth');
 
-const url = '/inventory';
+const {
+  rows, loading, error, search, filters, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/inventory', {
+  filters: { low_stock: false, expiring: false, category: '' },
+  sort: 'name',
+  dir: 'asc',
+});
 
-const columns = [
-  { label: t('inventory.item_name'), field: 'name', sortable: true, searchable: true, width: '20%' },
-  { label: t('inventory.category'), field: 'category', sortable: true, searchable: true, width: '12%' },
-  { label: t('vendors.title'), field: 'vendor', sortable: false, width: '12%' },
-  { label: t('inventory.qty'), field: 'quantity_on_hand', sortable: true, width: '10%' },
-  { label: t('inventory.unit_cost'), field: 'unit_cost', sortable: true, width: '12%' },
-  { label: t('inventory.expiry_date'), field: 'expiry_date', sortable: false, width: '12%' },
-  { label: t('common.actions'), field: 'actions', sortable: false, width: '10%', template: true },
-];
+const columns = computed(() => [
+  { key: 'name', label: t('inventory.item_name'), sortable: true, width: '22%' },
+  { key: 'category', label: t('inventory.category'), sortable: true, width: '13%' },
+  { key: 'vendor', label: t('vendors.title'), sortable: false, width: '13%' },
+  { key: 'quantity_on_hand', label: t('inventory.qty'), sortable: true, width: '10%' },
+  { key: 'unit_cost', label: t('inventory.unit_cost'), sortable: true, width: '13%', align: 'end' },
+  { key: 'expiry_date', label: t('inventory.expiry_date'), sortable: false, width: '13%' },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: '10%', align: 'end', printHidden: true },
+]);
 
 const fmt = (v) => formatIQD(v || 0);
 const categories = ref([]);
 const vendors    = ref([]);
 const busy       = ref(false);
 
-const lowStockFilter = ref(false);
-const expiringFilter = ref(false);
-const categoryFilter = ref('');
-
 const stockValue = computed(() =>
-  dataTable.value?.table?.rows?.reduce((s, r) => s + (r.quantity_on_hand || 0) * (r.unit_cost || 0), 0) ?? 0);
+  rows.value.reduce((s, r) => s + (r.quantity_on_hand || 0) * (r.unit_cost || 0), 0));
 
 function qtyClass(row) {
-  if (row.quantity_on_hand <= 0)                       return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-  if (row.quantity_on_hand <= row.reorder_level)       return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-  return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+  if (row.quantity_on_hand <= 0)                       return 'bg-red-100 text-red-700';
+  if (row.quantity_on_hand <= row.reorder_level)       return 'bg-amber-100 text-amber-700';
+  return 'bg-emerald-50 text-emerald-700';
 }
 
 async function loadCategories() {
@@ -246,13 +262,7 @@ async function loadVendors() {
   } catch { /* non-critical */ }
 }
 
-const dataTable = ref(null);
-
-watch([lowStockFilter, expiringFilter, categoryFilter], () => {
-  dataTable.value?.reload?.();
-});
-
-onMounted(() => { loadCategories(); loadVendors(); });
+onMounted(() => { load(); loadCategories(); loadVendors(); });
 
 // ---- Move ----
 const showMove   = ref(false);
@@ -276,7 +286,7 @@ async function confirmMove() {
       batch_number: moveForm.value.batch_number || undefined,
     });
     showMove.value = false;
-    dataTable.value?.reload?.();
+    reload();
   } catch (e) { moveError.value = e.userMessage; }
   finally { busy.value = false; }
 }
@@ -305,11 +315,9 @@ async function create() {
       expiry_date: form.value.expiry_date || undefined,
     });
     showCreate.value = false;
-    dataTable.value?.reload?.();
+    reload();
     loadCategories();
   } catch (e) { formError.value = e.userMessage; }
   finally { busy.value = false; }
 }
-
-const error = ref('');
 </script>

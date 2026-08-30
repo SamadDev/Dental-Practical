@@ -13,16 +13,30 @@ use Illuminate\Support\Facades\DB;
 
 class VendorController extends Controller
 {
+    /** sort key => column, whitelisted so the query string can't drive a raw ORDER BY. */
+    private const SORTABLE = [
+        'name'               => 'name',
+        'contact_person'     => 'contact_person',
+        'phone'              => 'phone',
+        'payment_terms_days' => 'payment_terms_days',
+        'created_at'         => 'created_at',
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $q = Vendor::query()
             ->when($request->boolean('active_only', true), fn ($qq) => $qq->where('is_active', true))
             ->when($s = $request->query('search'), fn ($qq) => $qq->where(function ($w) use ($s) {
                 $w->where('name', 'like', "%{$s}%")->orWhere('contact_person', 'like', "%{$s}%");
-            }))
-            ->orderBy('name');
+            }));
 
-        return response()->json($q->paginate(50));
+        $sort = self::SORTABLE[(string) $request->query('sort')] ?? 'name';
+        $dir  = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $q->orderBy($sort, $dir);
+
+        $perPage = max(5, min(200, (int) $request->query('per_page', 25) ?: 25));
+
+        return response()->json($q->paginate($perPage));
     }
 
     public function store(Request $request): JsonResponse

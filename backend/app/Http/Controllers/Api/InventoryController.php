@@ -24,13 +24,13 @@ class InventoryController extends Controller
             ->when($request->boolean('active_only', true), fn ($qq) => $qq->active());
 
         $sort = $request->query('sort', 'name');
-        $dir  = $request->query('dir', 'asc');
+        $dir  = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
         $allowed = ['name', 'sku', 'category', 'quantity_on_hand', 'unit_cost', 'reorder_level', 'expiry_date'];
-        if (in_array($sort, $allowed)) {
-            $q->orderBy($sort, $dir);
-        }
+        $q->orderBy(in_array($sort, $allowed) ? $sort : 'name', $dir);
 
-        return response()->json($q->paginate(50));
+        $perPage = max(5, min(200, (int) $request->query('per_page', 50) ?: 50));
+
+        return response()->json($q->paginate($perPage));
     }
 
     public function store(Request $request): JsonResponse

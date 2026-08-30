@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentPlanController extends Controller
 {
+    /** sort key => column, whitelisted so the query string can't drive a raw ORDER BY. */
+    private const SORTABLE = [
+        'name'         => 'name',
+        'total_amount' => 'total_amount',
+        'start_date'   => 'start_date',
+        'status'       => 'status',
+        'created_at'   => 'created_at',
+    ];
+
     public function index(Request $request): JsonResponse
     {
         $q = PaymentPlan::with(['patient:id,name,phone', 'installments']);
@@ -26,8 +35,22 @@ class PaymentPlanController extends Controller
         if ($request->boolean('with_overdue')) {
             $q->whereHas('installments', fn ($i) => $i->whereIn('status', ['overdue', 'partial']));
         }
+        if ($s = trim((string) $request->query('search'))) {
+            $q->where(function ($w) use ($s) {
+                $w->where('name', 'like', "%{$s}%")
+                    ->orWhereHas('patient', fn ($p) => $p
+                        ->where('name', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%"));
+            });
+        }
 
-        return response()->json($q->orderByDesc('id')->paginate(25));
+        $sort = self::SORTABLE[(string) $request->query('sort')] ?? 'created_at';
+        $dir  = strtolower((string) $request->query('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $q->orderBy($sort, $dir)->orderByDesc('id');
+
+        $perPage = max(5, min(200, (int) $request->query('per_page', 25) ?: 25));
+
+        return response()->json($q->paginate($perPage));
     }
 
     public function store(Request $request): JsonResponse

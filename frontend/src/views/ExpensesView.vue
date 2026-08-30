@@ -109,7 +109,7 @@
       </template>
     </DataTableFilters>
 
-    <AppDataTable
+    <DataTable
       :columns="columns"
       :rows="rows"
       :loading="loading"
@@ -121,7 +121,8 @@
       :meta="meta"
       :per-page="perPage"
       @sort="toggleSort"
-      @page="(p, r) => { perPage = r; goToPage(p); }"
+      @page="goToPage"
+      @update:per-page="(n) => (perPage = n)"
       @reset="resetFilters"
     >
       <template #cell(created_at)="{ row }">
@@ -167,7 +168,7 @@
         <p class="mt-1 text-sm text-slate-700">{{ row.description }}</p>
         <p class="mt-1 text-xs text-slate-400">{{ formatDateTime(row.created_at) }}</p>
       </template>
-    </AppDataTable>
+    </DataTable>
 
 
     <ConfirmDialog
@@ -193,7 +194,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
-import AppDataTable       from '../components/AppDataTable.vue';
+import DataTable          from '../components/DataTable.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';

@@ -3,7 +3,7 @@
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('vendors.title') }}</h2>
-        <p v-if="!vendorTable.isLoading" class="mt-0.5 text-sm text-slate-500">{{ vendorTable.totalRecordCount }} {{ $t('common.results') }}</p>
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
       <div class="flex gap-2 no-print">
         <button class="btn-ghost" @click="openPO" :title="$t('po.new')"><Icon name="plus" :size="16" /></button>
@@ -19,8 +19,8 @@
 
     <!-- Purchase orders -->
     <div class="card mb-6 overflow-hidden">
-      <div class="flex min-h-12 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ $t('po.title') }}</h3>
+      <div class="flex min-h-12 items-center justify-between border-b border-slate-200 px-4 py-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">{{ $t('po.title') }}</h3>
         <select v-model="poStatus" class="field-select !w-auto !py-1 text-xs" @change="loadPOs">
           <option value="">{{ $t('common.all') }}</option>
           <option v-for="s in PO_STATUSES" :key="s" :value="s">{{ $t(`po.status.${s}`) }}</option>
@@ -30,21 +30,21 @@
       <div class="overflow-x-auto" v-if="!poLoading && pos.length">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b border-slate-100 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/50">
-              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $t('po.number') }}</th>
-              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $t('vendors.title') }}</th>
-              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $t('archive.date_from') }}</th>
-              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $t('plans.total') }}</th>
-              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $t('aqsat.status') }}</th>
+            <tr class="border-b border-slate-100 bg-slate-50/60">
+              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $t('po.number') }}</th>
+              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $t('vendors.title') }}</th>
+              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $t('archive.date_from') }}</th>
+              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $t('plans.total') }}</th>
+              <th class="px-4 py-2.5 text-start text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $t('aqsat.status') }}</th>
               <th class="no-print"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="po in pos" :key="po.id" class="data-table-row cursor-pointer" @click="openPODetail(po)">
-              <td class="px-4 py-3 font-mono font-medium text-slate-900 dark:text-slate-100">{{ po.po_number }}</td>
-              <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ po.vendor?.name }}</td>
-              <td class="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">{{ formatDate(po.order_date) }}</td>
-              <td class="px-4 py-3 font-mono tabular-nums text-slate-700 dark:text-slate-300">{{ fmt(po.total_amount) }}</td>
+              <td class="px-4 py-3 font-mono font-medium text-slate-900">{{ po.po_number }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ po.vendor?.name }}</td>
+              <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ formatDate(po.order_date) }}</td>
+              <td class="px-4 py-3 font-mono tabular-nums text-slate-700">{{ fmt(po.total_amount) }}</td>
               <td class="px-4 py-3">
                 <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold"
                       :class="poStatusClass(po.status)">{{ $t(`po.status.${po.status}`) }}</span>
@@ -61,32 +61,48 @@
     </div>
 
     <!-- Vendors table -->
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('vendors.title')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    />
+
     <DataTable
-      ref="vendorTable"
-      :url="url"
       :columns="columns"
-      :showHeaderCard="false"
-      :hasCheckbox="false"
-      reloadTableEvent="reloadVendors"
-      :defaultOrder="true"
-      :orderByColumnIndex="0"
-      :orderByColumnName="'name'"
-      :orderByColumnDir="'asc'"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered"
+      :empty-text="$t('vendors.title')"
+      empty-icon="🏭"
+      :meta="meta"
+      :per-page="perPage"
+      @sort="toggleSort"
+      @page="goToPage"
+      @update:per-page="(n) => (perPage = n)"
+      @reset="resetFilters"
     >
       <template #cell(name)="{ row }">
         <div class="leading-tight">
-          <div>{{ row.name }}</div>
-          <div class="text-xs text-slate-400 dark:text-slate-500">{{ row.contact_person || '' }}</div>
+          <div class="font-medium text-slate-900">{{ row.name }}</div>
+          <div class="text-xs text-slate-400">{{ row.contact_person || '' }}</div>
         </div>
       </template>
 
       <template #cell(phone)="{ row }">
         <a v-if="row.phone" :href="`tel:${row.phone}`" class="whitespace-nowrap text-brand-600 hover:underline">{{ row.phone }}</a>
-        <span v-else class="text-slate-300 dark:text-slate-600">—</span>
+        <span v-else class="text-slate-300">—</span>
+      </template>
+
+      <template #cell(email)="{ row }">
+        <span class="text-slate-600">{{ row.email || '—' }}</span>
       </template>
 
       <template #cell(payment_terms_days)="{ row }">
-        <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ $t('vendors.net', { n: row.payment_terms_days }) }}</span>
+        <span class="tabular-nums text-slate-600">{{ $t('vendors.net', { n: row.payment_terms_days }) }}</span>
       </template>
 
       <template #cell(is_active)="{ row }">
@@ -98,8 +114,8 @@
       </template>
 
       <template #card="{ row }">
-        <p class="font-medium text-slate-900 dark:text-slate-100">{{ row.name }} <span class="text-xs font-normal text-slate-400 dark:text-slate-500">{{ row.contact_person }}</span></p>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ row.phone || '—' }} · {{ $t('vendors.net', { n: row.payment_terms_days }) }}</p>
+        <p class="font-medium text-slate-900">{{ row.name }} <span class="text-xs font-normal text-slate-400">{{ row.contact_person }}</span></p>
+        <p class="mt-1 text-xs text-slate-500">{{ row.phone || '—' }} · {{ $t('vendors.net', { n: row.payment_terms_days }) }}</p>
       </template>
     </DataTable>
 
@@ -153,7 +169,7 @@
 
       <h4 class="mt-5 mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('po.items') }}</h4>
       <div v-for="(item, idx) in poForm.items" :key="idx"
-           class="mb-2 grid grid-cols-[1fr_auto_auto_auto] items-end gap-2 rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
+           class="mb-2 grid grid-cols-[1fr_auto_auto_auto] items-end gap-2 rounded-lg border border-slate-200 p-2.5">
         <FormField v-slot="{ id }" :label="$t('inventory.title')">
           <select :id="id" v-model="item.inventory_item_id" class="field-select !py-1.5 text-sm">
             <option :value="''" disabled>—</option>
@@ -170,7 +186,7 @@
       </div>
       <button type="button" class="btn-ghost btn-sm mt-1" @click="addPOLine" :title="$t('po.add_line')"><Icon name="plus" :size="14" /></button>
 
-      <p class="mt-4 text-end text-sm text-slate-600 dark:text-slate-400">
+      <p class="mt-4 text-end text-sm text-slate-600">
         {{ $t('plans.total') }}:
         <b class="font-mono tabular-nums">{{ fmt(poTotal) }} {{ $t('currency') }}</b>
       </p>
@@ -187,19 +203,19 @@
       <div v-if="poDetail">
         <ul class="space-y-2">
           <li v-for="it in poDetail.items" :key="it.id"
-              class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5">
+              class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
             <div class="leading-tight">
-              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ it.item?.name ?? '—' }}</div>
-              <div class="text-xs text-slate-400 dark:text-slate-500 font-mono">{{ it.item?.sku }}</div>
+              <div class="text-sm font-medium text-slate-900">{{ it.item?.name ?? '—' }}</div>
+              <div class="text-xs text-slate-400 font-mono">{{ it.item?.sku }}</div>
             </div>
-            <div class="text-end text-sm tabular-nums text-slate-600 dark:text-slate-400">
+            <div class="text-end text-sm tabular-nums text-slate-600">
               {{ it.quantity_received }}/{{ it.quantity_ordered }}
-              <div class="font-mono text-xs text-slate-400 dark:text-slate-500">{{ fmt(it.unit_cost) }}</div>
+              <div class="font-mono text-xs text-slate-400">{{ fmt(it.unit_cost) }}</div>
             </div>
           </li>
         </ul>
-        <div class="mt-4 flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 text-sm">
-          <span class="text-slate-500 dark:text-slate-400">{{ $t('plans.total') }}</span>
+        <div class="mt-4 flex justify-between border-t border-slate-100 pt-3 text-sm">
+          <span class="text-slate-500">{{ $t('plans.total') }}</span>
           <b class="font-mono tabular-nums">{{ fmt(poDetail.total_amount) }} {{ $t('currency') }}</b>
         </div>
       </div>
@@ -212,10 +228,10 @@
     <Modal v-model="showReceive" :title="$t('po.receive_title')" max-w-xl>
       <div v-if="receiveTarget">
         <div v-for="(line, idx) in receiveLines" :key="line.purchase_order_item_id"
-             class="mb-3 rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+             class="mb-3 rounded-lg border border-slate-200 p-3">
           <div class="mb-2 flex items-center justify-between">
-            <span class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ line.name }}</span>
-            <span class="text-xs text-slate-400 dark:text-slate-500">{{ line.received }}/{{ line.ordered }} {{ $t('inventory.qty') }}</span>
+            <span class="text-sm font-medium text-slate-800">{{ line.name }}</span>
+            <span class="text-xs text-slate-400">{{ line.received }}/{{ line.ordered }} {{ $t('inventory.qty') }}</span>
           </div>
           <div class="grid grid-cols-3 gap-2">
             <FormField v-slot="{ id }" :label="$t('po.receive_qty')">
@@ -241,37 +257,34 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
 import IqdInput  from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
+import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();
-const auth = inject('auth');
 
-const url = '/vendors';
-
-const columns = [
-  { label: t('vendors.name'), field: 'name', sortable: true, searchable: true, width: '25%' },
-  { label: t('patient.phone'), field: 'phone', sortable: false, searchable: true, width: '15%' },
-  { label: t('vendors.email'), field: 'email', sortable: false, searchable: true, width: '15%' },
-  { label: t('vendors.terms'), field: 'payment_terms_days', sortable: true, width: '12%' },
-  { label: t('aqsat.status'), field: 'is_active', sortable: false, width: '12%' },
-];
+const columns = computed(() => [
+  { key: 'name', label: t('vendors.name'), sortable: true, width: '25%' },
+  { key: 'phone', label: t('patient.phone'), sortable: true, width: '15%' },
+  { key: 'email', label: t('vendors.email'), sortable: false, width: '20%' },
+  { key: 'payment_terms_days', label: t('vendors.terms'), sortable: true, width: '15%' },
+  { key: 'is_active', label: t('aqsat.status'), sortable: false, width: '12%' },
+]);
 
 const fmt = (v) => formatIQD(v || 0);
 const busy = ref(false);
 
-const vendorTable = ref(null);
-
 const {
-  rows, loading, error, search, filters, sort, dir, perPage, meta,
+  rows, loading, error, search, sort, dir, perPage, meta,
   activeFilterCount, isFiltered,
   load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
 } = useDataTable('/vendors', { sort: 'name', dir: 'asc' });
@@ -325,7 +338,7 @@ async function createVendor() {
   try {
     await api.post('/vendors', form.value);
     showCreate.value = false;
-    vendorTable.value?.reload?.();
+    reload();
   } catch (e) { formError.value = e.userMessage; }
   finally { busy.value = false; }
 }

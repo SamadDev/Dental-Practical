@@ -1,7 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { createI18n } from 'vue-i18n';
-import PrimeVue from 'primevue/config';
 import App from './App.vue';
 import router from './router';
 import en from './locales/en.json';
@@ -20,10 +19,7 @@ const i18n = createI18n({
 const app = createApp(App)
   .use(createPinia())
   .use(router)
-  .use(i18n)
-  .use(PrimeVue, {
-    unstyled: true,
-  });
+  .use(i18n);
 
 const { can } = useAuth();
 app.provide('auth', { can });

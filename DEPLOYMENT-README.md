@@ -117,65 +117,144 @@ DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_password
 ```
 
-## Deploy commands
+## Complete Deployment Instructions
 
-### Backend
-From the local repo:
+### Quick Reference: Deploy Everything
+
+When you have changes ready, run these steps in order:
+
+#### Step 1: Commit and push to GitHub
+```bash
+cd /Users/samad/Dental-Practical
+git add .
+git commit -m "Your commit message here"
+git push origin main
+```
+
+#### Step 2: Frontend auto-deploys to GitHub Pages
+The GitHub Pages workflow automatically triggers when you push to `main`.
+- Workflow file: `.github/workflows/deploy-frontend.yml`
+- What it does: Builds the frontend from `frontend/` and publishes to GitHub Pages
+- Live URL: `https://samaddev.github.io/Dental-Practical/#/home`
+- Status: Check https://github.com/SamadDev/Dental-Practical/actions
+
+**Important**: The GitHub Pages workflow runs automatically on every push to `main`. Wait for the "Deploy frontend to GitHub Pages" workflow to complete (usually 30-60 seconds).
+
+#### Step 3: Deploy backend to remote server
+From the backend folder on your local machine:
 
 ```bash
 cd backend
 php vendor/bin/envoy run deploy
 ```
 
-### Seed data
+This deploys the Laravel backend to `dental@176.9.120.84:/home/dental/public_html`
 
+#### Step 4: Seed database (if needed)
 ```bash
 cd backend
 php vendor/bin/envoy run seed
 ```
 
-## GitHub Pages workflow example
+### Individual Deploy Commands
 
-Create `.github/workflows/deploy-frontend.yml` with:
+#### Frontend deployment
+Frontend is automatic via GitHub Pages workflow when you push to `main`.
 
+To manually verify the build locally:
+```bash
+cd frontend
+npm run build
+npm run preview  # preview at http://localhost:4173/Dental-Practical/#/home
+```
+
+#### Backend deployment
+```bash
+cd backend
+php vendor/bin/envoy run deploy
+```
+
+#### Seed data (development/testing)
+```bash
+cd backend
+php vendor/bin/envoy run seed
+```
+
+### GitHub Pages Workflow
+
+**File**: `.github/workflows/deploy-frontend.yml`
+
+**Workflow details**:
+- Triggers on: push to `main` branch or manual workflow dispatch
+- Runs: Frontend build from `frontend/` folder
+- Publishes: `frontend/dist/` to GitHub Pages under `/Dental-Practical/`
+- URL: https://samaddev.github.io/Dental-Practical/
+
+**Current workflow**:
 ```yaml
-name: Deploy frontend
+name: Deploy frontend to GitHub Pages
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm install
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://dental.smartvisioniq.com/api/v1' }}
         run: npm run build
 
-      - name: Upload artifact
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist
 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
 ```
+
+**To check deployment status**:
+1. Go to: https://github.com/SamadDev/Dental-Practical/actions
+2. Look for "Deploy frontend to GitHub Pages" workflow
+3. Check the latest run status (should show ✅ for success)
+4. Visit live site: https://samaddev.github.io/Dental-Practical/#/home
 
 ## Notes for future AI or teammates
 
@@ -185,6 +264,38 @@ jobs:
 - The backend and frontend are separate deployment layers and should not be treated as a single monolith.
 - Always ensure the frontend production API base points to the live server URL, not localhost.
 - The server user must be `dental`, and the host must be `176.9.120.84`.
+
+### For AI Assistants: Standard Deployment Flow
+
+When the user asks to "deploy", "send to GitHub", "update production", or similar:
+
+1. **Commit and push changes to GitHub main branch**:
+   ```bash
+   cd /Users/samad/Dental-Practical
+   git add .
+   git commit -m "Describe changes"
+   git push origin main
+   ```
+
+2. **Frontend automatically deploys**:
+   - The GitHub Pages workflow (`.github/workflows/deploy-frontend.yml`) triggers automatically
+   - Wait ~30-60 seconds for the workflow to complete
+   - Verify at: https://github.com/SamadDev/Dental-Practical/actions
+   - Live frontend: https://samaddev.github.io/Dental-Practical/#/home
+
+3. **Deploy backend if changed**:
+   ```bash
+   cd backend
+   php vendor/bin/envoy run deploy
+   ```
+   - This uploads backend code to remote server
+   - Server: `dental@176.9.120.84`
+   - Path: `/home/dental/public_html`
+
+4. **Verify both are working**:
+   - Frontend: Open https://samaddev.github.io/Dental-Practical/#/home
+   - Backend: Check that API is responding at your configured API endpoint
+   - If there are issues, check the GitHub Actions logs or Envoy output
 
 ## Current verified status
 

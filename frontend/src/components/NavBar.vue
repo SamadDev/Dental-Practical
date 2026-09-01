@@ -15,10 +15,16 @@
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
             <span class="hidden sm:inline">Online</span>
           </span>
-          <button type="button" class="app-lang-btn" @click="toggleLang">
+
+          <label class="app-lang-picker" aria-label="Select language">
             <Icon name="globe" :size="15" />
-            <span class="hidden sm:inline">{{ lang.current === 'en' ? $t('lang.kurdish') : $t('lang.english') }}</span>
-          </button>
+            <select :value="lang.current" class="app-lang-select" @change="onLangChange">
+              <option value="en">{{ $t('lang.english') }}</option>
+              <option value="ku">{{ $t('lang.kurdish') }}</option>
+              <option value="ar">{{ $t('lang.arabic') }}</option>
+            </select>
+          </label>
+
           <div class="app-avatar" aria-hidden="true">DS</div>
         </div>
       </div>
@@ -65,8 +71,8 @@ const currentTitle = computed(() => {
   return route.name ? t(`nav.${route.name}`) : t('app.title');
 });
 
-function toggleLang() {
-  const next = lang.current === 'en' ? 'ku' : 'en';
+function onLangChange(event) {
+  const next = event.target.value;
   lang.set(next);
   locale.value = next;
 }

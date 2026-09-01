@@ -162,10 +162,11 @@
 
         <FormField v-slot="{ id }" :label="$t('patient.phone')"
                    :hint="$t('patient.phone_hint')" :error="errors.phone">
-          <input :id="id" v-model="editForm.phone" type="tel" dir="ltr" inputmode="tel"
+          <input :id="id" :value="formatPhoneInput(editForm.phone)" type="tel" dir="ltr" inputmode="tel"
                  class="field font-mono" :class="{ 'field-error': errors.phone }"
                  :aria-invalid="!!errors.phone || undefined"
-                 placeholder="0770 123 4567" />
+                 placeholder="0770 123 4567"
+                 @input="editForm.phone = sanitizePhoneInput($event.target.value)" />
         </FormField>
 
         <FormField v-slot="{ id }" :label="$t('patient.age')" :error="errors.age">
@@ -217,7 +218,7 @@ import FormField     from '../components/FormField.vue';
 import Icon from '../components/Icon.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
-import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
 
 const route   = useRoute();
 const { t }   = useI18n();

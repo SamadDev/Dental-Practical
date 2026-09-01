@@ -43,17 +43,6 @@
             {{ stats.upcoming }}
           </span>
         </button>
-        <button
-          type="button"
-          :class="filters.is_smoker === '1' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.is_smoker = filters.is_smoker === '1' ? '' : '1'; reload()"
-        >
-          🚬 {{ $t('table.smokers') }}
-          <span v-if="stats.smokers != null" class="chip-count"
-                :class="filters.is_smoker === '1' ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.smokers }}
-          </span>
-        </button>
       </template>
 
       <template #advanced>
@@ -95,7 +84,6 @@
     >
       <template #cell(name)="{ row }">
         <span class="font-medium text-slate-900">{{ row.name }}</span>
-        <SmokerBadge :show="!!row.is_smoker" class="ms-1.5" />
       </template>
 
       <template #cell(phone)="{ row }">
@@ -165,7 +153,7 @@
       <template #card="{ row }">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="font-medium text-slate-900">{{ row.name }}<SmokerBadge :show="!!row.is_smoker" class="ms-1.5" /></p>
+            <p class="font-medium text-slate-900">{{ row.name }}</p>
             <p class="mt-0.5 text-xs text-slate-400">{{ row.phone ? formatPhoneForDisplay(row.phone) : '—' }} · {{ $t('patient.age') }} {{ row.age ?? '—' }}</p>
           </div>
           <span v-if="row.outstanding_debt > 0" class="font-mono text-xs font-semibold tabular-nums text-red-700">
@@ -198,10 +186,11 @@
 
         <FormField v-slot="{ id }" :label="$t('patient.phone')"
                    :hint="$t('patient.phone_hint')" :error="errors.phone">
-          <input :id="id" v-model="form.phone" type="tel" dir="ltr" inputmode="tel"
+          <input :id="id" :value="formatPhoneInput(form.phone)" type="tel" dir="ltr" inputmode="tel"
                  class="field font-mono" :class="{ 'field-error': errors.phone }"
                  :aria-invalid="!!errors.phone || undefined"
-                 placeholder="0770 123 4567" />
+                 placeholder="0770 123 4567"
+                 @input="form.phone = sanitizePhoneInput($event.target.value)" />
         </FormField>
 
         <FormField v-slot="{ id }" :label="$t('patient.age')" :error="errors.age">
@@ -209,11 +198,6 @@
                  inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
                  :aria-invalid="!!errors.age || undefined" placeholder="—" />
         </FormField>
-
-        <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" v-model="form.is_smoker" class="field-check" />
-          🚬 {{ $t('table.smoker') }}
-        </label>
 
         <FormField v-slot="{ id }" :label="$t('patient.medical_notes')"
                    :hint="$t('patient.notes_hint')">
@@ -272,12 +256,11 @@ import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField from '../components/FormField.vue';
-import SmokerBadge from '../components/SmokerBadge.vue';
 import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
-import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -288,7 +271,7 @@ const {
   load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
 } = useDataTable('/patients', {
   filters: {
-    has_debt: false, is_smoker: '', appointment: '',
+    has_debt: false, appointment: '',
     age_min: '', age_max: '', created_from: '',
   },
   sort: 'created_at',
@@ -321,7 +304,7 @@ const confirmQueueMsg = ref('');
 const confirmDeleteMsg = ref('');
 
 const emptyForm = () => ({
-  name: '', phone: '', age: null, medical_notes: '', is_smoker: false,
+  name: '', phone: '', age: null, medical_notes: '',
   appointment_date: nowLocalInput(),
 });
 const form = ref(emptyForm());
@@ -379,7 +362,6 @@ function openEdit(p) {
     phone: p.phone || '',
     age: p.age || null,
     medical_notes: p.medical_notes || '',
-    is_smoker: !!p.is_smoker,
     appointment_date: toLocalInput(p.appointment_date),
   };
   errors.value = {};

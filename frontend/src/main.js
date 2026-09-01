@@ -5,6 +5,7 @@ import App from './App.vue';
 import router from './router';
 import en from './locales/en.json';
 import ku from './locales/ku.json';
+import ar from './locales/ar.json';
 import { useLangStore } from './store/lang';
 import { useAuth } from './composables/useAuth';
 import './assets/main.css';
@@ -13,7 +14,7 @@ const i18n = createI18n({
   legacy: false,
   locale: localStorage.getItem('dps_lang') || 'en',
   fallbackLocale: 'en',
-  messages: { en, ku },
+  messages: { en, ku, ar },
 });
 
 const app = createApp(App)

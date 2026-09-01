@@ -25,10 +25,30 @@ export function formatPhoneForDisplay(raw) {
   return `+964 ${prefix} ${part1} ${part2}`;
 }
 
-export function formatPhoneForWhatsApp(raw) {
+export function formatPhoneForWhatsApp(raw, message = '') {
   const normalized = normalizePhone(raw);
   if (!normalized || normalized.length < 9) return null;
-  return `https://wa.me/964${normalized}`;
+  const base = `https://wa.me/964${normalized}`;
+  if (!message) return base;
+  return `${base}?text=${encodeURIComponent(message)}`;
+}
+
+export function sanitizePhoneInput(raw) {
+  if (raw == null) return '';
+  return String(raw).replace(/\D/g, '').slice(0, 12);
+}
+
+export function formatPhoneInput(raw) {
+  const digits = sanitizePhoneInput(raw);
+  if (!digits) return '';
+
+  const normalized = digits.startsWith('964') ? digits.slice(3) : digits;
+  const local = normalized.startsWith('0') ? normalized : `0${normalized}`;
+
+  if (local.length <= 3) return local;
+  if (local.length <= 6) return `${local.slice(0, 3)} ${local.slice(3)}`;
+  if (local.length <= 9) return `${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
+  return `${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6, 9)} ${local.slice(9, 12)}`;
 }
 
 export function formatPhoneForTel(raw) {

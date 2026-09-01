@@ -26,7 +26,8 @@
   },
   "lang": {
     "english": "English",
-    "kurdish": "کوردی"
+    "kurdish": "کوردی",
+    "arabic": "العربية"
   },
   "common": {
     "save": "پاشەکەوت",
@@ -207,6 +208,7 @@
     "pay": "دانەوە",
     "waive": "بەخشین",
     "waive_confirm": "ئەم قیستە بەخشرێت؟ ئیتر ژمارە ناکرێت بە قەرز.",
+    "notify_customer": "ناردنی یادخستەنەوە",
     "pay_title": "دانەوەی قیست",
     "paid_date": "بەرواری دانەوە",
     "remaining_now": "ماوە لەم قیستە",

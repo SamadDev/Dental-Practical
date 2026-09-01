@@ -149,7 +149,8 @@
           <input :id="id" v-model="form.contact_person" class="field" />
         </FormField>
         <FormField v-slot="{ id }" :label="$t('patient.phone')">
-          <input :id="id" v-model="form.phone" class="field" />
+          <input :id="id" :value="formatPhoneInput(form.phone)" type="tel" dir="ltr" inputmode="tel"
+                 class="field font-mono" @input="form.phone = sanitizePhoneInput($event.target.value)" />
         </FormField>
         <FormField v-slot="{ id }" :label="$t('vendors.email')">
           <input :id="id" v-model="form.email" type="email" class="field" />
@@ -287,6 +288,7 @@ import IqdInput  from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
+import { formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
 import { formatDate } from '../utils/datetime';
 
 const { t } = useI18n();

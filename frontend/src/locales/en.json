@@ -26,7 +26,8 @@
   },
   "lang": {
     "english": "English",
-    "kurdish": "کوردی"
+    "kurdish": "کوردی",
+    "arabic": "العربية"
   },
   "common": {
     "save": "Save",
@@ -210,6 +211,7 @@
     "pay": "Record Payment",
     "waive": "Waive",
     "waive_confirm": "Waive this installment? It will no longer count as owed.",
+    "notify_customer": "Send reminder",
     "pay_title": "Record Installment Payment",
     "paid_date": "Payment Date",
     "remaining_now": "Remaining on this installment",

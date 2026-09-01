@@ -122,6 +122,11 @@
       <template #cell(actions)="{ row }">
         <div class="flex items-center gap-1.5 no-print">
           <button class="btn-ghost btn-sm" @click="openDetail(row)" :title="$t('common.view')"><Icon name="folder" :size="14" /></button>
+          <a v-if="row.patient?.phone && hasDueInstallment(row)" :href="whatsappReminderLink(row)"
+             target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm"
+             :title="$t('plans.notify_customer') || 'Send WhatsApp reminder'">
+            <Icon name="comment" :size="14" />
+          </a>
         </div>
       </template>
 
@@ -171,6 +176,12 @@
             </div>
             <StatusChipInstallment :value="ins.status" />
             <div class="flex shrink-0 gap-1.5" v-if="ins.status !== 'paid' && ins.status !== 'waived'">
+              <a v-if="detail.patient?.phone && shouldRemindInstallment(ins)"
+                 :href="installmentReminderLink(ins)"
+                 target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm"
+                 :title="$t('plans.notify_customer') || 'Send WhatsApp reminder'">
+                <Icon name="comment" :size="14" />
+              </a>
               <button class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
               <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')"><Icon name="x" :size="14" /></button>
             </div>
@@ -262,6 +273,7 @@ import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
+import { formatPhoneForWhatsApp } from '../utils/phone';
 
 const { t } = useI18n();
 
@@ -287,6 +299,46 @@ const columns = computed(() => [
 ]);
 
 const fmt = (v) => formatIQD(v || 0);
+
+function shouldRemindInstallment(installment) {
+  return ['pending', 'partial', 'overdue'].includes(installment.status) &&
+    (!installment.due_date || new Date(installment.due_date) <= new Date());
+}
+
+function hasDueInstallment(plan) {
+  return (plan.installments ?? []).some((item) => shouldRemindInstallment(item));
+}
+
+function buildReminderMessage({ patientName, planName, dueDate, dueText, amount }) {
+  const safePatient = patientName || 'Patient';
+  const safePlan = planName || 'payment plan';
+  const safeDate = dueDate ? formatDate(dueDate) : 'the scheduled date';
+  const safeAmount = fmt(amount || 0);
+  return `Hello ${safePatient}, this is a reminder that your installment of ${safeAmount} IQD for ${safePlan} is ${dueText} on ${safeDate}. Please contact the clinic to settle it.`;
+}
+
+function installmentReminderLink(installment, plan = null) {
+  const activePlan = plan || detail.value;
+  const patient = activePlan?.patient || detail.value?.patient;
+  const patientName = patient?.name || 'Patient';
+  const planName = activePlan?.name || detail.value?.name || 'payment plan';
+  const remaining = Math.max(0, (installment.amount || 0) - (installment.amount_paid || 0));
+  const dueText = installment.status === 'overdue' ? 'overdue' : 'due';
+  const message = buildReminderMessage({
+    patientName,
+    planName,
+    dueDate: installment.due_date,
+    dueText,
+    amount: remaining,
+  });
+  return formatPhoneForWhatsApp(patient?.phone, message);
+}
+
+function whatsappReminderLink(plan) {
+  const dueInstallment = (plan.installments ?? []).find((item) => shouldRemindInstallment(item));
+  if (!dueInstallment) return formatPhoneForWhatsApp(plan.patient?.phone);
+  return installmentReminderLink(dueInstallment, plan);
+}
 
 const planStats = computed(() => {
   const plans = rows.value;

@@ -9,8 +9,8 @@ export const useLangStore = defineStore('lang', {
     current: localStorage.getItem('dps_lang') || 'en',
   }),
   getters: {
-    isRtl: (s) => s.current === 'ku',
-    dir:   (s) => (s.current === 'ku' ? 'rtl' : 'ltr'),
+    isRtl: (s) => ['ku', 'ar'].includes(s.current),
+    dir:   (s) => (['ku', 'ar'].includes(s.current) ? 'rtl' : 'ltr'),
   },
   actions: {
     set(lang) {

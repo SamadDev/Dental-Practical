@@ -12,8 +12,7 @@
     "expenses": "Expenses",
     "plans": "Payment Plans",
     "inventory": "Inventory",
-    "vendors": "Vendors & POs",
-    "cashflow": "Cash Flow"
+    "vendors": "Vendors & POs"
   },
   "auth": {
     "sign_in": "Sign In",
@@ -296,22 +295,7 @@
       "cancelled": "Cancelled"
     }
   },
-  "cashflow": {
-    "title": "Cash Flow Forecast",
-    "inflow": "Inflow",
-    "outflow": "Outflow",
-    "net": "Net",
-    "balance": "Balance",
-    "daily": "Daily Forecast",
-    "manual_entries": "Manual Entries",
-    "no_manual": "No manual entries in this range.",
-    "add_manual": "Add Entry",
-    "source": "Source",
-    "next_month": "Next Month",
-    "next_90": "Next 90 Days",
-    "generate_aqsat": "Generate from Aqsat",
-    "empty": "No forecast data for this range."
-  },
+
   "table": {
     "age_max": "Max age",
     "age_min": "Min age",

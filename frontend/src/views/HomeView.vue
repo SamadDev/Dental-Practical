@@ -39,7 +39,6 @@ const modules = [
   { name: 'archive',   to: '/archive',       icon: 'archive',      bg: '#fdf2f8', fg: '#be185d', short: 'Archive' },
   { name: 'dashboard', to: '/dashboard',     icon: 'bar-chart',    bg: '#eff6ff', fg: '#1d4ed8', short: 'Dashboard' },
   { name: 'plans',     to: '/payment-plans', icon: 'credit-card',  bg: '#ecfdf5', fg: '#047857', short: 'Plans' },
-  { name: 'cashflow',  to: '/cash-flow',     icon: 'trending-up',  bg: '#f0fdf4', fg: '#15803d', short: 'Cash flow' },
   { name: 'inventory', to: '/inventory',     icon: 'package',      bg: '#fefce8', fg: '#a16207', short: 'Inventory' },
   { name: 'vendors',   to: '/vendors',       icon: 'factory',      bg: '#f5f3ff', fg: '#6d28d9', short: 'Vendors' },
   { name: 'expenses',  to: '/expenses',      icon: 'receipt',      bg: '#fff7ed', fg: '#c2410c', short: 'Expenses' },

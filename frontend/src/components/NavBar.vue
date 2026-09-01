@@ -61,7 +61,6 @@ const routes = [
   { name: 'archive',   path: '/archive',      icon: 'archive' },
   { name: 'dashboard', path: '/dashboard',    icon: 'bar-chart' },
   { name: 'plans',     path: '/payment-plans',icon: 'credit-card' },
-  { name: 'cashflow',  path: '/cash-flow',    icon: 'trending-up' },
   { name: 'inventory', path: '/inventory',    icon: 'package' },
   { name: 'vendors',   path: '/vendors',      icon: 'factory' },
   { name: 'expenses',  path: '/expenses',     icon: 'receipt' },

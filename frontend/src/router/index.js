@@ -20,7 +20,6 @@ const router = createRouter({
     { path: '/patients/:id',    component: PatientView,       name: 'patient', props: true },
     { path: '/archive',         component: ArchiveView,       name: 'archive' },
     { path: '/dashboard',       component: DashboardView,     name: 'dashboard' },
-    { path: '/cash-flow',       component: DashboardView,     name: 'cashflow' },
     { path: '/expenses',        component: ExpensesView,      name: 'expenses' },
     { path: '/payment-plans',   component: PaymentPlansView,  name: 'plans' },
     { path: '/inventory',       component: InventoryView,     name: 'inventory' },

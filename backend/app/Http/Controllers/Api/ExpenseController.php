@@ -17,6 +17,7 @@ class ExpenseController extends Controller
         'created_at'  => 'expenses.created_at',
         'amount'      => 'expenses.amount',
         'description' => 'expenses.description',
+        'note'        => 'expenses.note',
     ];
 
     public function index(Request $request): JsonResponse
@@ -42,6 +43,7 @@ class ExpenseController extends Controller
         $data = $request->validate([
             'amount'      => 'required|integer|min:1',
             'description' => 'required|string|max:500',
+            'note'        => 'nullable|string|max:1000',
         ]);
 
         return response()->json(Expense::create($data), 201);
@@ -60,7 +62,10 @@ class ExpenseController extends Controller
         $q = Expense::query();
 
         if ($s = trim((string) $request->query('search'))) {
-            $q->where('expenses.description', 'like', "%{$s}%");
+            $q->where(function ($w) use ($s) {
+                $w->where('expenses.description', 'like', "%{$s}%")
+                  ->orWhere('expenses.note', 'like', "%{$s}%");
+            });
         }
 
         $this->applyDateRange($q, $request, 'expenses.created_at');

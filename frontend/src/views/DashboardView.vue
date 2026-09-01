@@ -89,12 +89,13 @@
       <KpiCard
         color="red" icon="●"
         :label="$t('dashboard.active_customer_debt')"
+        :hint="$t('dashboard.active_customer_debt_hint')"
         :value="m.active_customer_debt"
       />
       <KpiCard
         color="violet" icon="◷"
         :label="$t('dashboard.upcoming_aqsat_revenue')"
-        :hint="$t('dashboard.aqsat_hint')"
+        :hint="$t('dashboard.upcoming_aqsat_revenue_hint')"
         :value="m.upcoming_aqsat_revenue"
       />
       <KpiCard

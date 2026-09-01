@@ -23,10 +23,10 @@ body { background: #f6f7fb; }
 
   /* ----- Top navigation — button-first, no slide-out drawer ----- */
   .app-topbar {
-    @apply sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur;
+    @apply sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-sm;
   }
   .app-topbar-inner {
-    @apply mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8;
+    @apply mx-auto max-w-[1500px] px-4 py-3 sm:px-6 lg:px-8;
   }
   .app-topbar-top {
     @apply flex items-center justify-between gap-4;
@@ -70,7 +70,7 @@ body { background: #f6f7fb; }
            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1;
   }
   .app-nav-btn.is-active {
-    @apply border-brand-700/10 bg-brand-600 text-white shadow-md shadow-brand-600/25 hover:bg-brand-600 hover:text-white;
+    @apply border-brand-200 bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-100 hover:bg-brand-50 hover:text-brand-700;
   }
 }
 

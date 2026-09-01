@@ -79,16 +79,24 @@
 
       <!-- Installment contracts -->
       <div class="card p-5">
-        <h3 class="mb-4 font-semibold text-slate-900">{{ $t('aqsat.title') }}</h3>
+        <div class="mb-4">
+          <h3 class="font-semibold text-slate-900">{{ $t('aqsat.title') }}</h3>
+          <p class="mt-1 text-xs text-slate-500">{{ $t('aqsat.title_hint') }}</p>
+        </div>
         <ul v-if="patient.aqsat_contracts && patient.aqsat_contracts.length"
-            class="space-y-2.5 text-sm">
+            class="space-y-3 text-sm">
           <li v-for="c in patient.aqsat_contracts" :key="c.id"
-              class="flex justify-between gap-4 border-b border-slate-100 pb-2.5 last:border-0">
-            <span class="min-w-0 truncate text-slate-700">{{ c.treatment_name }}</span>
-            <span class="shrink-0 font-mono tabular-nums">
-              <span class="font-semibold text-slate-900">{{ format(c.remaining_balance) }}</span>
-              <span class="text-slate-400"> / {{ format(c.total_amount) }}</span>
-            </span>
+              class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div class="flex justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-medium text-slate-900">{{ c.treatment_name }}</p>
+                <p class="mt-1 text-xs text-slate-500">Status: <span class="font-medium">{{ c.status }}</span></p>
+              </div>
+              <div class="shrink-0 text-right font-mono text-xs">
+                <p class="font-semibold text-slate-900">{{ format(c.remaining_balance) }}</p>
+                <p class="text-slate-400">of {{ format(c.total_amount) }}</p>
+              </div>
+            </div>
           </li>
         </ul>
         <p v-else class="text-sm text-slate-400">{{ $t('common.none') }}</p>

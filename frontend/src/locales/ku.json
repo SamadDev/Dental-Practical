@@ -132,35 +132,44 @@
     "no_contracts": "ئەم نەخۆشە هیچ گرێبەستێکی چالاکی نییە"
   },
   "aqsat": {
-    "title": "گرێبەستەکانی ئەقساط",
+    "title": "دەسلات بۆ چارەسەرکردن (ئەقساط)",
+    "title_hint": "گرێبەستانی کۆمپانیا چارەسەرکردنی بۆ کڕیار دابین دەکات",
     "new": "گرێبەستی نوێ",
-    "treatment_name": "چارەسەرکردن",
-    "total_amount": "کۆی گشتی",
-    "remaining_balance": "ماوە",
-    "status": "دۆخ"
+    "treatment_name": "ناوی چارەسەرکردن",
+    "total_amount": "پارەی دەسلات",
+    "remaining_balance": "هێشتا تێدەکرێت",
+    "status": "دۆخ",
+    "status_active": "چالاک",
+    "status_completed": "تەواو کراو",
+    "status_cancelled": "لابراو",
+    "explanation": "ئەقساط دۆخێکی دەسلات دا کە کۆمپانیا بڕی چارەسەرکردن دابین دەکات و کڕیار لەسەریدا دانە بە سەرانسەرێ کاتێکی تریشدا دەدات."
   },
   "expense": {
     "title": "خەرجی نەختی",
     "amount": "بڕ",
     "description": "وەسف",
+    "note": "تێبینی",
     "add": "تۆمارکردنی خەرجی",
     "amount_required": "بڕێک گەورەتر لە سفر بنووسە",
     "description_required": "وەسف پێویستە",
     "empty": "هێشتا هیچ خەرجییەک تۆمار نەکراوە.",
     "description_hint": "ئەم پارەیە بۆ چی خەرجکرا؟",
-    "search_placeholder": "گەڕان بە وەسف…"
+    "note_hint": "تێبینییەکی هەڵبژاردنی کلینیکی، فرۆشگا، یان هۆکار",
+    "search_placeholder": "گەڕان بە وەسف یان تێبینی…"
   },
   "dashboard": {
     "title": "داشبۆردی دارایی",
     "total_cash_collected": "کۆی پارەی کۆکراوەی نەختی",
-    "active_customer_debt": "قەرزی چالاکی کڕیار",
-    "upcoming_aqsat_revenue": "داهاتی داهاتووی ئەقساط",
+    "active_customer_debt": "بقێیەکانی دەنگ نەکراو",
+    "active_customer_debt_hint": "پارەی کڕیارانی کە هێشتا لە دەرچوونی تێکردنەوە نەدابوون",
+    "upcoming_aqsat_revenue": "گرێبەستەکانی دەسلات (ئەقساط)",
+    "upcoming_aqsat_revenue_hint": "بقێیەی گرێبەستەکانی دەسلاتی چالاک",
     "true_net_profit": "قازانجی ڕاستەقینە",
     "total_expenses": "کۆی خەرجی",
     "from": "لە",
     "to": "بۆ",
     "net_profit_hint": "پارەی کۆکراوە پاش لابردنی خەرجی",
-    "aqsat_hint": "کاریگەری لێ نییە بە مێژووی هەڵبژێردراو",
+    "aqsat_hint": "پێش بینیکی دواتر — کاریگەری لێ نییە بە مێژووی هەڵبژێردراو",
     "load_error": "نەتوانرا زانیاری داشبۆرد باربکرێت.",
     "retry": "هەوڵدانەوە",
     "presets": {

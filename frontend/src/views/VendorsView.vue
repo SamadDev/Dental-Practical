@@ -17,6 +17,25 @@
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
 
+    <div class="mb-5 grid gap-3 md:grid-cols-4">
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Vendors</div>
+        <div class="mt-3 text-2xl font-bold text-slate-900">{{ rows.length }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Open POs</div>
+        <div class="mt-3 text-2xl font-bold text-violet-700">{{ openPOCount }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Pending receive</div>
+        <div class="mt-3 text-2xl font-bold text-amber-700">{{ partialPoCount }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Open value</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ fmt(openPoValue) }}</div>
+      </div>
+    </div>
+
     <!-- Purchase orders -->
     <div class="card mb-6 overflow-hidden">
       <div class="flex min-h-12 items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -282,6 +301,17 @@ const columns = computed(() => [
 
 const fmt = (v) => formatIQD(v || 0);
 const busy = ref(false);
+
+const openPOCount = computed(() =>
+  pos.value.filter((po) => ['draft', 'sent', 'confirmed', 'partial'].includes(po.status)).length);
+
+const partialPoCount = computed(() =>
+  pos.value.filter((po) => po.status === 'partial').length);
+
+const openPoValue = computed(() =>
+  pos.value
+    .filter((po) => ['draft', 'sent', 'confirmed', 'partial'].includes(po.status))
+    .reduce((sum, po) => sum + (Number(po.total_amount) || 0), 0));
 
 const {
   rows, loading, error, search, sort, dir, perPage, meta,

@@ -12,6 +12,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('amount'); // Whole IQD only.
             $table->string('description');
+            $table->text('note')->nullable();
             $table->timestamps();
 
             $table->index('created_at');

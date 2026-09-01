@@ -19,6 +19,25 @@
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
 
+    <div class="mb-5 grid gap-3 md:grid-cols-4">
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Items</div>
+        <div class="mt-3 text-2xl font-bold text-slate-900">{{ meta.total }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Low stock</div>
+        <div class="mt-3 text-2xl font-bold text-amber-700">{{ lowStockCount }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Expiring</div>
+        <div class="mt-3 text-2xl font-bold text-red-600">{{ expiringSoonCount }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Stock value</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ fmt(stockValue) }}</div>
+      </div>
+    </div>
+
     <DataTableFilters
       v-model:search="search"
       :placeholder="$t('inventory.title')"
@@ -242,6 +261,16 @@ const busy       = ref(false);
 
 const stockValue = computed(() =>
   rows.value.reduce((s, r) => s + (r.quantity_on_hand || 0) * (r.unit_cost || 0), 0));
+
+const lowStockCount = computed(() =>
+  rows.value.filter((r) => (r.quantity_on_hand || 0) <= (r.reorder_level || 0)).length);
+
+const expiringSoonCount = computed(() =>
+  rows.value.filter((r) => {
+    if (!r.track_expiry || !r.expiry_date) return false;
+    const diff = Math.ceil((new Date(r.expiry_date) - new Date()) / (1000 * 60 * 60 * 24));
+    return diff >= 0 && diff <= 30;
+  }).length);
 
 function qtyClass(row) {
   if (row.quantity_on_hand <= 0)                       return 'bg-red-100 text-red-700';

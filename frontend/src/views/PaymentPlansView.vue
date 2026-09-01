@@ -3,7 +3,8 @@
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('plans.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
+        <p class="mt-0.5 text-sm text-slate-500">{{ $t('plans.title_hint') }}</p>
+        <p v-if="!loading" class="mt-2 text-xs text-slate-400">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
       <button class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
     </header>
@@ -13,6 +14,31 @@
              px-3 py-2 text-sm text-red-700">
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
+
+    <div class="mb-5 grid gap-3 md:grid-cols-4">
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Active plans</div>
+        <div class="mt-3 flex items-end justify-between">
+          <span class="text-2xl font-bold text-slate-900">{{ planStats.active }}</span>
+          <span class="text-xs text-emerald-600">{{ planStats.completionRate }}% on track</span>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Outstanding</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-amber-700">{{ fmt(planStats.outstanding) }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Overdue</div>
+        <div class="mt-3 flex items-end justify-between">
+          <span class="text-2xl font-bold text-red-600">{{ planStats.overdueCount }}</span>
+          <span class="text-xs text-slate-500">installments</span>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Collected</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ fmt(planStats.collected) }}</div>
+      </div>
+    </div>
 
     <DataTableFilters
       v-model:search="search"
@@ -261,6 +287,24 @@ const columns = computed(() => [
 ]);
 
 const fmt = (v) => formatIQD(v || 0);
+
+const planStats = computed(() => {
+  const plans = rows.value;
+  const active = plans.filter((p) => p.status === 'active').length;
+  const outstanding = plans.reduce((sum, p) => sum + remaining(p), 0);
+  const overdueCount = plans.reduce((sum, p) =>
+    sum + (p.installments ?? []).filter((i) => i.status === 'overdue').length, 0);
+  const collected = plans.reduce((sum, p) => sum + paidSum(p), 0);
+  const total = plans.reduce((sum, p) => sum + (Number(p.total_amount) || 0), 0);
+
+  return {
+    active,
+    outstanding,
+    overdueCount,
+    collected,
+    completionRate: total ? Math.round((collected / total) * 100) : 0,
+  };
+});
 
 const remaining = (plan) =>
   Math.max(0, plan.total_amount - plan.down_payment -

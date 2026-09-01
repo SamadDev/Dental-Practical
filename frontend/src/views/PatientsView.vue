@@ -77,13 +77,27 @@
       empty-icon="🧑‍⚕️"
       :meta="meta"
       :per-page="perPage"
+      row-clickable
+      @row-click="openPatient"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
       @reset="resetFilters"
     >
       <template #cell(name)="{ row }">
-        <span class="font-medium text-slate-900">{{ row.name }}</span>
+        <div class="flex items-center gap-2">
+          <div class="min-w-0">
+            <span class="font-medium text-slate-900">{{ row.name }}</span>
+            <span v-if="row.patient_code" class="block font-mono text-[11px] tracking-wide text-slate-400">
+              {{ row.patient_code }}
+            </span>
+          </div>
+          <span v-if="row.severe_allergies_count > 0" :title="$t('patient.severe_allergy_badge')"
+                class="inline-flex shrink-0 items-center rounded-lg border border-red-200
+                       bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+            ⚠ {{ $t('patient.severe_allergy_short') }}
+          </span>
+        </div>
       </template>
 
       <template #cell(phone)="{ row }">
@@ -153,8 +167,14 @@
       <template #card="{ row }">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <p class="font-medium text-slate-900">{{ row.name }}</p>
-            <p class="mt-0.5 text-xs text-slate-400">{{ row.phone ? formatPhoneForDisplay(row.phone) : '—' }} · {{ $t('patient.age') }} {{ row.age ?? '—' }}</p>
+            <p class="font-medium text-slate-900">
+              {{ row.name }}
+              <span v-if="row.severe_allergies_count > 0" class="align-middle text-red-600"
+                    :title="$t('patient.severe_allergy_badge')">⚠</span>
+            </p>
+            <p class="mt-0.5 text-xs text-slate-400">
+              <span v-if="row.patient_code" class="font-mono">{{ row.patient_code }} · </span>{{ row.phone ? formatPhoneForDisplay(row.phone) : '—' }} · {{ $t('patient.age') }} {{ row.age ?? '—' }}
+            </p>
           </div>
           <span v-if="row.outstanding_debt > 0" class="font-mono text-xs font-semibold tabular-nums text-red-700">
             {{ formatIQD(row.outstanding_debt) }}
@@ -197,6 +217,14 @@
           <input :id="id" v-model.number="form.age" type="number" min="0" max="120"
                  inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
                  :aria-invalid="!!errors.age || undefined" placeholder="—" />
+        </FormField>
+
+        <FormField v-slot="{ id }" :label="$t('patient.gender')">
+          <select :id="id" v-model="form.gender" class="field-select">
+            <option value="">—</option>
+            <option value="female">{{ $t('patient.gender_female') }}</option>
+            <option value="male">{{ $t('patient.gender_male') }}</option>
+          </select>
         </FormField>
 
         <FormField v-slot="{ id }" :label="$t('patient.medical_notes')"
@@ -304,7 +332,7 @@ const confirmQueueMsg = ref('');
 const confirmDeleteMsg = ref('');
 
 const emptyForm = () => ({
-  name: '', phone: '', age: null, medical_notes: '',
+  name: '', phone: '', age: null, gender: '', medical_notes: '',
   appointment_date: nowLocalInput(),
 });
 const form = ref(emptyForm());
@@ -327,6 +355,10 @@ function validate() {
 
 function inQueue(patientId) {
   return queueIds.value.has(patientId);
+}
+
+function openPatient(row) {
+  router.push(`/patients/${row.id}`);
 }
 
 function toggleAppointment(value) {
@@ -361,6 +393,7 @@ function openEdit(p) {
     name: p.name,
     phone: p.phone || '',
     age: p.age || null,
+    gender: p.gender || '',
     medical_notes: p.medical_notes || '',
     appointment_date: toLocalInput(p.appointment_date),
   };

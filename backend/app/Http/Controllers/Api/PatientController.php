@@ -32,6 +32,9 @@ class PatientController extends Controller
             // Aggregates as subquery selects rather than a GROUP BY join, so
             // they can be both sorted on and filtered by without duplicating rows.
             ->withCount('visits')
+            ->withCount(['conditions as severe_allergies_count' => function ($q) {
+                $q->where('type', 'allergy')->where('severity', 'severe');
+            }])
             ->withSum('visits as outstanding_debt', 'short_term_debt')
             ->addSelect([
                 'last_visit_at' => Visit::selectRaw('MAX(created_at)')
@@ -46,7 +49,8 @@ class PatientController extends Controller
         // withSum yields null for a patient with no visits; the table's money
         // column and its "has debt" styling both expect a plain integer.
         $page->getCollection()->transform(function (Patient $p) {
-            $p->outstanding_debt = (int) $p->outstanding_debt;
+            $p->outstanding_debt       = (int) $p->outstanding_debt;
+            $p->severe_allergies_count = (int) $p->severe_allergies_count;
 
             return $p;
         });
@@ -76,6 +80,11 @@ class PatientController extends Controller
             $patient->load([
                 'visits' => fn ($q) => $q->orderByDesc('created_at'),
                 'aqsatContracts',
+                // Severe first, then moderate, then mild — same order the
+                // conditions endpoint returns.
+                'conditions' => fn ($q) => $q->orderByRaw(
+                    "CASE severity WHEN 'severe' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END",
+                )->orderBy('name'),
             ])->append('outstanding_short_term_debt')
         );
     }
@@ -105,6 +114,7 @@ class PatientController extends Controller
             'name'             => ($creating ? 'required' : 'sometimes').'|string|max:255',
             'phone'            => 'nullable|string|max:50',
             'age'              => 'nullable|integer|min:0|max:150',
+            'gender'           => 'nullable|in:male,female',
             'appointment_date' => 'nullable|date',
             'is_smoker'        => 'nullable|boolean',
             'medical_notes'    => 'nullable|string',
@@ -118,6 +128,7 @@ class PatientController extends Controller
             $q->where(function ($w) use ($s) {
                 $w->where('patients.name', 'like', "%{$s}%")
                     ->orWhere('patients.phone', 'like', "%{$s}%")
+                    ->orWhere('patients.patient_code', 'like', "%{$s}%")
                     ->orWhere('patients.medical_notes', 'like', "%{$s}%");
             });
         }

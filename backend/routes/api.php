@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CashFlowForecastController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\PatientConditionController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PaymentPlanController;
 use App\Http\Controllers\Api\VendorController;
@@ -31,6 +32,12 @@ Route::prefix('v1')->group(function () {
     // Patients
     Route::get('patients/stats', [PatientController::class, 'stats']);
     Route::apiResource('patients', PatientController::class);
+
+    // Patient allergies & conditions
+    Route::get('patients/{patient}/conditions', [PatientConditionController::class, 'index']);
+    Route::post('patients/{patient}/conditions', [PatientConditionController::class, 'store']);
+    Route::patch('conditions/{condition}', [PatientConditionController::class, 'update']);
+    Route::delete('conditions/{condition}', [PatientConditionController::class, 'destroy']);
 
     // Aqsat contracts
     Route::apiResource('aqsat-contracts', AqsatContractController::class)

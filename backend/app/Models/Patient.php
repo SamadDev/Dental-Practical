@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Patient extends Model
 {
     protected $fillable = [
-        'name', 'phone', 'age', 'appointment_date', 'is_smoker', 'medical_notes',
+        'name', 'patient_code', 'gender', 'phone', 'age', 'appointment_date', 'is_smoker', 'medical_notes',
     ];
 
     protected $casts = [
@@ -16,6 +16,36 @@ class Patient extends Model
         'age'              => 'integer',
         'appointment_date' => 'string',
     ];
+
+    protected static function booted(): void
+    {
+        // Every patient gets a short unique public code (PT-XXXXXX) used on
+        // charts and for quick lookup at the reception desk.
+        static::creating(function (self $patient) {
+            if (empty($patient->patient_code)) {
+                $patient->patient_code = self::generatePatientCode();
+            }
+        });
+    }
+
+    public static function generatePatientCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+        do {
+            $code = 'PT';
+            for ($i = 0; $i < 6; $i++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+        } while (self::where('patient_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function conditions(): HasMany
+    {
+        return $this->hasMany(PatientCondition::class);
+    }
 
     public function visits(): HasMany
     {

@@ -150,14 +150,12 @@
     "title": "المصروفات النقدية",
     "amount": "المبلغ",
     "description": "الوصف",
-    "note": "ملاحظة",
     "add": "تسجيل المصروف",
     "amount_required": "أدخل مبلغًا أكبر من صفر",
     "description_required": "الوصف مطلوب",
     "empty": "لا توجد مصروفات مسجلة بعد.",
     "description_hint": "على ماذا تم صرف هذا المبلغ؟",
-    "note_hint": "معلومة إضافية حول العيادة أو المورد أو السبب",
-    "search_placeholder": "ابحث في الوصف أو الملاحظة…"
+    "search_placeholder": "ابحث في الوصف…"
   },
   "dashboard": {
     "title": "لوحة الإيرادات",

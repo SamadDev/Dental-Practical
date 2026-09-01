@@ -24,7 +24,7 @@
 
     <!-- Quick-entry form -->
     <form class="no-print card mb-5 p-4" novalidate @submit.prevent="askAdd">
-      <div class="grid items-start gap-4 md:grid-cols-[minmax(0,14rem)_1fr_1fr_auto]">
+      <div class="grid items-start gap-4 md:grid-cols-[minmax(0,14rem)_1fr_auto]">
         <FormField v-slot="{ id }" :label="$t('expense.amount')" :error="errors.amount" required>
           <IqdInput :id="id" v-model="form.amount" :invalid="!!errors.amount" />
         </FormField>
@@ -41,13 +41,6 @@
             :class="{ 'field-error': errors.description }"
             :aria-invalid="!!errors.description || undefined"
             :placeholder="$t('expense.description')"
-          />
-        </FormField>
-
-        <FormField v-slot="{ id }" :label="$t('expense.note')" :hint="$t('expense.note_hint')">
-          <input
-            :id="id" v-model="form.note" class="field"
-            :placeholder="$t('expense.note')"
           />
         </FormField>
 
@@ -146,10 +139,6 @@
         <span class="text-slate-700">{{ row.description }}</span>
       </template>
 
-      <template #cell(note)="{ row }">
-        <span class="text-slate-600">{{ row.note || '—' }}</span>
-      </template>
-
       <template #cell(actions)="{ row }">
         <button class="btn-danger btn-sm" @click="askRemove(row)">
           🗑 {{ $t('common.delete') }}
@@ -176,7 +165,6 @@
           <button class="btn-danger btn-sm" @click="askRemove(row)">🗑</button>
         </div>
         <p class="mt-1 text-sm text-slate-700">{{ row.description }}</p>
-        <p v-if="row.note" class="mt-1 text-xs text-slate-600">{{ row.note }}</p>
         <p class="mt-1 text-xs text-slate-400">{{ formatDateTime(row.created_at) }}</p>
       </template>
     </DataTable>
@@ -232,12 +220,11 @@ const columns = computed(() => [
   { key: 'amount',      label: t('expense.amount'),         sortable: true, skeleton: 'md',
     initialDir: 'desc' },
   { key: 'description', label: t('expense.description'),    sortable: true, skeleton: 'lg' },
-  { key: 'note',        label: t('expense.note'),           sortable: true, skeleton: 'lg' },
   { key: 'actions',     label: t('common.actions'), align: 'end', printHidden: true,
     skeleton: 'md' },
 ]);
 
-const form       = ref({ amount: 0, description: '', note: '' });
+const form       = ref({ amount: 0, description: '' });
 const errors     = ref({});
 const submitting = ref(false);
 const formError  = ref('');
@@ -293,9 +280,8 @@ function validate() {
 
 function askAdd() {
   if (!validate()) return;
-  const noteText = form.value.note.trim();
   confirmAddMsg.value =
-    `"${form.value.description.trim()}"${noteText ? ` — ${noteText}` : ''} — ${formatIQD(form.value.amount)} ${t('currency')}`;
+    `"${form.value.description.trim()}" — ${formatIQD(form.value.amount)} ${t('currency')}`;
   showConfirmAdd.value = true;
 }
 
@@ -306,9 +292,8 @@ async function add() {
     await api.post('/expenses', {
       amount:      Number(form.value.amount),
       description: form.value.description.trim(),
-      note:        form.value.note.trim(),
     });
-    form.value   = { amount: 0, description: '', note: '' };
+    form.value   = { amount: 0, description: '' };
     errors.value = {};
     // A new expense is the newest row — jump back to page 1 so it's visible.
     reload();

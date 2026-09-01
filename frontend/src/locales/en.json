@@ -150,14 +150,12 @@
     "title": "Cash Expenses",
     "amount": "Amount",
     "description": "Description",
-    "note": "Note",
     "add": "Log Expense",
     "amount_required": "Enter an amount greater than zero",
     "description_required": "Description is required",
     "empty": "No expenses logged yet.",
     "description_hint": "What was this spent on?",
-    "note_hint": "Optional clinic detail, vendor, or reason",
-    "search_placeholder": "Search description or note…"
+    "search_placeholder": "Search description…"
   },
   "dashboard": {
     "title": "Financial Dashboard",

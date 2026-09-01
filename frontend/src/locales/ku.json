@@ -148,14 +148,12 @@
     "title": "خەرجی نەختی",
     "amount": "بڕ",
     "description": "وەسف",
-    "note": "تێبینی",
     "add": "تۆمارکردنی خەرجی",
     "amount_required": "بڕێک گەورەتر لە سفر بنووسە",
     "description_required": "وەسف پێویستە",
     "empty": "هێشتا هیچ خەرجییەک تۆمار نەکراوە.",
     "description_hint": "ئەم پارەیە بۆ چی خەرجکرا؟",
-    "note_hint": "تێبینییەکی هەڵبژاردنی کلینیکی، فرۆشگا، یان هۆکار",
-    "search_placeholder": "گەڕان بە وەسف یان تێبینی…"
+    "search_placeholder": "گەڕان بە وەسف…"
   },
   "dashboard": {
     "title": "داشبۆردی دارایی",

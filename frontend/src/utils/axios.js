@@ -1,22 +1,43 @@
-import axios from 'axios';
+import axios from "axios";
+import router from "../router";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE || "/api/v1",
   timeout: 15000,
-  headers: { Accept: 'application/json' },
+  headers: { Accept: "application/json" },
 });
 
+// Attach auth token to every request
+api.interceptors.request.use((config) => {
+  const raw = localStorage.getItem("dps_auth");
+  if (raw) {
+    try {
+      const { token } = JSON.parse(raw);
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    } catch {}
+  }
+  return config;
+});
+
+// Handle 401 -> redirect to login
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    // Surface a single readable message for the UI.
+    if (err.response?.status === 401) {
+      localStorage.removeItem("dps_auth");
+      router.push("/login");
+    }
+
     err.userMessage =
       err.response?.data?.message ||
-      (err.response?.status === 422 ? Object.values(err.response.data.errors ?? {}).flat().join(' ') : '') ||
+      (err.response?.status === 422
+        ? Object.values(err.response.data.errors ?? {}).flat().join(" ")
+        : "") ||
       err.message ||
-      'Network error';
+      "Network error";
+
     return Promise.reject(err);
-  },
+  }
 );
 
 export default api;

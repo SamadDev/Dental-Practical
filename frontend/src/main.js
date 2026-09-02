@@ -22,7 +22,8 @@ const app = createApp(App)
   .use(router)
   .use(i18n);
 
-const { can } = useAuth();
+const { can, fetchMe, isAuthenticated } = useAuth();
+if (isAuthenticated.value) fetchMe();
 app.provide('auth', { can });
 
 const lang = useLangStore();

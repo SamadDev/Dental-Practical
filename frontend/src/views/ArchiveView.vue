@@ -138,16 +138,30 @@
       </template>
 
       <template #cell(treatment_notes)="{ row }">
-        <span class="block max-w-[200px] truncate text-slate-600" :title="row.treatment_notes || ''">
-          {{ row.treatment_notes || '—' }}
-        </span>
+        <div class="max-w-[200px]">
+          <span v-if="row.treatment_name"
+                class="mb-1 inline-flex max-w-full items-center truncate rounded-full border border-violet-200
+                       bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700"
+                :title="row.treatment_name">
+            {{ row.treatment_name }}
+          </span>
+          <span class="block truncate text-slate-600" :title="row.treatment_notes || ''">
+            {{ row.treatment_notes || '—' }}
+          </span>
+        </div>
       </template>
 
       <template #cell(actions)="{ row }">
-        <button v-if="row.short_term_debt > 0" class="btn-success btn-sm"
-                @click="openPay(row)" :title="$t('checkout.pay_debt')">
-          <Icon name="credit-card" :size="14" />
-        </button>
+        <div class="flex items-center justify-end gap-1.5">
+          <button class="btn-ghost btn-sm" :title="$t('visit.book_followup')"
+                  @click.stop="openFollowup(row)">
+            <Icon name="calendar" :size="14" />
+          </button>
+          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm"
+                  @click="openPay(row)" :title="$t('checkout.pay_debt')">
+            <Icon name="credit-card" :size="14" />
+          </button>
+        </div>
       </template>
 
       <template #card="{ row }">
@@ -155,6 +169,11 @@
           <div>
             <p class="font-medium text-slate-900">{{ row.patient?.name || '—' }}</p>
             <p class="mt-0.5 text-xs text-slate-400">{{ formatDateTime(row.created_at) }}</p>
+            <span v-if="row.treatment_name"
+                  class="mt-1 inline-flex max-w-full items-center truncate rounded-full border border-violet-200
+                         bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+              {{ row.treatment_name }}
+            </span>
           </div>
           <StatusBadge kind="visit_type" :value="row.visit_type" />
         </div>
@@ -165,9 +184,14 @@
           <span v-if="row.short_term_debt > 0" class="font-mono text-xs font-semibold tabular-nums text-red-700">
             {{ $t('checkout.short_term_debt') }}: {{ format(row.short_term_debt) }}
           </span>
-          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm ms-auto" @click.stop="openPay(row)">
-            <Icon name="credit-card" :size="14" />
-          </button>
+          <span class="ms-auto flex items-center gap-1.5">
+            <button class="btn-ghost btn-sm" :title="$t('visit.book_followup')" @click.stop="openFollowup(row)">
+              <Icon name="calendar" :size="14" />
+            </button>
+            <button v-if="row.short_term_debt > 0" class="btn-success btn-sm" @click.stop="openPay(row)">
+              <Icon name="credit-card" :size="14" />
+            </button>
+          </span>
         </div>
       </template>
 
@@ -184,6 +208,32 @@
     </DataTable>
 
     <PayDebtDialog v-model="showPay" :visit="payVisit" @completed="onPaid" />
+
+    <!-- Book follow-up -->
+    <Modal v-model="showFollowup" :title="$t('visit.followup_for', { name: followupVisit?.patient?.name || '' })">
+      <FormField v-slot="{ id }" :label="$t('visit.followup_datetime')" :hint="$t('visit.followup_hint')">
+        <input :id="id" v-model="followupDatetime" type="datetime-local" class="field" />
+      </FormField>
+
+      <template #footer>
+        <button type="button" class="btn-ghost" @click="showFollowup = false">
+          {{ $t('common.cancel') }}
+        </button>
+        <button type="button" class="btn-primary" :disabled="bookingFollowup || !followupDatetime"
+                @click="askBookFollowup">
+          {{ $t('visit.book_followup') }}
+        </button>
+      </template>
+    </Modal>
+
+    <ConfirmDialog
+      v-model="showConfirmFollowup"
+      :title="$t('common.confirm_action')"
+      :message="confirmFollowupMsg"
+      :confirm-label="$t('visit.book_followup')"
+      :danger="false"
+      @confirmed="bookFollowup"
+    />
   </section>
 </template>
 
@@ -195,7 +245,10 @@ import DataTableFilters from '../components/DataTableFilters.vue';
 import PayDebtDialog from '../components/PayDebtDialog.vue';
 import StatusBadge from '../components/StatusBadge.vue';
 import FormField from '../components/FormField.vue';
+import Modal from '../components/Modal.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import Icon from '../components/Icon.vue';
+import api from '../utils/axios';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime } from '../utils/datetime';
@@ -225,7 +278,7 @@ const columns = computed(() => [
   { key: 'created_at', label: t('archive.checkout_date'), sortable: true, width: '160px' },
   { key: 'visit_type', label: t('table.visit_type'), sortable: true, width: '110px' },
   { key: 'treatment_notes', label: t('visit.treatment_notes'), sortable: false, width: '200px' },
-  { key: 'actions', label: t('common.actions'), sortable: false, width: '80px', printHidden: true },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: '116px', printHidden: true },
 ]);
 
 const format = (v) => formatIQD(v || 0);
@@ -280,6 +333,44 @@ function openPay(v) {
 
 function onPaid() {
   reload();
+}
+
+/* ---- Book follow-up (sets patients.appointment_date) ---- */
+const showFollowup = ref(false);
+const followupVisit = ref(null);
+const followupDatetime = ref('');
+const bookingFollowup = ref(false);
+const showConfirmFollowup = ref(false);
+const confirmFollowupMsg = ref('');
+
+/** One week out at 09:00 local — a sensible starting point for a recall. */
+function defaultFollowup() {
+  const d = new Date(Date.now() + 7 * 86400000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    + `-${String(d.getDate()).padStart(2, '0')}T09:00`;
+}
+
+function openFollowup(row) {
+  followupVisit.value = row;
+  followupDatetime.value = defaultFollowup();
+  showFollowup.value = true;
+}
+
+function askBookFollowup() {
+  confirmFollowupMsg.value = `"${followupVisit.value.patient?.name || ''}"`;
+  showConfirmFollowup.value = true;
+}
+
+async function bookFollowup() {
+  bookingFollowup.value = true;
+  try {
+    await api.patch(`/patients/${followupVisit.value.patient_id}`, {
+      appointment_date: followupDatetime.value || null,
+    });
+    showFollowup.value = false;
+  } finally {
+    bookingFollowup.value = false;
+  }
 }
 
 onMounted(load);

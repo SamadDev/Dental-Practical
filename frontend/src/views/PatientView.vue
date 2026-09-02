@@ -57,14 +57,22 @@
       </div>
     </div>
 
-    <p v-if="patient.outstanding_short_term_debt > 0"
-       class="mt-3 inline-flex items-center gap-1 rounded-full border border-red-300
-              bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
-      {{ $t('patient.outstanding_debt') }}:
-      <span class="font-mono tabular-nums">
-        {{ format(patient.outstanding_short_term_debt) }} {{ $t('currency') }}
-      </span>
-    </p>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <p v-if="patient.outstanding_short_term_debt > 0"
+         class="inline-flex items-center gap-1 rounded-full border border-red-300
+                bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
+        {{ $t('patient.outstanding_debt') }}:
+        <span class="font-mono tabular-nums">
+          {{ format(patient.outstanding_short_term_debt) }} {{ $t('currency') }}
+        </span>
+      </p>
+      <p v-if="upcomingFollowup"
+         class="inline-flex items-center gap-1 rounded-full border border-brand-300
+                bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+        <span aria-hidden="true">📅</span> {{ $t('patient.followup') }}:
+        <span class="tabular-nums">{{ formatDateTime(patient.appointment_date) }}</span>
+      </p>
+    </div>
 
     <div class="mt-4 flex flex-wrap items-stretch gap-3">
       <div class="card px-4 py-3 text-sm">
@@ -220,6 +228,7 @@
       <table class="w-full text-sm">
         <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
+            <th class="px-4 py-3 text-start font-semibold">{{ $t('visit.treatment') }}</th>
             <th class="px-4 py-3 text-start font-semibold">{{ $t('common.total') }}</th>
             <th class="px-4 py-3 text-start font-semibold">{{ $t('checkout.amount_paid') }}</th>
             <th class="px-4 py-3 text-start font-semibold">{{ $t('checkout.short_term_debt') }}</th>
@@ -228,13 +237,22 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           <tr v-for="v in pendingVisits" :key="v.id" class="transition-colors hover:bg-slate-50">
+            <td class="px-4 py-3">
+              <span v-if="v.treatment_name"
+                    class="inline-flex max-w-[160px] items-center truncate rounded-full border border-violet-200
+                           bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700"
+                    :title="v.treatment_name">
+                {{ v.treatment_name }}
+              </span>
+              <span v-else class="text-slate-400">—</span>
+            </td>
             <td class="px-4 py-3 font-mono tabular-nums text-slate-900">{{ format(v.total_cost) }}</td>
             <td class="px-4 py-3 font-mono tabular-nums text-emerald-700">{{ format(v.amount_paid) }}</td>
             <td class="px-4 py-3 font-mono tabular-nums text-red-700">{{ format(v.short_term_debt) }}</td>
             <td class="max-w-xs truncate px-4 py-3 text-slate-600">{{ v.treatment_notes || '—' }}</td>
           </tr>
           <tr v-if="!pendingVisits.length">
-            <td colspan="4" class="px-4 py-10 text-center text-slate-400">
+            <td colspan="5" class="px-4 py-10 text-center text-slate-400">
               {{ $t('archive.empty') }}
             </td>
           </tr>
@@ -418,6 +436,15 @@ const pendingVisits = computed(() =>
 );
 
 const totalVisits = computed(() => (patient.value?.visits || []).length);
+
+/** Teal header-banner chip — only while the follow-up date is today or later. */
+const upcomingFollowup = computed(() => {
+  const d = patient.value?.appointment_date;
+  if (!d) return false;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return String(d).slice(0, 10) >= today;
+});
 
 const lastVisitDisplay = computed(() => {
   const visits = patient.value?.visits || [];

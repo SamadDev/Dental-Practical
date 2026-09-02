@@ -33,7 +33,8 @@ class VisitController extends Controller
         $visits = Visit::with('patient:id,name,phone,appointment_date')
             ->whereIn('queue_status', ['pending', 'active'])
             ->whereDate('created_at', today())
-            ->orderByRaw("FIELD(queue_status, 'active', 'pending')")
+            // CASE instead of FIELD() — works on both MySQL (prod) and SQLite (dev).
+            ->orderByRaw("CASE queue_status WHEN 'active' THEN 0 ELSE 1 END")
             ->orderBy('created_at')
             ->get();
 
@@ -46,6 +47,7 @@ class VisitController extends Controller
             'patient_id'        => 'required|exists:patients,id',
             'aqsat_contract_id' => 'nullable|exists:aqsat_contracts,id',
             'visit_type'        => 'required|in:walk_in,phone,whatsapp',
+            'treatment_name'    => 'nullable|string|max:255',
             'treatment_notes'   => 'nullable|string',
         ]);
 
@@ -69,6 +71,7 @@ class VisitController extends Controller
     public function update(Request $request, Visit $visit): JsonResponse
     {
         $data = $request->validate([
+            'treatment_name'  => 'nullable|string|max:255',
             'treatment_notes' => 'nullable|string',
             'total_cost'      => 'nullable|integer|min:0',
         ]);

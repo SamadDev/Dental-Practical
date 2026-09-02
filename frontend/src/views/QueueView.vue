@@ -41,6 +41,13 @@
           <div class="flex flex-wrap items-center gap-2">
             <span class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ v.patient.name }}</span>
             <StatusBadge kind="queue_status" :value="v.queue_status" />
+            <span v-if="v.treatment_name"
+                  class="inline-flex max-w-[160px] items-center truncate rounded-full border border-violet-200
+                         bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700
+                         dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
+                  :title="v.treatment_name">
+              {{ v.treatment_name }}
+            </span>
             <span v-if="v.patient.appointment_date" class="chip-date">
               <Icon name="calendar" :size="12" /> {{ formatDateTime(v.patient.appointment_date) }}
             </span>
@@ -142,6 +149,12 @@
                   text-sm text-slate-500 dark:text-slate-400">
           {{ $t('common.no_results') }}
         </p>
+
+        <!-- Treatment tag for this visit -->
+        <FormField v-slot="{ id }" :label="$t('visit.treatment')" :hint="$t('visit.treatment_ph')">
+          <input :id="id" v-model="addForm.treatment_name" class="field"
+                 :placeholder="$t('visit.treatment_ph')" />
+        </FormField>
       </div>
 
       <template #footer>
@@ -233,7 +246,7 @@ async function load() {
 }
 
 function openAdd() {
-  addForm.value = { search: '', patient_id: null, patientName: '' };
+  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: '' };
   results.value = [];
   showAdd.value = true;
 }
@@ -268,7 +281,7 @@ function selectPatient(p) {
 }
 
 function clearSelection() {
-  addForm.value = { search: '', patient_id: null, patientName: '' };
+  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: addForm.value.treatment_name };
   results.value = [];
 }
 
@@ -281,9 +294,10 @@ async function addVisit() {
   await api.post('/visits', {
     patient_id: addForm.value.patient_id,
     visit_type: 'walk_in',
+    treatment_name: addForm.value.treatment_name || null,
   });
   showAdd.value = false;
-  addForm.value = { search: '', patient_id: null, patientName: '' };
+  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: '' };
   await load();
 }
 

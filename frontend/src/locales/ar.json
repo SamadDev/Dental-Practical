@@ -107,6 +107,7 @@
     "severe_allergy_badge": "حساسية شديدة — تحقق قبل الوصف",
     "severe_allergy_short": "حساسية",
     "severe_allergy_warn": "هذا المريض لديه حساسية شديدة. تحقق قبل وصف الدواء.",
+    "followup": "متابعة",
     "teeth_title": "مخطط الأسنان",
     "teeth_hint": "انقر على السن لتسجيل حالته",
     "teeth_charted": "{n} أسنان موثقة",
@@ -157,9 +158,15 @@
     }
   },
   "visit": {
+    "treatment": "العلاج",
+    "treatment_ph": "مثال: زراعة أسنان",
     "treatment_notes": "ملاحظات العلاج",
     "xray": "الأشعة",
     "upload_xray": "رفع / التقاط صورة أشعة",
+    "book_followup": "حجز موعد متابعة",
+    "followup_for": "موعد متابعة لـ {name}",
+    "followup_datetime": "تاريخ و وقت المتابعة",
+    "followup_hint": "سيظهر في ملف المريض وفي فلتر المواعيد القادمة",
     "snap_camera": "التقاط صورة",
     "checkout": "الدفع النهائي"
   },

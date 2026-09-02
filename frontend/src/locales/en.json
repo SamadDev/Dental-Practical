@@ -107,6 +107,7 @@
     "severe_allergy_badge": "Severe allergy — check before prescribing",
     "severe_allergy_short": "Allergy",
     "severe_allergy_warn": "This patient has a severe allergy. Check before prescribing.",
+    "followup": "Follow-up",
     "teeth_title": "Dental Chart",
     "teeth_hint": "Tap a tooth to record its status",
     "teeth_charted": "{n} teeth charted",
@@ -157,9 +158,15 @@
     }
   },
   "visit": {
+    "treatment": "Treatment",
+    "treatment_ph": "e.g. Dental Implant",
     "treatment_notes": "Treatment Notes",
     "xray": "X-Ray",
     "upload_xray": "Upload / Snap X-Ray",
+    "book_followup": "Book follow-up",
+    "followup_for": "Follow-up for {name}",
+    "followup_datetime": "Follow-up date & time",
+    "followup_hint": "Shows on the patient profile and in the Patients page Upcoming filter",
     "snap_camera": "Take Photo",
     "checkout": "Checkout"
   },

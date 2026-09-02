@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\PatientConditionController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PaymentPlanController;
+use App\Http\Controllers\Api\ToothChartController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,10 @@ Route::prefix('v1')->group(function () {
     Route::post('patients/{patient}/conditions', [PatientConditionController::class, 'store']);
     Route::patch('conditions/{condition}', [PatientConditionController::class, 'update']);
     Route::delete('conditions/{condition}', [PatientConditionController::class, 'destroy']);
+
+    // Dental chart (per-tooth statuses, universal numbering 1–32)
+    Route::get('patients/{patient}/teeth', [ToothChartController::class, 'show']);
+    Route::put('patients/{patient}/teeth', [ToothChartController::class, 'update']);
 
     // Aqsat contracts
     Route::apiResource('aqsat-contracts', AqsatContractController::class)

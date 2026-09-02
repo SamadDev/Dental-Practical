@@ -126,6 +126,9 @@
       <p v-else class="px-5 py-6 text-sm text-slate-400">{{ $t('patient.no_conditions') }}</p>
     </div>
 
+    <!-- Dental chart -->
+    <DentalChart v-if="patient" class="mt-4" :patient-id="patient.id" />
+
     <div class="mt-5 grid gap-4 md:grid-cols-2">
       <!-- Details -->
       <div class="card p-5">
@@ -393,6 +396,7 @@ import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import Icon from '../components/Icon.vue';
+import DentalChart from '../components/DentalChart.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';

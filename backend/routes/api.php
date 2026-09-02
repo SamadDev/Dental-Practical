@@ -145,6 +145,21 @@ Route::prefix('v1')->group(function () {
         Route::get('purchase-orders', [VendorController::class, 'purchaseOrders'])->middleware('permission:vendors.view');
         Route::post('purchase-orders', [VendorController::class, 'storePurchaseOrder'])->middleware('permission:vendors.po');
         Route::get('purchase-orders/{purchaseOrder}', [VendorController::class, 'showPurchaseOrder'])->middleware('permission:vendors.view');
+        // DEBUG: diagnose patient query error for receptionist
+        Route::get('debug/patient-trace', function (\\Illuminate\\Http\\Request $request) {
+            try {
+                $user = $request->user();
+                $ids = $user->accessibleDoctorIds();
+                return response()->json([
+                    'user_id' => $user->id,
+                    'role' => $user->role,
+                    'isAdmin' => $user->isAdmin(),
+                    'ids' => $ids,
+                ]);
+            } catch (\\Throwable $e) {
+                return response()->json(['error' => $e->getMessage(), 'line' => $e->getLine()], 500);
+            }
+        });
         Route::match(['put', 'patch'], 'purchase-orders/{purchaseOrder}', [VendorController::class, 'updatePurchaseOrder'])->middleware('permission:vendors.po');
         Route::post('purchase-orders/{purchaseOrder}/receive', [VendorController::class, 'receivePurchaseOrder'])->middleware('permission:vendors.po');
     });

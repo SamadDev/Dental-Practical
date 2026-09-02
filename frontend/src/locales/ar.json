@@ -12,7 +12,9 @@
     "expenses": "المصروفات",
     "plans": "خطط التقسيط",
     "inventory": "المخزون",
-    "vendors": "الموردون"
+    "vendors": "الموردون",
+    "doctors": "Doctors",
+    "receptionists": "Receptionists"
   },
   "auth": {
     "sign_in": "تسجيل الدخول",
@@ -353,7 +355,6 @@
       "cancelled": "ملغي"
     }
   },
-
   "table": {
     "age_max": "العمر الأقصى",
     "age_min": "العمر الأدنى",
@@ -382,5 +383,23 @@
     "upcoming": "القادم",
     "visit_type": "نوع الزيارة",
     "showing": "عرض"
+  },
+  "doctors": {
+    "title": "Doctors",
+    "add": "Add Doctor",
+    "edit": "Edit Doctor",
+    "delete": "Delete Doctor",
+    "specialty": "Specialty",
+    "phone": "Phone",
+    "color": "Badge Color",
+    "bio": "Biography",
+    "receptionists": "Receptionists"
+  },
+  "receptionists": {
+    "title": "Receptionists",
+    "add": "Add Receptionist",
+    "edit": "Edit Receptionist",
+    "delete": "Delete Receptionist",
+    "assignedDoctors": "Assigned Doctors"
   }
 }

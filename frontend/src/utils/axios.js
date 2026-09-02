@@ -7,7 +7,7 @@ const api = axios.create({
   headers: { Accept: "application/json" },
 });
 
-// Attach auth token to every request
+// Attach auth token + current doctor context to every request
 api.interceptors.request.use((config) => {
   const raw = localStorage.getItem("dps_auth");
   if (raw) {
@@ -16,6 +16,17 @@ api.interceptors.request.use((config) => {
       if (token) config.headers.Authorization = `Bearer ${token}`;
     } catch {}
   }
+
+  // Inject current doctor context into patient/visit/queue queries when a
+  // specific doctor is selected (receptionists switching between doctors).
+  const doctorIdRaw = localStorage.getItem("dps_current_doctor_id");
+  const doctorId = doctorIdRaw ? Number(doctorIdRaw) : null;
+  const url = config.url || "";
+
+  if (doctorId !== null && (url.includes("/patients") || url.includes("/visits") || url.includes("/queue"))) {
+    config.params = { ...(config.params || {}), doctor_id: doctorId };
+  }
+
   return config;
 });
 

@@ -11,6 +11,8 @@ import InventoryView      from '../views/InventoryView.vue';
 import VendorsView        from '../views/VendorsView.vue';
 import HomeView           from '../views/HomeView.vue';
 import LoginView          from '../views/Login.vue';
+import DoctorsView        from '../views/DoctorsView.vue';
+import ReceptionistsView  from '../views/ReceptionistsView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -27,6 +29,9 @@ const router = createRouter({
     { path: '/payment-plans',   component: PaymentPlansView,  name: 'plans',    meta: { permission: 'payment_plans.view' } },
     { path: '/inventory',       component: InventoryView,     name: 'inventory', meta: { permission: 'inventory.view' } },
     { path: '/vendors',         component: VendorsView,       name: 'vendors',  meta: { permission: 'vendors.view' } },
+    { path: '/doctors',         component: DoctorsView,       name: 'doctors',  meta: { permission: 'users.manage' } },
+    { path: '/receptionists',   component: ReceptionistsView, name: 'receptionists', meta: { permission: 'users.manage' } },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });
 

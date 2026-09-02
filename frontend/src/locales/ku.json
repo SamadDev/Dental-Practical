@@ -12,7 +12,9 @@
     "expenses": "خەرجییەکان",
     "plans": "پلانی قیست",
     "inventory": "کۆگا",
-    "vendors": "فرۆشیارەکان"
+    "vendors": "فرۆشیارەکان",
+    "doctors": "Doctors",
+    "receptionists": "Receptionists"
   },
   "auth": {
     "sign_in": "چوونەژوورەوە",
@@ -350,7 +352,6 @@
       "cancelled": "هەڵوەشاوە"
     }
   },
-
   "table": {
     "age_max": "زۆرترین تەمەن",
     "age_min": "کەمترین تەمەن",
@@ -379,5 +380,23 @@
     "upcoming": "داهاتوو",
     "visit_type": "جۆری سەردان",
     "showing": "پیشاندان"
+  },
+  "doctors": {
+    "title": "Doctors",
+    "add": "Add Doctor",
+    "edit": "Edit Doctor",
+    "delete": "Delete Doctor",
+    "specialty": "Specialty",
+    "phone": "Phone",
+    "color": "Badge Color",
+    "bio": "Biography",
+    "receptionists": "Receptionists"
+  },
+  "receptionists": {
+    "title": "Receptionists",
+    "add": "Add Receptionist",
+    "edit": "Edit Receptionist",
+    "delete": "Delete Receptionist",
+    "assignedDoctors": "Assigned Doctors"
   }
 }

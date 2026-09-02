@@ -12,7 +12,9 @@
     "expenses": "Expenses",
     "plans": "Payment Plans",
     "inventory": "Inventory",
-    "vendors": "Vendors & POs"
+    "vendors": "Vendors & POs",
+    "doctors": "Doctors",
+    "receptionists": "Receptionists"
   },
   "auth": {
     "sign_in": "Sign In",
@@ -353,7 +355,6 @@
       "cancelled": "Cancelled"
     }
   },
-
   "table": {
     "age_max": "Max age",
     "age_min": "Min age",
@@ -382,5 +383,23 @@
     "upcoming": "Upcoming",
     "visit_type": "Visit Type",
     "showing": "Showing"
+  },
+  "doctors": {
+    "title": "Doctors",
+    "add": "Add Doctor",
+    "edit": "Edit Doctor",
+    "delete": "Delete Doctor",
+    "specialty": "Specialty",
+    "phone": "Phone",
+    "color": "Badge Color",
+    "bio": "Biography",
+    "receptionists": "Receptionists"
+  },
+  "receptionists": {
+    "title": "Receptionists",
+    "add": "Add Receptionist",
+    "edit": "Edit Receptionist",
+    "delete": "Delete Receptionist",
+    "assignedDoctors": "Assigned Doctors"
   }
 }

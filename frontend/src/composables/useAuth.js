@@ -26,6 +26,24 @@ const isAuthenticated = computed(() => !!token.value);
 const isReady = ref(false);
 let mePromise = null;
 
+// Current doctor context for receptionists who are assigned to multiple doctors.
+// - `currentDoctorId` is null for admin/doctor/hygienist (they only see their own).
+// - For receptionists, it's a number or null (= "all my assigned doctors").
+// Persisted in localStorage so it survives page reloads.
+const currentDoctorId = ref(
+  localStorage.getItem("dps_current_doctor_id")
+    ? Number(localStorage.getItem("dps_current_doctor_id"))
+    : null
+);
+
+function persistCurrentDoctor() {
+  if (currentDoctorId.value === null) {
+    localStorage.removeItem("dps_current_doctor_id");
+  } else {
+    localStorage.setItem("dps_current_doctor_id", String(currentDoctorId.value));
+  }
+}
+
 function persist() {
   localStorage.setItem(
     STORAGE_KEY,
@@ -41,7 +59,9 @@ function clear() {
   token.value = null;
   user.value = null;
   permissions.value = new Set();
+  currentDoctorId.value = null;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("dps_current_doctor_id");
 }
 
 function setSession(payload) {
@@ -79,6 +99,13 @@ async function fetchMe() {
       user.value = data;
       permissions.value = new Set(data.permissions || []);
       persist();
+
+      // If currentDoctorId is no longer valid (admin removed assignments), reset it
+      const validIds = (data.assigned_doctors || []).map((d) => d.id);
+      if (currentDoctorId.value !== null && !validIds.includes(currentDoctorId.value)) {
+        currentDoctorId.value = null;
+        persistCurrentDoctor();
+      }
       return data;
     })
     .catch((err) => {
@@ -101,6 +128,32 @@ function hasRole(role) {
   return user.value?.role === role;
 }
 
+function hasAnyRole(roles) {
+  return roles.includes(user.value?.role);
+}
+
+/** Doctors a receptionist is assigned to (empty for non-receptionists). */
+const assignedDoctors = computed(() => user.value?.assigned_doctors || []);
+
+/** Doctors a doctor user IS (one entry) or empty. */
+const doctorProfile = computed(() => user.value?.doctor_profile || null);
+
+/** True if user can pick from multiple doctors (only for receptionists). */
+const canSelectDoctor = computed(
+  () => hasRole("receptionist") && assignedDoctors.value.length > 1
+);
+
+/** Currently selected doctor (or null for "all my doctors"). */
+const currentDoctor = computed(() => {
+  if (currentDoctorId.value === null) return null;
+  return assignedDoctors.value.find((d) => d.id === currentDoctorId.value) || null;
+});
+
+function setCurrentDoctorId(id) {
+  currentDoctorId.value = id === null || id === undefined ? null : Number(id);
+  persistCurrentDoctor();
+}
+
 export function useAuth() {
   return {
     token,
@@ -110,10 +163,17 @@ export function useAuth() {
     isReady,
     can,
     hasRole,
+    hasAnyRole,
     login,
     logout,
     fetchMe,
     setSession,
     clear,
+    assignedDoctors,
+    doctorProfile,
+    canSelectDoctor,
+    currentDoctor,
+    currentDoctorId,
+    setCurrentDoctorId,
   };
 }

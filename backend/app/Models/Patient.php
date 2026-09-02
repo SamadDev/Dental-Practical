@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Patient extends Model
 {
     protected $fillable = [
         'name', 'patient_code', 'gender', 'phone', 'age', 'appointment_date', 'is_smoker', 'medical_notes',
+        'doctor_id',
     ];
 
     protected $casts = [
@@ -40,6 +42,11 @@ class Patient extends Model
         } while (self::where('patient_code', $code)->exists());
 
         return $code;
+    }
+
+    public function doctor(): BelongsTo
+    {
+        return $this->belongsTo(Doctor::class);
     }
 
     public function conditions(): HasMany

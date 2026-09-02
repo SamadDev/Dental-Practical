@@ -28,17 +28,20 @@ class VisitController extends Controller
     ];
 
     /** Today's unified queue: pending + active. Completed visits leave the queue. */
-    public function queue(): JsonResponse
+    public function queue(Request $request): JsonResponse
     {
-        $visits = Visit::with('patient:id,name,phone,appointment_date')
+        $user = $request->user();
+        $visits = Visit::with('patient:id,name,phone,appointment_date,doctor_id')
+            ->with('doctor:id,name,color,specialty')
             ->whereIn('queue_status', ['pending', 'active'])
             ->whereDate('created_at', today())
             // CASE instead of FIELD() — works on both MySQL (prod) and SQLite (dev).
             ->orderByRaw("CASE queue_status WHEN 'active' THEN 0 ELSE 1 END")
-            ->orderBy('created_at')
-            ->get();
+            ->orderBy('created_at');
 
-        return response()->json($visits);
+        $this->applyVisitScope($visits, $request);
+
+        return response()->json($visits->get());
     }
 
     public function store(Request $request): JsonResponse
@@ -49,6 +52,7 @@ class VisitController extends Controller
             'visit_type'        => 'required|in:walk_in,phone,whatsapp',
             'treatment_name'    => 'nullable|string|max:255',
             'treatment_notes'   => 'nullable|string',
+            'doctor_id'         => 'nullable|exists:doctors,id',
         ]);
 
         $data['queue_status'] = 'pending';
@@ -286,5 +290,35 @@ class VisitController extends Controller
         }
 
         return $q;
+    }
+
+
+    /**
+     * Scope a visit query by the user's accessible doctors.
+     * - Admin sees all unless ?doctor_id is set.
+     * - Doctor / hygienist sees own.
+     * - Receptionist sees assigned.
+     * - ?doctor_id=N narrows the scope to that one doctor (for any role).
+     */
+    private function applyVisitScope(Builder $q, Request $request): void
+    {
+        $user = $request->user();
+        $ids  = $user->accessibleDoctorIds();
+
+        if ($request->filled('doctor_id')) {
+            $q->where('visits.doctor_id', (int) $request->query('doctor_id'));
+            return;
+        }
+
+        if (empty($ids)) {
+            if (! $user->isAdmin()) {
+                $q->whereRaw('0 = 1');
+            }
+            return;
+        }
+
+        if (! $user->isAdmin()) {
+            $q->whereIn('visits.doctor_id', $ids);
+        }
     }
 }

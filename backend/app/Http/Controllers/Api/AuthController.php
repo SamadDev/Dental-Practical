@@ -15,8 +15,8 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
+            'email'       => 'required|email',
+            'password'    => 'required|string',
             'device_name' => 'sometimes|string|max:255',
         ]);
 
@@ -45,44 +45,44 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['ok' => true]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($this->userPayload($request->user()));
+        return response()->json($this->userPayload($request->user()->load(['doctorProfile', 'assignedDoctors'])));
     }
 
-    /** Admin: list all users. */
+    /** Admin: list all users with their profiles. */
     public function index(): JsonResponse
     {
-        return response()->json(
-            User::query()
-                ->select('id', 'name', 'email', 'role', 'is_active', 'created_at')
-                ->orderBy('role')
-                ->orderBy('name')
-                ->paginate(50)
-        );
+        $users = User::query()
+            ->with(['doctorProfile', 'assignedDoctors'])
+            ->select('id', 'name', 'email', 'role', 'is_active', 'created_at')
+            ->orderBy('role')
+            ->orderBy('name')
+            ->paginate(50);
+
+        return response()->json($users);
     }
 
-    /** Admin: create user. */
+    /** Admin: create user (admin/receptionist/hygienist only; doctors via DoctorController). */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role'     => ['required', Rule::in($this->roleNames())],
-            'is_active'=> 'sometimes|boolean',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email',
+            'password'  => 'required|string|min:6',
+            'role'      => ['required', Rule::in(['admin', 'receptionist', 'hygienist'])],
+            'is_active' => 'sometimes|boolean',
         ]);
 
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role'     => $data['role'],
-            'is_active'=> $data['is_active'] ?? true,
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => Hash::make($data['password']),
+            'role'      => $data['role'],
+            'is_active' => $data['is_active'] ?? true,
         ]);
         $user->assignSyncRole($data['role']);
 
@@ -93,11 +93,10 @@ class AuthController extends Controller
     public function update(Request $request, User $user): JsonResponse
     {
         $data = $request->validate([
-            'name'       => 'sometimes|string|max:255',
-            'email'      => 'sometimes|email|unique:users,email,' . $user->id,
-            'password'   => 'sometimes|string|min:6',
-            'role'       => ['sometimes', Rule::in($this->roleNames())],
-            'is_active'  => 'sometimes|boolean',
+            'name'      => 'sometimes|string|max:255',
+            'email'     => 'sometimes|email|unique:users,email,' . $user->id,
+            'password'  => 'sometimes|string|min:6',
+            'is_active' => 'sometimes|boolean',
         ]);
 
         if (isset($data['password'])) {
@@ -106,11 +105,7 @@ class AuthController extends Controller
 
         $user->update($data);
 
-        if (isset($data['role'])) {
-            $user->assignSyncRole($data['role']);
-        }
-
-        return response()->json($this->userPayload($user->refresh()));
+        return response()->json($this->userPayload($user->refresh()->load(['doctorProfile', 'assignedDoctors'])));
     }
 
     /** Admin: delete user. */
@@ -120,23 +115,39 @@ class AuthController extends Controller
             return response()->json(['message' => 'Cannot delete yourself'], 422);
         }
         $user->delete();
-
         return response()->json(['ok' => true]);
-    }
-
-    private function roleNames(): array
-    {
-        return ['admin', 'doctor', 'receptionist', 'hygienist'];
     }
 
     private function userPayload(User $user): array
     {
-        return [
+        $payload = [
             'id'          => $user->id,
             'name'        => $user->name,
             'email'       => $user->email,
             'role'        => $user->roles->first()?->name ?? $user->role,
             'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
         ];
+
+        // Doctor / hygienist: link to their profile
+        if ($user->isDoctor() || $user->isHygienist()) {
+            $payload['doctor_profile'] = $user->doctorProfile ? [
+                'id'       => $user->doctorProfile->id,
+                'name'     => $user->doctorProfile->name,
+                'specialty'=> $user->doctorProfile->specialty,
+                'color'    => $user->doctorProfile->color,
+            ] : null;
+        }
+
+        // Receptionist: list of assigned doctors
+        if ($user->isReceptionist()) {
+            $payload['assigned_doctors'] = $user->assignedDoctors->map(fn ($d) => [
+                'id'       => $d->id,
+                'name'     => $d->name,
+                'specialty'=> $d->specialty,
+                'color'    => $d->color,
+            ])->all();
+        }
+
+        return $payload;
     }
 }

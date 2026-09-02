@@ -42,6 +42,7 @@ class PatientController extends Controller
             ]);
 
         $this->applyPatientFilters($q, $request);
+        $this->applyDoctorScope($q, $request);
         $this->applySort($q, $request, self::SORTABLE, 'created_at');
 
         $page = $q->paginate($this->perPage($request));
@@ -118,6 +119,7 @@ class PatientController extends Controller
             'appointment_date' => 'nullable|date',
             'is_smoker'        => 'nullable|boolean',
             'medical_notes'    => 'nullable|string',
+            'doctor_id'        => 'nullable|integer|exists:doctors,id',
         ]);
     }
 
@@ -155,5 +157,37 @@ class PatientController extends Controller
             'none' => $q->whereNull('patients.appointment_date'),
             default => null,
         };
+    }
+
+
+    /**
+     * Receptionist / doctor / hygienist scoping:
+     *   - admin:    no extra filter (see ?doctor_id override below)
+     *   - doctor:   only own patients
+     *   - hygienist: same as doctor
+     *   - receptionist: only patients belonging to assigned doctors
+     *   - any user may override with ?doctor_id=X (admin) or restrict further
+     */
+    private function applyDoctorScope($q, Request $request): void
+    {
+        $user = $request->user();
+        $ids  = $user->accessibleDoctorIds();
+
+        if ($request->filled('doctor_id')) {
+            $q->where('patients.doctor_id', (int) $request->query('doctor_id'));
+            return;
+        }
+
+        if (empty($ids)) {
+            // Receptionist with no assignments, or non-clinical user: only own data
+            if (! $user->isAdmin()) {
+                $q->whereRaw('0 = 1');
+            }
+            return;
+        }
+
+        if (! $user->isAdmin()) {
+            $q->whereIn('patients.doctor_id', $ids);
+        }
     }
 }

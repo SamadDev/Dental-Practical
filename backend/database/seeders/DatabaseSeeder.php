@@ -16,12 +16,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Spatie roles & permissions FIRST (required by assignSyncRole in UserSeeder).
+        $this->call(RolesAndPermissionsSeeder::class);
+
         if (User::count() === 0) {
             $this->call(UserSeeder::class);
         }
-
-        // Spatie roles & permissions (idempotent).
-        $this->call(RolesAndPermissionsSeeder::class);
 
         // Realistic operating data: vendors, stock, POs, payment plans,
         // cash-flow ledger. Idempotent — safe on every deploy.

@@ -4,11 +4,13 @@ use App\Http\Controllers\Api\AqsatContractController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CashFlowForecastController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\PatientConditionController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PaymentPlanController;
+use App\Http\Controllers\Api\ReceptionistController;
 use App\Http\Controllers\Api\ToothChartController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitController;
@@ -41,6 +43,24 @@ Route::prefix('v1')->group(function () {
             Route::post('users', [AuthController::class, 'store']);
             Route::patch('users/{user}', [AuthController::class, 'update']);
             Route::delete('users/{user}', [AuthController::class, 'destroy']);
+        });
+
+        // Doctor management (admin)
+        Route::middleware('permission:users.manage')->group(function () {
+            Route::get('doctors',         [DoctorController::class, 'index']);
+            Route::post('doctors',        [DoctorController::class, 'store']);
+            Route::get('doctors/{doctor}',[DoctorController::class, 'show']);
+            Route::match(['put','patch'], 'doctors/{doctor}', [DoctorController::class, 'update']);
+            Route::delete('doctors/{doctor}', [DoctorController::class, 'destroy']);
+        });
+
+        // Receptionist management (admin) - many-to-many with doctors
+        Route::middleware('permission:users.manage')->group(function () {
+            Route::get('receptionists',         [ReceptionistController::class, 'index']);
+            Route::post('receptionists',        [ReceptionistController::class, 'store']);
+            Route::get('receptionists/{user}',  [ReceptionistController::class, 'show']);
+            Route::match(['put','patch'], 'receptionists/{user}', [ReceptionistController::class, 'update']);
+            Route::delete('receptionists/{user}', [ReceptionistController::class, 'destroy']);
         });
 // Patients
         Route::get('patients/stats', [PatientController::class, 'stats'])->middleware('permission:patients.view');

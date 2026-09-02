@@ -4,7 +4,7 @@
     $backendPath = '/home/dental/public_html';
 @endsetup
 
-@servers(['web' => 'dentail'])
+@servers(['web' => 'dental@176.9.120.84'])
 
 @task('deploy', ['on' => 'web'])
     # Pull latest into working copy

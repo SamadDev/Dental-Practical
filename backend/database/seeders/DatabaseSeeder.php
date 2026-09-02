@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             $this->call(UserSeeder::class);
         }
 
+        // Spatie roles & permissions (idempotent).
+        $this->call(RolesAndPermissionsSeeder::class);
+
         // Realistic operating data: vendors, stock, POs, payment plans,
         // cash-flow ledger. Idempotent — safe on every deploy.
         $this->call(OperationsSeeder::class);

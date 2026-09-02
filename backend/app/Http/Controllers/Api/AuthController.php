@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -38,39 +38,25 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
-                'permissions' => $this->getPermissions($user->role),
-            ],
+            'user'  => $this->userPayload($user),
         ]);
     }
 
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['ok' => true]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
-        return response()->json([
-            'id'          => $user->id,
-            'name'        => $user->name,
-            'email'       => $user->email,
-            'role'        => $user->role,
-            'permissions' => $this->getPermissions($user->role),
-        ]);
+        return response()->json($this->userPayload($request->user()));
     }
 
     /** Admin: list all users. */
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
-        $this->authorizeAdmin($request);
-
         return response()->json(
             User::query()
                 ->select('id', 'name', 'email', 'role', 'is_active', 'created_at')
@@ -83,13 +69,11 @@ class AuthController extends Controller
     /** Admin: create user. */
     public function store(Request $request): JsonResponse
     {
-        $this->authorizeAdmin($request);
-
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role'     => 'required|in:admin,doctor,receptionist,hygienist',
+            'role'     => ['required', Rule::in($this->roleNames())],
             'is_active'=> 'sometimes|boolean',
         ]);
 
@@ -100,25 +84,19 @@ class AuthController extends Controller
             'role'     => $data['role'],
             'is_active'=> $data['is_active'] ?? true,
         ]);
+        $user->assignSyncRole($data['role']);
 
-        return response()->json([
-            'id'    => $user->id,
-            'name'  => $user->name,
-            'email' => $user->email,
-            'role'  => $user->role,
-        ], 201);
+        return response()->json($this->userPayload($user), 201);
     }
 
     /** Admin: update user. */
     public function update(Request $request, User $user): JsonResponse
     {
-        $this->authorizeAdmin($request);
-
         $data = $request->validate([
             'name'       => 'sometimes|string|max:255',
             'email'      => 'sometimes|email|unique:users,email,' . $user->id,
             'password'   => 'sometimes|string|min:6',
-            'role'       => 'sometimes|in:admin,doctor,receptionist,hygienist',
+            'role'       => ['sometimes', Rule::in($this->roleNames())],
             'is_active'  => 'sometimes|boolean',
         ]);
 
@@ -128,50 +106,37 @@ class AuthController extends Controller
 
         $user->update($data);
 
-        return response()->json([
-            'id'    => $user->id,
-            'name'  => $user->name,
-            'email' => $user->email,
-            'role'  => $user->role,
-            'is_active' => $user->is_active,
-        ]);
+        if (isset($data['role'])) {
+            $user->assignSyncRole($data['role']);
+        }
+
+        return response()->json($this->userPayload($user->refresh()));
     }
 
     /** Admin: delete user. */
-    public function destroy(User $user): JsonResponse
+    public function destroy(Request $request, User $user): JsonResponse
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'Cannot delete yourself'], 422);
         }
         $user->delete();
+
         return response()->json(['ok' => true]);
     }
 
-    private function getPermissions(string $role): array
+    private function roleNames(): array
     {
-        $user = new User();
-        $user->role = $role;
-        $allPerms = [
-            'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
-            'queue.view', 'queue.manage',
-            'visits.view', 'visits.create', 'visits.edit', 'visits.checkout', 'visits.xray', 'visits.pay_debt',
-            'archive.view',
-            'aqsat.view', 'aqsat.create', 'aqsat.edit',
-            'payment_plans.view', 'payment_plans.create', 'payment_plans.edit', 'payment_plans.pay',
-            'expenses.view', 'expenses.create', 'expenses.delete',
-            'inventory.view', 'inventory.move', 'inventory.adjust',
-            'vendors.view', 'vendors.create', 'vendors.edit', 'vendors.po',
-            'cash_flow.view', 'cash_flow.manage',
-            'dashboard.view',
-            'users.manage',
-        ];
-        return array_filter($allPerms, fn ($p) => $user->hasPermission($p));
+        return ['admin', 'doctor', 'receptionist', 'hygienist'];
     }
 
-    private function authorizeAdmin(Request $request): void
+    private function userPayload(User $user): array
     {
-        if (! $request->user()->isAdmin()) {
-            abort(403, 'Admin only');
-        }
+        return [
+            'id'          => $user->id,
+            'name'        => $user->name,
+            'email'       => $user->email,
+            'role'        => $user->roles->first()?->name ?? $user->role,
+            'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+        ];
     }
 }

@@ -146,7 +146,7 @@ Route::prefix('v1')->group(function () {
         Route::post('purchase-orders', [VendorController::class, 'storePurchaseOrder'])->middleware('permission:vendors.po');
         Route::get('purchase-orders/{purchaseOrder}', [VendorController::class, 'showPurchaseOrder'])->middleware('permission:vendors.view');
         // DEBUG: diagnose patient query error for receptionist
-        Route::get('debug/patient-trace', function (\\Illuminate\\Http\\Request $request) {
+        Route::get('debug/patient-trace', function (\Illuminate\Http\Request $request) {
             try {
                 $user = $request->user();
                 $ids = $user->accessibleDoctorIds();
@@ -156,7 +156,7 @@ Route::prefix('v1')->group(function () {
                     'isAdmin' => $user->isAdmin(),
                     'ids' => $ids,
                 ]);
-            } catch (\\Throwable $e) {
+            } catch (\Throwable $e) {
                 return response()->json(['error' => $e->getMessage(), 'line' => $e->getLine()], 500);
             }
         });

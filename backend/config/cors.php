@@ -9,7 +9,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // Whitelist: LAN private ranges, localhost, and the production public domain.
+    // Whitelist: LAN private ranges, localhost, production public domain, and GitHub Pages.
     'allowed_origins' => [],
     'allowed_origins_patterns' => [
         '#^https?://192\.168\.\d+\.\d+(:\d+)?$#',
@@ -17,6 +17,7 @@ return [
         '#^https?://172\.(1[6-9]|2\d|3[01])\.\d+\.\d+(:\d+)?$#',
         '#^https?://localhost(:\d+)?$#',
         '#^https?://([a-z0-9-]+\.)?smartvisioniq\.com$#',
+        '#^https?://[a-z0-9-]+\.github\.io$#',
     ],
 
     'allowed_headers'         => ['*'],

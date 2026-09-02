@@ -31,7 +31,7 @@
 
       <nav class="app-nav-row" aria-label="Primary">
         <router-link
-          v-for="r in routes" :key="r.name" :to="r.path"
+          v-for="r in routes" :key="r.name" :to="r.path" v-if="!r.permission || can(r.permission)"
           class="app-nav-btn"
           :class="$route.name === r.name ? 'is-active' : ''"
         >
@@ -54,18 +54,18 @@ import { useAuth } from '../composables/useAuth';
 const { locale, t } = useI18n();
 const route = useRoute();
 const lang = useLangStore();
-const { user, logout } = useAuth();
+const { user, logout, can } = useAuth();
 
 const routes = [
-  { name: 'home',      path: '/home',         icon: 'grid' },
-  { name: 'queue',     path: '/queue',        icon: 'calendar' },
-  { name: 'patients',  path: '/patients',     icon: 'users' },
-  { name: 'archive',   path: '/archive',      icon: 'archive' },
-  { name: 'dashboard', path: '/dashboard',    icon: 'bar-chart' },
-  { name: 'plans',     path: '/payment-plans',icon: 'credit-card' },
-  { name: 'inventory', path: '/inventory',    icon: 'package' },
-  { name: 'vendors',   path: '/vendors',      icon: 'factory' },
-  { name: 'expenses',  path: '/expenses',     icon: 'receipt' },
+  { name: 'home',      path: '/home',         icon: 'grid',     permission: 'dashboard.view' },
+  { name: 'queue',     path: '/queue',        icon: 'calendar', permission: 'queue.view' },
+  { name: 'patients',  path: '/patients',     icon: 'users',    permission: 'patients.view' },
+  { name: 'archive',   path: '/archive',      icon: 'archive',  permission: 'archive.view' },
+  { name: 'dashboard', path: '/dashboard',    icon: 'bar-chart', permission: 'dashboard.view' },
+  { name: 'plans',     path: '/payment-plans',icon: 'credit-card', permission: 'payment_plans.view' },
+  { name: 'inventory', path: '/inventory',    icon: 'package',  permission: 'inventory.view' },
+  { name: 'vendors',   path: '/vendors',      icon: 'factory',  permission: 'vendors.view' },
+  { name: 'expenses',  path: '/expenses',     icon: 'receipt',  permission: 'expenses.view' },
 ];
 
 const currentTitle = computed(() => {

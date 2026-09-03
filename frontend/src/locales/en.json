@@ -278,6 +278,7 @@
     "dark_mode_desc": "Toggle dark/light theme",
     "language": "Language",
     "currency": "Currency",
+    "view_all": "View All",
     "presets": {
       "today": "Today",
       "last_7": "Last 7 Days",

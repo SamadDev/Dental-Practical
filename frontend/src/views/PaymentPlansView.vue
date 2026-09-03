@@ -6,7 +6,7 @@
         <p class="mt-0.5 text-sm text-slate-500">{{ $t('plans.title_hint') }}</p>
         <p v-if="!loading" class="mt-2 text-xs text-slate-400">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
-      <button class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
+      <button v-if="can('payment_plans.create')" class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -182,8 +182,8 @@
                  :title="$t('plans.notify_customer') || 'Send WhatsApp reminder'">
                 <Icon name="comment" :size="14" />
               </a>
-              <button class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
-              <button class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')"><Icon name="x" :size="14" /></button>
+              <button v-if="can('payment_plans.pay')" class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
+              <button v-if="can('payment_plans.edit')" class="btn-ghost btn-sm" @click="waive(ins)" :title="$t('plans.waive')"><Icon name="x" :size="14" /></button>
             </div>
           </li>
         </ul>
@@ -271,11 +271,13 @@ import FormField     from '../components/FormField.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
+import { useAuth } from '../composables/useAuth';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 import { formatPhoneForWhatsApp } from '../utils/phone';
 
 const { t } = useI18n();
+const { can } = useAuth();
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,

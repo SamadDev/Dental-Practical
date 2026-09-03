@@ -23,7 +23,7 @@
                     col.printHidden ? 'no-print' : '',
                     col.sticky === 'start' ? 'sticky left-0 z-20' : '',
                     col.sticky === 'end' ? 'sticky right-0 z-20' : '',
-                    sort === col.key ? 'bg-brand-50/70' : '',
+                    sort === col.key ? 'bg-indigo-50/70' : '',
                   ]"
                   :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
                   :aria-sort="ariaSort(col)"
@@ -34,18 +34,18 @@
                       type="button"
                       class="group inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors
                              hover:bg-white
-                             focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
                       :class="col.align === 'end' ? 'flex-row-reverse' : ''"
                       @click="$emit('sort', col.key, col.initialDir || 'asc')"
                     >
                       <span
                         class="font-bold tracking-wider transition-colors"
-                        :class="sort === col.key ? 'text-brand-700' : 'text-slate-500 group-hover:text-slate-900'"
+                        :class="sort === col.key ? 'text-indigo-700' : 'text-slate-500 group-hover:text-slate-900'"
                       >{{ col.label }}</span>
                       <span
                         class="grid h-3.5 w-3.5 place-items-center text-[9px] leading-none transition-all duration-200"
                         :class="sort === col.key
-                          ? 'text-brand-600 opacity-100'
+                          ? 'text-indigo-600 opacity-100'
                           : 'text-slate-400 opacity-0 group-hover:opacity-60'"
                         aria-hidden="true"
                       >
@@ -93,7 +93,7 @@
               <tr
                 v-for="(row, i) in rows" :key="rowKey(row, i)"
                 class="data-table-row group transition-colors duration-150
-                       even:bg-slate-50/40 odd:bg-white hover:bg-brand-50/40"
+                       even:bg-slate-50/40 odd:bg-white hover:bg-indigo-50/40"
                 :class="[
                   rowClickable ? 'cursor-pointer' : '',
                   rowHighlight && rowHighlight(row) ? 'bg-amber-50/60 ring-1 ring-inset ring-amber-200' : ''
@@ -253,7 +253,7 @@ function ariaSort(col) {
 
 /* Focus visible for keyboard navigation */
 .data-table-row:focus-visible {
-  @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+  @apply outline-none ring-2 ring-indigo-500 ring-offset-2 ring-offset-white;
 }
 
 /* Shimmering skeleton loader — reads as "working" rather than a static block. */

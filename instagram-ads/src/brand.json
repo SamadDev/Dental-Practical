@@ -1,0 +1,22 @@
+{
+  "handle": "@dentalclinic",
+  "phone": "0750 000 0000",
+  "ku": {
+    "name": "نۆرینگەی ددان",
+    "headline1": "پێزەی نوێت",
+    "headline2": "لێرە دەست پێدەکات",
+    "sub": "چاودێری تەواوی ددان بۆ تۆ و خێزانەکەت",
+    "chips": ["سپی کردنەوە", "ئیمپلانت", "برەیس", "کلینکردنەوە"],
+    "cta": "ئێستا پەیوەندی بکە",
+    "location": "هەولێر"
+  },
+  "en": {
+    "name": "Dental Clinic",
+    "headline1": "Your new smile",
+    "headline2": "starts here.",
+    "sub": "Complete dental care for you & your family.",
+    "chips": ["Whitening", "Implants", "Braces", "Cleaning"],
+    "cta": "Book your visit today",
+    "location": "Erbil"
+  }
+}

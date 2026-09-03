@@ -1,189 +1,197 @@
 <template>
-  <section class="p-6 max-w-5xl mx-auto">
-    <header class="mb-6 flex flex-wrap items-end justify-between gap-3">
+  <section>
+    <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('receptionists.title') }}</h2>
-        <p class="mt-0.5 text-sm text-slate-500">{{ receptionists.length }} {{ $t('common.results') }}</p>
+        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
-      <button class="btn-primary flex items-center gap-2" @click="openCreate">
-        <Icon name="plus" :size="16" /> {{ $t('receptionists.add') }}
-      </button>
+      <button v-if="can('users.manage')" class="btn-primary no-print" @click="openCreate" :title="$t('receptionists.add')"><Icon name="plus" :size="16" /></button>
     </header>
 
-    <div v-if="error" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
-      <span>⚠</span> {{ error }}
-    </div>
+    <p v-if="error" role="alert" class="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      <span aria-hidden="true">⚠</span>{{ error }}
+    </p>
 
-    <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <th class="px-4 py-3">{{ $t('common.name') }}</th>
-              <th class="px-4 py-3">{{ $t('common.email') }}</th>
-              <th class="px-4 py-3">{{ $t('receptionists.assignedDoctors') }}</th>
-              <th class="px-4 py-3">{{ $t('common.status') }}</th>
-              <th class="px-4 py-3 no-print"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr v-if="loading"><td colspan="5" class="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
-            <tr v-else-if="!receptionists.length"><td colspan="5" class="px-4 py-8 text-center text-slate-400">No receptionists found.</td></tr>
-            <tr v-for="r in receptionists" :key="r.id" class="hover:bg-slate-50">
-              <td class="px-4 py-3 font-medium text-slate-900">{{ r.name }}</td>
-              <td class="px-4 py-3 text-slate-600">{{ r.email }}</td>
-              <td class="px-4 py-3">
-                <div class="flex flex-wrap gap-1">
-                  <span v-if="!r.doctors?.length" class="text-xs text-slate-400">—</span>
-                  <span v-for="d in r.doctors" :key="d.id" class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium" :style="{ backgroundColor: d.color + '20', color: d.color }">
-                    <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: d.color }"></span>
-                    {{ d.name }}
-                    <span v-if="d.specialty" class="opacity-70"> ({{ d.specialty }})</span>
-                  </span>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span :class="r.is_active ? 'badge-success' : 'badge-danger'">{{ r.is_active ? $t('common.active') : $t('common.inactive') }}</span>
-              </td>
-              <td class="px-4 py-3 no-print">
-                <div class="flex items-center gap-1">
-                  <button @click="openEdit(r)" class="btn-icon" title="Edit">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                  </button>
-                  <button @click="confirmDelete(r)" class="btn-icon !text-red-500 hover:!bg-red-50" title="Delete">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <DataTableFilters
+      v-model:search="search"
+      :placeholder="$t('receptionists.title')"
+      :active-count="activeFilterCount"
+      @input="onSearchInput"
+      @reset="resetFilters"
+    />
 
-    <!-- Create / Edit Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content max-w-lg w-full">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">{{ form.id ? $t('receptionists.edit') : $t('receptionists.add') }}</h3>
-          <button @click="closeModal" class="text-slate-400 hover:text-slate-600">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
+    <DataTable
+      :columns="columns"
+      :rows="rows"
+      :loading="loading"
+      :sort="sort"
+      :dir="dir"
+      :is-filtered="isFiltered"
+      :empty-text="$t('receptionists.title')"
+      empty-icon="👩‍💼"
+      :meta="meta"
+      :per-page="perPage"
+      @sort="toggleSort"
+      @page="goToPage"
+      @update:per-page="(n) => (perPage = n)"
+      @reset="resetFilters"
+    >
+      <template #cell(name)="{ row }">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex w-8 h-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-xs font-bold text-cyan-700">{{ row.initials }}</span>
+          <p class="font-medium text-slate-900 truncate">{{ row.name }}</p>
         </div>
-        <div v-if="formError" class="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ formError }}</div>
-        <form @submit.prevent="saveReceptionist" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="field-label">{{ $t('common.name') }} <span class="text-red-500">*</span></label><input v-model="form.name" type="text" required class="field-input" /></div>
-            <div><label class="field-label">{{ $t('common.email') }} <span class="text-red-500">*</span></label><input v-model="form.email" type="email" required class="field-input" /></div>
-          </div>
-          <div><label class="field-label">{{ $t('common.password') }} <span v-if="!form.id" class="text-red-500">*</span><span v-else class="text-slate-400 font-normal"> (keep blank)</span></label><input v-model="form.password" type="password" :required="!form.id" class="field-input" autocomplete="new-password" /></div>
+      </template>
+      <template #cell(email)="{ row }"><span class="text-slate-600">{{ row.email }}</span></template>
+      <template #cell(doctors)="{ row }">
+        <div class="flex flex-wrap gap-1">
+          <span v-if="!row.doctors?.length" class="text-xs text-slate-400">—</span>
+          <span v-for="d in row.doctors" :key="d.id" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" :style="{ backgroundColor: (d.color || '#06b6d4') + '20', color: d.color || '#06b6d4' }">
+            <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: d.color || '#06b6d4' }"></span>
+            {{ d.name }}<span v-if="d.specialty" class="opacity-70">({{ d.specialty }})</span>
+          </span>
+        </div>
+      </template>
+      <template #cell(status)="{ row }"><span :class="row.is_active ? 'badge-success' : 'badge-danger'">{{ row.is_active ? $t('common.active') : $t('common.inactive') }}</span></template>
+      <template #cell(actions)="{ row }">
+        <div class="flex justify-end gap-1 no-print">
+          <button v-if="can('users.manage')" class="btn-ghost btn-sm" @click="openEdit(row)" :title="$t('receptionists.edit')"><Icon name="edit" :size="14" /></button>
+          <button v-if="can('users.manage')" class="btn-ghost btn-sm !text-red-500 hover:!bg-red-50" @click="confirmDelete(row)" :title="$t('receptionists.delete')"><Icon name="trash" :size="14" /></button>
+        </div>
+      </template>
 
-          <!-- Doctor assignment multi-select -->
-          <div>
-            <label class="field-label">{{ $t('receptionists.assignedDoctors') }}</label>
-            <div class="mt-1.5 space-y-1.5">
-              <div v-for="d in allDoctors" :key="d.id" class="flex items-center gap-2">
-                <input type="checkbox" :id="'doc_' + d.id" :value="d.id" v-model="form.doctor_ids" class="w-4 h-4 rounded border-slate-300 text-indigo-600" />
-                <label :for="'doc_' + d.id" class="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
-                  <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: d.color }"></span>
-                  {{ d.name }}
-                  <span v-if="d.specialty" class="text-xs text-slate-400">({{ d.specialty }})</span>
-                </label>
-              </div>
+      <template #card="{ row }">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex w-8 h-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-xs font-bold text-cyan-700">{{ row.initials }}</span>
+            <div>
+              <p class="font-medium text-slate-900">{{ row.name }}</p>
+              <p class="text-xs text-slate-400">{{ row.email }}</p>
             </div>
           </div>
-
-          <div class="flex items-center gap-2"><input v-model="form.is_active" type="checkbox" id="rec_active" class="w-4 h-4 rounded border-slate-300 text-indigo-600" /><label for="rec_active" class="text-sm text-slate-700">{{ $t('common.active') }}</label></div>
-          <div class="flex justify-end gap-2 pt-2 border-t">
-            <button type="button" @click="closeModal" class="btn-ghost">{{ $t('common.cancel') }}</button>
-            <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? '...' : $t('common.save') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- Delete Confirm -->
-    <div v-if="deleting" class="modal-overlay" @click.self="deleting = null">
-      <div class="modal-content max-w-sm w-full">
-        <h3 class="text-lg font-bold mb-2">{{ $t('receptionists.delete') }}</h3>
-        <p class="text-sm text-slate-600 mb-4">Delete <strong>{{ deleting.name }}</strong>? This also deletes their account and cannot be undone.</p>
-        <div class="flex justify-end gap-2">
-          <button @click="deleting = null" class="btn-ghost">{{ $t('common.cancel') }}</button>
-          <button @click="doDelete" class="btn-danger" :disabled="saving">{{ $t('common.delete') }}</button>
+          <span :class="row.is_active ? 'badge-success' : 'badge-danger'">{{ row.is_active ? $t('common.active') : $t('common.inactive') }}</span>
         </div>
+        <div class="mt-2 flex flex-wrap gap-1">
+          <span v-if="!row.doctors?.length" class="text-xs text-slate-400">—</span>
+          <span v-for="d in row.doctors" :key="d.id" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" :style="{ backgroundColor: (d.color || '#06b6d4') + '20', color: d.color || '#06b6d4' }">
+            <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: d.color || '#06b6d4' }"></span>
+            {{ d.name }}
+          </span>
+        </div>
+        <div class="mt-3 flex justify-end gap-1 no-print">
+          <button v-if="can('users.manage')" class="btn-ghost btn-sm" @click="openEdit(row)" :title="$t('receptionists.edit')"><Icon name="edit" :size="14" /></button>
+          <button v-if="can('users.manage')" class="btn-ghost btn-sm !text-red-500 hover:!bg-red-50" @click="confirmDelete(row)" :title="$t('receptionists.delete')"><Icon name="trash" :size="14" /></button>
+        </div>
+      </template>
+    </DataTable>
+
+    <Modal v-model="showModal" :title="form.id ? $t('receptionists.edit') : $t('receptionists.add')">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <FormField v-slot="{ id }" :label="$t('common.name')" required><input :id="id" v-model="form.name" class="field" :placeholder="$t('common.name')" /></FormField>
+        <FormField v-slot="{ id }" :label="$t('common.email')" :error="errors.email" required><input :id="id" v-model="form.email" type="email" class="field" :placeholder="$t('common.email')" /></FormField>
+        <FormField v-slot="{ id }" :label="$t('receptionists.assignedDoctors')" class="sm:col-span-2">
+          <div class="flex flex-wrap gap-2">
+            <label v-for="d in allDoctors" :key="d.id" class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition-colors" :class="form.doctor_ids.includes(d.id) ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'">
+              <input type="checkbox" :value="d.id" v-model="form.doctor_ids" class="sr-only" />
+              <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: d.color || '#06b6d4' }"></span>{{ d.name }}
+            </label>
+          </div>
+        </FormField>
+        <FormField v-slot="{ id }" :label="form.id ? $t('receptionists.password_leave') : $t('common.password')" :error="errors.password" :required="!form.id" class="sm:col-span-2"><input :id="id" v-model="form.password" type="password" class="field" :placeholder="form.id ? $t('receptionists.password_hint') : $t('common.password')" /></FormField>
+        <div class="flex items-center gap-2 sm:col-span-2"><input :id="'recep-active'" v-model="form.is_active" type="checkbox" class="field-check" /><label :for="'recep-active'" class="text-sm text-slate-700">{{ $t('common.active') }}</label></div>
       </div>
-    </div>
+      <p v-if="formError" role="alert" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ formError }}</p>
+      <template #footer><button class="btn-ghost" @click="showModal = false">{{ $t('common.cancel') }}</button><button class="btn-primary" :disabled="saving" @click="saveReceptionist">{{ saving ? $t('common.saving') : $t('common.save') }}</button></template>
+    </Modal>
+
+    <Modal v-model="showDelete" :title="$t('receptionists.delete')">
+      <p class="text-sm text-slate-600">{{ $t('receptionists.delete_confirm', { name: deleting?.name }) }}</p>
+      <template #footer><button class="btn-ghost" @click="showDelete = false">{{ $t('common.cancel') }}</button><button class="btn-danger" :disabled="saving" @click="doDelete">{{ $t('common.delete') }}</button></template>
+    </Modal>
   </section>
 </template>
+
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
+import DataTable from '../components/DataTable.vue';
+import DataTableFilters from '../components/DataTableFilters.vue';
+import Modal from '../components/Modal.vue';
+import FormField from '../components/FormField.vue';
 import Icon from '../components/Icon.vue';
+import { useDataTable } from '../composables/useDataTable';
+import { useAuth } from '../composables/useAuth';
 
 const { t } = useI18n();
-const receptionists = ref([]);
+const { can } = useAuth();
+
+const {
+  rows, loading, error, search, sort, dir, perPage, meta,
+  activeFilterCount, isFiltered,
+  load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
+} = useDataTable('/receptionists', {
+  filters: {},
+  sort: 'name',
+  dir: 'asc',
+  perPage: 25,
+});
+
+function blankForm() { return { id: null, name: '', email: '', password: '', doctor_ids: [], is_active: true }; }
+
+const columns = computed(() => [
+  { key: 'name',    label: t('common.name'),                   sortable: true,  width: '24%' },
+  { key: 'email',   label: t('common.email'),                  sortable: false, width: '24%' },
+  { key: 'doctors', label: t('receptionists.assignedDoctors'), sortable: false, width: '32%' },
+  { key: 'status',  label: t('common.status'),                 sortable: false, width: '10%' },
+  { key: 'actions', label: t('common.actions'),                sortable: false, width: '10%', align: 'end', printHidden: true },
+]);
+
 const allDoctors = ref([]);
-const loading = ref(false);
-const error = ref('');
 const saving = ref(false);
 const formError = ref('');
+const errors = ref({});
 const showModal = ref(false);
+const showDelete = ref(false);
 const deleting = ref(null);
 const form = ref(blankForm());
 
-function blankForm() {
-  return { id: null, name: '', email: '', password: '', doctor_ids: [], is_active: true };
-}
-
-onMounted(async () => {
-  loading.value = true; error.value = '';
+onMounted(loadAllDoctors);
+async function loadAllDoctors() {
   try {
-    const [rRes, dRes] = await Promise.all([
-      api.get('/receptionists'),
-      api.get('/doctors'),
-    ]);
-    receptionists.value = rRes.data.data;
-    allDoctors.value = dRes.data.data;
-  } catch (e) { error.value = e.userMessage || 'Failed to load'; }
-  finally { loading.value = false; }
-});
-
-function openCreate() { form.value = blankForm(); formError.value = ''; showModal.value = true; }
-
-function openEdit(r) {
-  form.value = { id: r.id, name: r.name, email: r.email, password: '', doctor_ids: r.doctors?.map(d => d.id) || [], is_active: r.is_active };
-  formError.value = ''; showModal.value = true;
+    const { data } = await api.get('/doctors', { params: { per_page: 100 } });
+    allDoctors.value = data.data ?? data;
+  } catch { /* non-critical */ }
 }
 
-function closeModal() { showModal.value = false; }
+function openCreate() { form.value = blankForm(); formError.value = ''; errors.value = {}; showModal.value = true; }
+function openEdit(r) { form.value = { id: r.id, name: r.name, email: r.email, password: '', doctor_ids: r.doctors?.map(d => d.id) || [], is_active: r.is_active }; formError.value = ''; errors.value = {}; showModal.value = true; }
 
 async function saveReceptionist() {
-  saving.value = true; formError.value = '';
+  saving.value = true; formError.value = ''; errors.value = {};
   try {
-    const p = { ...form.value };
-    if (!p.password) delete p.password;
+    const p = { ...form.value }; if (!p.password) delete p.password;
     if (p.id) {
       const up = { name: p.name, is_active: p.is_active, doctor_ids: p.doctor_ids };
       if (p.password) { up.email = p.email; up.password = p.password; }
       else delete up.email;
-      const { data } = await api.patch(`/receptionists/${p.id}`, up);
-      const i = receptionists.value.findIndex(x => x.id === p.id);
-      if (i >= 0) receptionists.value[i] = data.data;
+      await api.patch(`/receptionists/${p.id}`, up);
     } else {
-      const { data } = await api.post('/receptionists', p);
-      receptionists.value.push(data.data);
+      await api.post('/receptionists', p);
     }
-    closeModal();
-  } catch (e) { formError.value = e.userMessage || e.response?.data?.message || 'Save failed'; }
-  finally { saving.value = false; }
+    showModal.value = false;
+    reload();
+  } catch (e) {
+    if (e.response?.status === 422) { errors.value = e.response.data.errors || {}; formError.value = Object.values(errors.value).flat().join(' '); }
+    else { formError.value = e.userMessage || e.response?.data?.message || 'Save failed'; }
+  } finally { saving.value = false; }
 }
 
-function confirmDelete(r) { deleting.value = r; }
-
+function confirmDelete(r) { deleting.value = r; showDelete.value = true; }
 async function doDelete() {
   saving.value = true;
-  try { await api.delete(`/receptionists/${deleting.value.id}`); receptionists.value = receptionists.value.filter(x => x.id !== deleting.value.id); deleting.value = null; }
-  catch (e) { alert(e.userMessage || 'Delete failed'); }
+  try { await api.delete(`/receptionists/${deleting.value.id}`); showDelete.value = false; deleting.value = null; reload(); }
+  catch (e) { formError.value = e.userMessage || 'Delete failed'; }
   finally { saving.value = false; }
 }
 </script>

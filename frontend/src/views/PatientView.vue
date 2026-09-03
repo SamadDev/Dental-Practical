@@ -1,13 +1,13 @@
 <template>
   <section v-if="patient">
     <router-link to="/patients"
-                 class="inline-flex items-center gap-1 text-sm font-medium text-brand-600
-                        hover:text-brand-700 hover:underline">
+                 class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600
+                         hover:text-indigo-700 hover:underline">
       <span aria-hidden="true">←</span> {{ $t('common.back_to_patients') }}
     </router-link>
 
     <!-- Profile header -->
-    <div class="mt-3 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500
+    <div class="mt-3 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-600
                 px-5 py-5 text-white shadow-card sm:px-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-4">
@@ -43,12 +43,12 @@
               {{ $t('patient.total_visits') }}
             </div>
           </div>
-          <button type="button"
+          <button v-if="can('patients.edit')" type="button"
                   class="grid h-9 w-9 place-items-center rounded-lg bg-white/15 transition-colors hover:bg-white/25"
                   :title="$t('common.edit')" @click="openEdit">
             <Icon name="edit" :size="16" />
           </button>
-          <button type="button"
+          <button v-if="can('patients.delete')" type="button"
                   class="grid h-9 w-9 place-items-center rounded-lg bg-red-500/80 transition-colors hover:bg-red-500"
                   :title="$t('common.delete')" @click="askDeletePatient">
             <Icon name="trash" :size="16" />
@@ -67,8 +67,8 @@
         </span>
       </p>
       <p v-if="upcomingFollowup"
-         class="inline-flex items-center gap-1 rounded-full border border-brand-300
-                bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+class="inline-flex items-center gap-1 rounded-full border border-indigo-300
+               bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
         <span aria-hidden="true">📅</span> {{ $t('patient.followup') }}:
         <span class="tabular-nums">{{ formatDateTime(patient.appointment_date) }}</span>
       </p>
@@ -105,7 +105,7 @@
             ⚠ {{ $t('patient.severe_allergy_warn') }}
           </p>
         </div>
-        <button type="button" class="btn-ghost btn-sm" @click="openConditions">
+        <button v-if="can('patients.edit')" type="button" class="btn-ghost btn-sm" @click="openConditions">
           <Icon name="edit" :size="14" /> {{ $t('patient.manage_conditions') }}
         </button>
       </div>
@@ -142,16 +142,16 @@
       <div class="card p-5">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="font-semibold text-slate-900">{{ $t('patient.title') }}</h3>
-          <button class="btn-ghost btn-sm" @click="openEdit" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button v-if="can('patients.edit')" class="btn-ghost btn-sm" @click="openEdit" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
         </div>
         <dl class="space-y-3 text-sm">
           <div class="flex justify-between gap-4 border-b border-slate-100 pb-3">
             <dt class="text-slate-500">{{ $t('patient.phone') }}</dt>
             <dd class="font-mono text-slate-900" dir="ltr">
               <a v-if="patient.phone" :href="formatPhoneForWhatsApp(patient.phone)" target="_blank" rel="noopener noreferrer"
-                 class="flex items-center gap-1 hover:text-brand-600 transition-colors"
-                 :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(patient.phone) })">
-                <span class="text-brand-600" aria-hidden="true">💬</span>
+class="flex items-center gap-1 hover:text-indigo-600 transition-colors"
+                  :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(patient.phone) })">
+                <span class="text-indigo-600" aria-hidden="true">💬</span>
                 {{ formatPhoneForDisplay(patient.phone) }}
               </a>
               <span v-else class="text-slate-400">—</span>
@@ -209,11 +209,11 @@
       <label
         class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl
                border-2 border-dashed border-slate-300 px-4 py-8 text-center transition-colors
-               hover:border-brand-400 hover:bg-brand-50/40"
+               hover:border-indigo-400 hover:bg-indigo-50/40"
       >
         <span class="text-3xl" aria-hidden="true">📷</span>
         <span class="text-sm font-medium text-slate-700">{{ $t('visit.upload_xray') }}</span>
-        <span v-if="uploading" class="text-xs text-brand-600">{{ $t('common.saving') }}</span>
+        <span v-if="uploading" class="text-xs text-indigo-600">{{ $t('common.saving') }}</span>
         <input type="file" accept="image/*" capture="environment" class="sr-only"
                :disabled="uploading" @change="uploadXray($event, activeVisit)" />
       </label>
@@ -360,10 +360,10 @@
               · {{ $t('patient.sev_' + c.severity) }}
             </p>
           </div>
-          <button type="button" class="btn-ghost btn-sm" :title="$t('common.edit')" @click="editCondition(c)">
+          <button v-if="can('patients.edit')" type="button" class="btn-ghost btn-sm" :title="$t('common.edit')" @click="editCondition(c)">
             <Icon name="edit" :size="14" />
           </button>
-          <button type="button" class="btn-danger btn-sm" :title="$t('common.delete')" @click="askDeleteCondition(c)">
+          <button v-if="can('patients.edit')" type="button" class="btn-danger btn-sm" :title="$t('common.delete')" @click="askDeleteCondition(c)">
             <Icon name="trash" :size="14" />
           </button>
         </li>
@@ -418,10 +418,12 @@ import DentalChart from '../components/DentalChart.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
+import { useAuth } from '../composables/useAuth';
 
 const route   = useRoute();
 const router  = useRouter();
 const { t }   = useI18n();
+const { can } = useAuth();
 const patient = ref(null);
 const uploading = ref(false);
 

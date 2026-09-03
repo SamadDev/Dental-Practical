@@ -14,7 +14,14 @@
     "inventory": "المخزون",
     "vendors": "الموردون",
     "doctors": "Doctors",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "management": "الإدارة"
+  },
+  "role": {
+    "admin": "مدير",
+    "doctor": "طبيب",
+    "receptionist": "موظف استقبال",
+    "hygienist": "أخصائي صحة"
   },
   "auth": {
     "sign_in": "تسجيل الدخول",
@@ -23,7 +30,10 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "email_required": "أدخل بريدًا إلكترونيًا صحيحًا",
-    "password_required": "كلمة المرور مطلوبة"
+    "password_required": "كلمة المرور مطلوبة",
+    "current_doctor": "الطبيب الحالي",
+    "all_my_doctors": "كل أطبائي",
+    "switch_doctor": "تبديل الطبيب"
   },
   "lang": {
     "english": "English",
@@ -61,7 +71,13 @@
     "clear": "مسح",
     "all": "الكل",
     "results": "نتائج",
-    "no_results": "لم يتم العثور على نتائج"
+    "no_results": "لم يتم العثور على نتائج",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "password": "كلمة المرور"
   },
   "patient": {
     "title": "المرضى",
@@ -136,7 +152,10 @@
     "status_root_canal": "علاج جذور",
     "status_missing": "مفقود",
     "status_implant": "زراعة",
-    "status_previous_visit": "زيارة سابقة"
+    "status_previous_visit": "زيارة سابقة",
+    "save_add_another": "حفظ وإضافة مريض آخر",
+    "add_appointment": "إضافة موعد",
+    "hide_appointment": "إخفاء موعد"
   },
   "queue": {
     "title": "طابور اليوم",
@@ -393,13 +412,19 @@
     "phone": "Phone",
     "color": "Badge Color",
     "bio": "Biography",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "delete_confirm": "حذف {name}؟ سيتم أيضًا حذف حساب المستخدم الخاص به ولا يمكن التراجع.",
+    "password_leave": "كلمة مرور جديدة (اتركها فارغة للإبقاء)",
+    "password_hint": "اتركها فارغة للإبقاء على كلمة المرور الحالية"
   },
   "receptionists": {
     "title": "Receptionists",
     "add": "Add Receptionist",
     "edit": "Edit Receptionist",
     "delete": "Delete Receptionist",
-    "assignedDoctors": "Assigned Doctors"
+    "assignedDoctors": "Assigned Doctors",
+    "delete_confirm": "حذف {name}؟ سيتم أيضًا حذف حسابهم ولا يمكن التراجع.",
+    "password_leave": "كلمة مرور جديدة (اتركها فارغة للإبقاء)",
+    "password_hint": "اتركها فارغة للإبقاء على كلمة المرور الحالية"
   }
 }

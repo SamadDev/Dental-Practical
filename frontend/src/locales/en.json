@@ -4,7 +4,8 @@
   },
   "nav": {
     "workspace": "Menu",
-    "home": "Main Menu",
+    "home": "Home",
+    "main_menu": "Main Menu",
     "queue": "Daily Queue",
     "patients": "Patients",
     "archive": "Treatment Archive",
@@ -14,7 +15,16 @@
     "inventory": "Inventory",
     "vendors": "Vendors & POs",
     "doctors": "Doctors",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "management": "Management",
+    "profile": "My Profile",
+    "roles": "Roles & Permissions"
+  },
+  "role": {
+    "admin": "Admin",
+    "doctor": "Doctor",
+    "receptionist": "Receptionist",
+    "hygienist": "Hygienist"
   },
   "auth": {
     "sign_in": "Sign In",
@@ -23,6 +33,9 @@
     "email": "Email",
     "password": "Password",
     "email_required": "Enter a valid email address",
+    "current_doctor": "Current doctor",
+    "all_my_doctors": "All my doctors",
+    "switch_doctor": "Switch doctor",
     "password_required": "Password is required"
   },
   "lang": {
@@ -61,7 +74,13 @@
     "clear": "Clear",
     "all": "All",
     "results": "results",
-    "no_results": "No results found"
+    "no_results": "No results found",
+    "name": "Name",
+    "email": "Email",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "password": "Password"
   },
   "patient": {
     "title": "Patients",
@@ -136,7 +155,10 @@
     "status_root_canal": "Root Canal",
     "status_missing": "Missing",
     "status_implant": "Implant",
-    "status_previous_visit": "Previous Visit"
+    "status_previous_visit": "Previous Visit",
+    "save_add_another": "Save & Add Another",
+    "add_appointment": "Add appointment date",
+    "hide_appointment": "Hide appointment date"
   },
   "queue": {
     "title": "Today's Queue",
@@ -393,13 +415,49 @@
     "phone": "Phone",
     "color": "Badge Color",
     "bio": "Biography",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "delete_confirm": "Delete {name}? This also deletes their user account and cannot be undone.",
+    "password_leave": "New Password (leave blank to keep)",
+    "password_hint": "Leave blank to keep current password"
   },
   "receptionists": {
     "title": "Receptionists",
     "add": "Add Receptionist",
     "edit": "Edit Receptionist",
     "delete": "Delete Receptionist",
-    "assignedDoctors": "Assigned Doctors"
+    "assignedDoctors": "Assigned Doctors",
+    "delete_confirm": "Delete {name}? This also deletes their account and cannot be undone.",
+    "password_leave": "New Password (leave blank to keep)",
+    "password_hint": "Leave blank to keep current password"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your account settings",
+    "profile_info": "Profile Information",
+    "change_password": "Change Password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_password": "Confirm New Password",
+    "update_password": "Update Password",
+    "role": "Role",
+    "saved": "Profile saved successfully",
+    "password_changed": "Password changed successfully",
+    "activity": "Account Activity",
+    "last_login": "Last Login",
+    "account_created": "Account Created"
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Manage user roles and their permissions",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "users": "users",
+    "users_with_role": "Users with this role",
+    "no_users": "No users",
+    "select_role": "Select a role to view permissions",
+    "all_users": "All Users",
+    "manage_users": "Manage user roles",
+    "change_role": "Change Role",
+    "role_updated": "User role updated successfully"
   }
 }

@@ -5,7 +5,7 @@
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('patient.title') }}</h2>
         <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
-      <button class="btn-primary" @click="openAdd" :title="$t('patient.new')"><Icon name="plus" :size="16" /></button>
+      <button v-if="can('patients.create')" class="btn-primary" @click="openAdd" :title="$t('patient.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -102,9 +102,9 @@
 
       <template #cell(phone)="{ row }">
         <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
-           class="flex items-center gap-1 font-mono text-slate-600 underline-offset-2 transition-colors hover:text-brand-600"
+           class="flex items-center gap-1 font-mono text-slate-600 underline-offset-2 transition-colors hover:text-indigo-600"
            dir="ltr" :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(row.phone) })">
-          <span class="text-brand-600" aria-hidden="true">💬</span>
+          <span class="text-indigo-600" aria-hidden="true">💬</span>
           {{ formatPhoneForDisplay(row.phone) }}
         </a>
         <span v-else class="text-slate-400">—</span>
@@ -159,8 +159,8 @@
                        bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
-          <button class="btn-ghost btn-sm" @click.stop="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
-          <button class="btn-danger btn-sm" @click.stop="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
+          <button v-if="can('patients.edit')" class="btn-ghost btn-sm" @click.stop="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button v-if="can('patients.delete')" class="btn-danger btn-sm" @click.stop="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
       </template>
 
@@ -188,8 +188,8 @@
             :disabled="addingId === row.id"
             @click.stop="askAddToQueue(row)"
           ><Icon name="plus" :size="14" /></button>
-          <button class="btn-ghost btn-sm" @click.stop="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
-          <button class="btn-danger btn-sm" @click.stop="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
+          <button v-if="can('patients.edit')" class="btn-ghost btn-sm" @click.stop="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
+          <button v-if="can('patients.delete')" class="btn-danger btn-sm" @click.stop="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
       </template>
     </DataTable>
@@ -198,49 +198,75 @@
     <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')">
       <form class="space-y-4" novalidate @submit.prevent="askSave">
         <FormField v-slot="{ id }" :label="$t('patient.name')" :error="errors.name" required>
-          <input :id="id" v-model="form.name" class="field"
+          <input :id="id" ref="nameInput" v-model="form.name" class="field"
                  :class="{ 'field-error': errors.name }"
                  :aria-invalid="!!errors.name || undefined"
-                 :placeholder="$t('patient.name')" />
+                 :placeholder="$t('patient.name')"
+                 autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" />
         </FormField>
 
-        <FormField v-slot="{ id }" :label="$t('patient.phone')"
-                   :hint="$t('patient.phone_hint')" :error="errors.phone">
-          <input :id="id" :value="formatPhoneInput(form.phone)" type="tel" dir="ltr" inputmode="tel"
-                 class="field font-mono" :class="{ 'field-error': errors.phone }"
-                 :aria-invalid="!!errors.phone || undefined"
-                 placeholder="0770 123 4567"
-                 @input="form.phone = sanitizePhoneInput($event.target.value)" />
+        <FormField :label="$t('patient.phone')" :error="errors.phone">
+          <div class="flex gap-0 rounded-lg border overflow-hidden" :class="errors.phone ? 'border-red-400' : 'border-slate-300 focus-within:border-indigo-500'">
+            <span class="inline-flex items-center px-3 bg-slate-100 text-slate-500 text-sm font-mono select-none border-r border-slate-200">🇮🇶 +964</span>
+            <input ref="phoneInput" v-model="form.phone" type="tel" dir="ltr" inputmode="tel"
+                   class="flex-1 px-3 py-2 font-mono outline-none bg-white"
+                   placeholder="770 123 4567"
+                   @input="form.phone = formatPhoneDigits($event.target.value)" />
+          </div>
         </FormField>
 
-        <FormField v-slot="{ id }" :label="$t('patient.age')" :error="errors.age">
-          <input :id="id" v-model.number="form.age" type="number" min="0" max="120"
-                 inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
-                 :aria-invalid="!!errors.age || undefined" placeholder="—" />
-        </FormField>
-
-        <FormField v-slot="{ id }" :label="$t('patient.gender')">
-          <select :id="id" v-model="form.gender" class="field-select">
-            <option value="">—</option>
-            <option value="female">{{ $t('patient.gender_female') }}</option>
-            <option value="male">{{ $t('patient.gender_male') }}</option>
-          </select>
+        <!-- Age + Gender on one row, with gender as a quick segmented toggle -->
+        <FormField :label="`${$t('patient.age')} / ${$t('patient.gender')}`">
+          <div class="flex gap-2">
+            <input v-model.number="form.age" type="number" min="0" max="120"
+                   inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
+                   placeholder="—" style="max-width:110px" />
+            <!-- Gender segmented toggle -->
+            <div class="flex rounded-lg border border-slate-200 bg-slate-50 overflow-hidden" role="group" :aria-label="$t('patient.gender')">
+              <button type="button" @click="form.gender = form.gender === 'male' ? '' : 'male'"
+                      :class="form.gender === 'male' ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100'"
+                      class="px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                ♂ {{ $t('patient.gender_male') }}
+              </button>
+              <button type="button" @click="form.gender = form.gender === 'female' ? '' : 'female'"
+                      :class="form.gender === 'female' ? 'bg-pink-500 text-white' : 'text-slate-600 hover:bg-slate-100'"
+                      class="px-3 py-2 text-sm font-medium border-l border-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500">
+                ♀ {{ $t('patient.gender_female') }}
+              </button>
+            </div>
+          </div>
         </FormField>
 
         <FormField v-slot="{ id }" :label="$t('patient.medical_notes')"
                    :hint="$t('patient.notes_hint')">
-          <textarea :id="id" v-model="form.medical_notes" rows="3" class="field-textarea"
+          <textarea :id="id" v-model="form.medical_notes" rows="2" class="field-textarea"
                     :placeholder="$t('patient.medical_notes')"></textarea>
         </FormField>
 
-        <FormField v-slot="{ id }" :label="`📅 ${$t('patient.appointment_date')}`">
-          <input :id="id" v-model="form.appointment_date" type="datetime-local" class="field" />
-        </FormField>
+        <!-- Appointment date is collapsed behind a toggle so most forms stay minimal -->
+        <div>
+          <button type="button" @click="showAppointmentField = !showAppointmentField"
+                  class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none">
+            <Icon :name="showAppointmentField ? 'minus' : 'plus'" :size="14" />
+            {{ showAppointmentField ? $t('patient.hide_appointment') : $t('patient.add_appointment') }}
+          </button>
+          <FormField v-if="showAppointmentField" :label="`📅 ${$t('patient.appointment_date')}`" class="mt-2">
+            <div class="flex gap-2">
+              <input v-model="form.appointment_date" type="datetime-local" class="field flex-1" />
+              <button v-if="form.appointment_date" type="button" @click="form.appointment_date = ''" class="btn-ghost btn-sm" :title="$t('common.clear')">✕</button>
+            </div>
+          </FormField>
+        </div>
       </form>
 
       <template #footer>
         <button type="button" class="btn-ghost" @click="showForm = false">
           {{ $t('common.cancel') }}
+        </button>
+        <!-- Save & Add Another: only for new patients -->
+        <button v-if="!editingId" type="button" class="btn-secondary" @click="saveAndAddAnother"
+                :disabled="saving">
+          {{ $t('patient.save_add_another') }}
         </button>
         <button type="button" class="btn-primary" @click="askSave">
           {{ $t('common.save') }}
@@ -275,7 +301,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '../utils/axios';
@@ -286,12 +312,16 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField from '../components/FormField.vue';
 import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
-import { formatDateTime, nowLocalInput, toLocalInput } from '../utils/datetime';
+import { useAuth } from '../composables/useAuth';
+import { useToast } from '../composables/useToast';
+import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
-import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
+import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 
 const { t } = useI18n();
 const router = useRouter();
+const { can } = useAuth();
+const toast = useToast();
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,
@@ -324,6 +354,10 @@ const editingId = ref(null);
 const addingId = ref(null);
 const queueIds = ref(new Set());
 const pendingPatient = ref(null);
+const saving = ref(false);
+const showAppointmentField = ref(false);
+const nameInput = ref(null);
+const phoneInput = ref(null);
 
 const showConfirmSave = ref(false);
 const showConfirmQueue = ref(false);
@@ -331,12 +365,23 @@ const showConfirmDelete = ref(false);
 const confirmQueueMsg = ref('');
 const confirmDeleteMsg = ref('');
 
+// Default to a blank appointment — most patients are walk-ins. Date is only
+// collected when the user explicitly opts in via the "Add appointment" toggle.
 const emptyForm = () => ({
   name: '', phone: '', age: null, gender: '', medical_notes: '',
-  appointment_date: nowLocalInput(),
+  appointment_date: '',
 });
 const form = ref(emptyForm());
 const errors = ref({});
+
+// Format phone as `770 123 4567` (10-digit local Iraq format).
+// Strips non-digits and groups them. Caps at 10 digits.
+function formatPhoneDigits(raw) {
+  const digits = String(raw || '').replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+}
 
 function validate() {
   const e = {};
@@ -384,20 +429,26 @@ function openAdd() {
   editingId.value = null;
   form.value = emptyForm();
   errors.value = {};
+  showAppointmentField.value = false;
   showForm.value = true;
+  // Auto-focus the name field once the modal has rendered.
+  nextTick(() => nameInput.value?.focus());
 }
 
 function openEdit(p) {
   editingId.value = p.id;
+  // Format phone for display; form stores grouped digits for the API.
   form.value = {
     name: p.name,
-    phone: p.phone || '',
+    phone: formatPhoneDigits((p.phone || '').replace(/\s/g, '')),
     age: p.age || null,
     gender: p.gender || '',
     medical_notes: p.medical_notes || '',
     appointment_date: toLocalInput(p.appointment_date),
   };
   errors.value = {};
+  // Show the appointment field only if the patient actually has one.
+  showAppointmentField.value = !!p.appointment_date;
   showForm.value = true;
 }
 
@@ -407,14 +458,42 @@ function askSave() {
 }
 
 async function save() {
-  if (editingId.value) {
-    await api.put(`/patients/${editingId.value}`, form.value);
-  } else {
+  if (saving.value) return;
+  saving.value = true;
+  try {
+    if (editingId.value) {
+      await api.put(`/patients/${editingId.value}`, form.value);
+      toast.success(t('common.save') + ' — ' + form.value.name);
+    } else {
+      await api.post('/patients', form.value);
+      toast.success(t('patient.new') + ' — ' + form.value.name);
+    }
+    showForm.value = false;
+    reload();
+    loadSidecars();
+  } catch (e) {
+    if (e.response?.status === 422) errors.value = e.response.data.errors || {};
+    else errors.value._general = e.userMessage || 'Save failed';
+  } finally { saving.value = false; }
+}
+
+async function saveAndAddAnother() {
+  if (saving.value) return;
+  if (!validate()) return;
+  saving.value = true;
+  try {
     await api.post('/patients', form.value);
-  }
-  showForm.value = false;
-  reload();
-  loadSidecars();
+    toast.success(t('patient.new') + ' — ' + form.value.name);
+    form.value = emptyForm();
+    errors.value = {};
+    showAppointmentField.value = false;
+    await reload();
+    await loadSidecars();
+    await nextTick();
+    nameInput.value?.focus();
+  } catch (e) {
+    if (e.response?.status === 422) errors.value = e.response.data.errors || {};
+  } finally { saving.value = false; }
 }
 
 function askDelete(p) {
@@ -424,7 +503,9 @@ function askDelete(p) {
 }
 
 async function deletePatient() {
+  const name = pendingPatient.value.name;
   await api.delete(`/patients/${pendingPatient.value.id}`);
+  toast.success(t('common.delete') + ' — ' + name);
   pendingPatient.value = null;
   reload();
   loadSidecars();
@@ -441,6 +522,7 @@ async function addToQueue() {
   addingId.value = p.id;
   try {
     await api.post('/visits', { patient_id: p.id, visit_type: 'walk_in' });
+    toast.success(t('queue.add_walk_in') + ' — ' + p.name);
     await loadSidecars();
   } finally {
     addingId.value = null;

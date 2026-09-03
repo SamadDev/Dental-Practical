@@ -14,7 +14,14 @@
     "inventory": "کۆگا",
     "vendors": "فرۆشیارەکان",
     "doctors": "Doctors",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "management": "بەڕێوەبردن"
+  },
+  "role": {
+    "admin": "بەڕێوەبەر",
+    "doctor": "دکتۆر",
+    "receptionist": "وەرگر",
+    "hygienist": "تەندروستکار"
   },
   "auth": {
     "sign_in": "چوونەژوورەوە",
@@ -23,7 +30,10 @@
     "email": "ئیمەیل",
     "password": "وشەی نهێنی",
     "email_required": "ئیمەیلێکی دروست بنووسە",
-    "password_required": "وشەی نهێنی پێویستە"
+    "password_required": "وشەی نهێنی پێویستە",
+    "current_doctor": "دکتۆری ئێستا",
+    "all_my_doctors": "هەموو دکتۆرەکانم",
+    "switch_doctor": "گۆڕینی دکتۆر"
   },
   "lang": {
     "english": "English",
@@ -61,7 +71,13 @@
     "clear": "سڕینەوە",
     "all": "هەموو",
     "results": "ئەنجام",
-    "no_results": "هیچ ئەنجامێک نەدۆزرایەوە"
+    "no_results": "هیچ ئەنجامێک نەدۆزرایەوە",
+    "name": "ناو",
+    "email": "ئیمەیڵ",
+    "status": "دۆخ",
+    "active": "چالاک",
+    "inactive": "ناچالاک",
+    "password": "وشەی نهێنی"
   },
   "patient": {
     "title": "نەخۆشەکان",
@@ -134,7 +150,10 @@
     "status_root_canal": "چارەسەری ڕەگ",
     "status_missing": "دەرکراوە",
     "status_implant": "ئیمپلانت",
-    "status_previous_visit": "سەردانی پێشوو"
+    "status_previous_visit": "سەردانی پێشوو",
+    "save_add_another": "پاراستن و زیادکردنی تر",
+    "add_appointment": "زیادکردنی بەروار",
+    "hide_appointment": "شاردنەوەی بەروار"
   },
   "queue": {
     "title": "ڕیزی ئەمڕۆ",
@@ -390,13 +409,19 @@
     "phone": "Phone",
     "color": "Badge Color",
     "bio": "Biography",
-    "receptionists": "Receptionists"
+    "receptionists": "Receptionists",
+    "delete_confirm": "سڕینەوەی {name}؟ هەژماری بەکارهێنەریشی دەسڕدرێتەوە و ناگەڕێتەوە.",
+    "password_leave": "وشەی نهێنی نوێ (بە بەتاڵی بهێڵە بۆ هێشتنەوەی کۆن)",
+    "password_hint": "بە بەتاڵی بهێڵە بۆ هێشتنەوەی وشەی نهێنی ئێستا"
   },
   "receptionists": {
     "title": "Receptionists",
     "add": "Add Receptionist",
     "edit": "Edit Receptionist",
     "delete": "Delete Receptionist",
-    "assignedDoctors": "Assigned Doctors"
+    "assignedDoctors": "Assigned Doctors",
+    "delete_confirm": "سڕینەوەی {name}؟ هەژماری ئەوانیش دەسڕدرێتەوە و ناگەڕێتەوە.",
+    "password_leave": "وشەی نهێنی نوێ (بە بەتاڵی بهێڵە بۆ هێشتنەوەی کۆن)",
+    "password_hint": "بە بەتاڵی بهێڵە بۆ هێشتنەوەی وشەی نهێنی ئێستا"
   }
 }

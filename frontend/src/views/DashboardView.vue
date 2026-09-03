@@ -20,9 +20,9 @@
           <button
             v-for="p in PRESETS" :key="p.key"
             class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors
-                   focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
+                   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
             :class="activePreset === p.key
-              ? 'bg-brand-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-sm'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'"
             @click="applyPreset(p)"
           >

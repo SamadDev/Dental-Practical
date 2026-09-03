@@ -23,7 +23,7 @@
     </header>
 
     <!-- Quick-entry form -->
-    <form class="no-print card mb-5 p-4" novalidate @submit.prevent="askAdd">
+    <form v-if="can('expenses.create')" class="no-print card mb-5 p-4" novalidate @submit.prevent="askAdd">
       <div class="grid items-start gap-4 md:grid-cols-[minmax(0,14rem)_1fr_auto]">
         <FormField v-slot="{ id }" :label="$t('expense.amount')" :error="errors.amount" required>
           <IqdInput :id="id" v-model="form.amount" :invalid="!!errors.amount" />
@@ -140,7 +140,7 @@
       </template>
 
       <template #cell(actions)="{ row }">
-        <button class="btn-danger btn-sm" @click="askRemove(row)">
+        <button v-if="can('expenses.delete')" class="btn-danger btn-sm" @click="askRemove(row)">
           🗑 {{ $t('common.delete') }}
         </button>
       </template>
@@ -162,7 +162,7 @@
             {{ format(row.amount) }}
             <span class="font-sans text-xs font-normal text-slate-400">{{ $t('currency') }}</span>
           </span>
-          <button class="btn-danger btn-sm" @click="askRemove(row)">🗑</button>
+          <button v-if="can('expenses.delete')" class="btn-danger btn-sm" @click="askRemove(row)">🗑</button>
         </div>
         <p class="mt-1 text-sm text-slate-700">{{ row.description }}</p>
         <p class="mt-1 text-xs text-slate-400">{{ formatDateTime(row.created_at) }}</p>
@@ -198,10 +198,12 @@ import IqdInput      from '../components/IqdInput.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import { useDataTable } from '../composables/useDataTable';
+import { useAuth } from '../composables/useAuth';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime } from '../utils/datetime';
 
 const { t } = useI18n();
+const { can } = useAuth();
 
 const {
   rows, totals, loading, error, search, filters, sort, dir, perPage, meta,

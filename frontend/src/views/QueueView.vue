@@ -7,7 +7,7 @@
           {{ queue.length }} {{ $t('common.results') }}
         </p>
       </div>
-      <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
+      <button v-if="can('queue.manage')" class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <div v-if="loading" class="card divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -24,7 +24,7 @@
          class="card flex flex-col items-center gap-3 p-12 text-center">
       <span class="text-4xl opacity-30" aria-hidden="true">🪑</span>
       <p class="text-slate-500 dark:text-slate-400">{{ $t('queue.empty') }}</p>
-      <button class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
+      <button v-if="can('queue.manage')" class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
     </div>
 
     <ul v-else class="card divide-y divide-slate-200 dark:divide-slate-700/50 overflow-hidden">
@@ -54,9 +54,9 @@
           </div>
           <div class="mt-1" dir="ltr">
             <a v-if="v.patient.phone" :href="formatPhoneForWhatsApp(v.patient.phone)" target="_blank" rel="noopener noreferrer"
-               class="font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-brand-600 underline-offset-2 transition-colors flex items-center gap-1"
+               class="font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 underline-offset-2 transition-colors flex items-center gap-1"
                :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(v.patient.phone) })">
-              <span class="text-brand-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
+              <span class="text-indigo-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
               {{ formatPhoneForDisplay(v.patient.phone) }}
             </a>
             <span v-else class="text-slate-400 dark:text-slate-500 text-xs">—</span>
@@ -76,7 +76,7 @@
                        :aria-label="$t('patient.title')">
             <Icon name="user" :size="14" />
           </router-link>
-          <button class="btn-danger btn-sm" @click="askRemove(v)">
+          <button v-if="can('queue.manage')" class="btn-danger btn-sm" @click="askRemove(v)">
             <Icon name="x" :size="14" /> {{ $t('queue.remove') }}
           </button>
         </div>
@@ -130,9 +130,9 @@
                 <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ p.name }}</span>
                 <span v-if="p.phone" class="block font-mono text-xs text-slate-500 dark:text-slate-400" dir="ltr">
                   <a :href="formatPhoneForWhatsApp(p.phone)" target="_blank" rel="noopener noreferrer"
-                     class="flex items-center gap-1 hover:text-brand-600 transition-colors"
+                     class="flex items-center gap-1 hover:text-indigo-600 transition-colors"
                      :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(p.phone) })">
-                    <span class="text-brand-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
+                    <span class="text-indigo-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
                     {{ formatPhoneForDisplay(p.phone) }}
                   </a>
                 </span>
@@ -207,6 +207,9 @@ import FormField      from '../components/FormField.vue';
 import Icon from '../components/Icon.vue';
 import { formatDateTime } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
+import { useAuth } from '../composables/useAuth';
+
+const { can } = useAuth();
 
 const queue   = ref([]);
 const loading = ref(true);

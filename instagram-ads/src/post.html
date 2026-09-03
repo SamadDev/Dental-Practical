@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>@@FONTS@@</style>
+<style>
+  :root{
+    --b50:#eef2ff; --b100:#e0e7ff; --b200:#c7d2fe; --b300:#a5b4fc; --b400:#818cf8;
+    --b500:#5a6ef0; --b600:#4361ee; --b700:#374cd1; --b800:#2f3fa8; --b900:#2b3a85;
+    --ink:#0f172a; --s500:#64748b; --s400:#94a3b8;
+  }
+  html,body{margin:0;padding:0;width:1080px;height:1080px;overflow:hidden;}
+  body{font-family:'Vazirmatn','Inter',system-ui,sans-serif;color:var(--ink);
+       background:linear-gradient(155deg,#eef2ff 0%,#ffffff 46%,#e0e7ff 100%);}
+  .blob{position:absolute;border-radius:50%;}
+  .b1{width:620px;height:620px;right:-200px;top:-200px;
+      background:radial-gradient(circle at 40% 40%, rgba(165,180,252,.40), rgba(165,180,252,0) 70%);}
+  .b2{width:700px;height:700px;left:-260px;bottom:-300px;
+      background:radial-gradient(circle at 55% 45%, rgba(129,140,248,.28), rgba(129,140,248,0) 70%);}
+  .page{position:relative;width:100%;height:100%;box-sizing:border-box;overflow:hidden;
+        padding:60px 72px 64px;display:flex;flex-direction:column;}
+  .top{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:22px;}
+  .logo{width:80px;height:80px;border-radius:22px;flex:none;
+        background:linear-gradient(135deg,var(--b600),var(--b400));
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 14px 30px -10px rgba(67,97,238,.55);}
+  .cname{font-weight:700;font-size:42px;line-height:1.1;}
+  .handle{font-family:'Inter',sans-serif;font-weight:700;font-size:25px;color:var(--b700);
+          background:#fff;border:2px solid var(--b100);padding:13px 27px;border-radius:999px;direction:ltr;}
+  .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  .tooth{width:172px;height:172px;filter:drop-shadow(0 18px 26px rgba(67,97,238,.30));}
+  h1{margin:34px 0 0;font-weight:700;font-size:78px;line-height:1.22;letter-spacing:-.5px;}
+  h1 .grad{background:linear-gradient(100deg,var(--b600),var(--b400));
+           -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .sub{margin:16px 0 0;font-size:33px;font-weight:400;color:var(--s500);}
+  .chips{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:44px;}
+  .chip{font-size:29px;font-weight:700;color:var(--b700);background:var(--b50);
+        border:2px solid var(--b100);padding:16px 34px;border-radius:999px;
+        display:flex;align-items:center;gap:12px;}
+  .chip i{width:10px;height:10px;border-radius:50%;background:var(--b500);flex:none;}
+  .card{margin-top:48px;background:#fff;border:2px solid var(--b100);border-radius:32px;
+        padding:34px 40px;display:flex;align-items:center;justify-content:space-between;gap:28px;
+        box-shadow:0 24px 50px -22px rgba(43,58,133,.35);}
+  .phone{display:flex;align-items:center;gap:20px;direction:ltr;}
+  .wa{width:66px;height:66px;flex:none;}
+  .num{font-family:'Inter',sans-serif;font-weight:700;font-size:44px;letter-spacing:1px;color:var(--ink);white-space:nowrap;}
+  .num small{display:block;font-family:'Vazirmatn',sans-serif;font-weight:400;font-size:21px;
+             letter-spacing:0;color:var(--s400);margin-top:2px;}
+  .side{display:flex;align-items:center;gap:24px;}
+  .loc{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:700;color:var(--b800);}
+  .cta{font-size:29px;font-weight:700;color:#fff;background:linear-gradient(120deg,var(--b600),var(--b500));
+       padding:22px 40px;border-radius:20px;box-shadow:0 14px 28px -10px rgba(67,97,238,.55);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="page" id="page">
+<div class="blob b1"></div><div class="blob b2"></div>
+
+  <div class="top">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M50 12 C32 12 25 23 25 35.5 C25 45 28.5 51 30 60 C31.5 70 33 87 40.5 87 C47.5 87 45.5 71.5 50 71.5 C54.5 71.5 52.5 87 59.5 87 C67 87 68.5 70 70 60 C71.5 51 75 45 75 35.5 C75 23 68 12 50 12 Z" fill="#fff"/>
+          <path d="M36 22 C33 25 31.5 29 31.5 33" stroke="#4361ee" stroke-opacity=".35" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="cname" id="name"></div>
+    </div>
+    <div class="handle" id="handle"></div>
+  </div>
+
+  <div class="hero">
+    <svg class="tooth" viewBox="0 0 100 100" fill="none">
+      <defs>
+        <linearGradient id="tg" x1="20" y1="8" x2="80" y2="92" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#4361ee"/><stop offset="1" stop-color="#818cf8"/>
+        </linearGradient>
+      </defs>
+      <path d="M50 10 C31 10 24 22 24 35 C24 45 28 51 29.5 60 C31 70 32.5 88 40 88 C47 88 45 72 50 72 C55 72 53 88 60 88 C67.5 88 69 70 70.5 60 C72 51 76 45 76 35 C76 22 69 10 50 10 Z" fill="url(#tg)"/>
+      <ellipse cx="38" cy="27" rx="8.5" ry="5" transform="rotate(-32 38 27)" fill="#fff" opacity=".55"/>
+    </svg>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="card">
+    <div class="phone">
+      <svg class="wa" viewBox="0 0 24 24">
+        <path d="M12 2a10 10 0 0 0-8.65 15.03L2 22l5.14-1.32A10 10 0 1 0 12 2Z" fill="#25D366"/>
+        <path d="M8.7 7.6c.2-.5.42-.53.66-.54l.56-.01c.18 0 .38.03.58.47l.83 1.9c.1.22.04.44-.1.62l-.44.55c-.14.17-.3.36-.13.68.62 1.14 1.55 1.98 2.75 2.5.28.12.45.1.62-.06l.72-.78c.2-.22.4-.17.63-.08l1.83.9c.27.14.44.25.44.48-.03.53-.3 1.5-1.35 1.9-1 .4-2.3.32-4.4-.9-2.2-1.26-3.7-3.63-3.9-4.1-.2-.48-.02-.75.2-.98l.6-.55Z" fill="#fff"/>
+      </svg>
+      <div class="num" id="phone"></div>
+    </div>
+    <div class="side">
+      <div class="loc">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2Z" fill="#4361ee"/>
+        </svg>
+        <span id="loc"></span>
+      </div>
+      <div class="cta" id="cta"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BRAND = @@BRAND@@;
+const lang  = new URLSearchParams(location.search).get('lang') || 'ku';
+const L = BRAND[lang];
+const rtl = lang !== 'en';
+
+document.documentElement.lang = lang;
+document.documentElement.dir  = rtl ? 'rtl' : 'ltr';
+document.getElementById('name').textContent   = L.name;
+document.getElementById('handle').textContent = BRAND.handle;
+document.getElementById('phone').innerHTML    = BRAND.phone + `<small>${rtl ? 'پەیوەندی / واتسئاپ' : 'Call & WhatsApp'}</small>`;
+document.getElementById('loc').textContent    = L.location;
+document.getElementById('cta').textContent    = L.cta;
+document.getElementById('sub').textContent    = L.sub;
+document.getElementById('h1').innerHTML =
+  `${L.headline1}<br><span class="grad">${L.headline2}</span>`;
+document.getElementById('chips').innerHTML =
+  L.chips.map(c => `<div class="chip"><i></i>${c}</div>`).join('');
+</script>
+</body>
+</html>

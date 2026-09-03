@@ -8,6 +8,7 @@ import ku from './locales/ku.json';
 import ar from './locales/ar.json';
 import { useLangStore } from './store/lang';
 import { useAuth } from './composables/useAuth';
+import { useToast } from './composables/useToast';
 import './assets/main.css';
 
 const i18n = createI18n({
@@ -25,6 +26,9 @@ const app = createApp(App)
 const { can, fetchMe, isAuthenticated } = useAuth();
 if (isAuthenticated.value) fetchMe();
 app.provide('auth', { can });
+
+const toast = useToast();
+app.provide('toast', toast);
 
 const lang = useLangStore();
 lang.set(lang.current);

@@ -13,6 +13,8 @@ import HomeView           from '../views/HomeView.vue';
 import LoginView          from '../views/Login.vue';
 import DoctorsView        from '../views/DoctorsView.vue';
 import ReceptionistsView  from '../views/ReceptionistsView.vue';
+import ProfileView        from '../views/ProfileView.vue';
+import RolesView          from '../views/RolesView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -22,7 +24,7 @@ const router = createRouter({
     { path: '/home',            component: HomeView,          name: 'home',     meta: { permission: 'dashboard.view' } },
     { path: '/queue',           component: QueueView,         name: 'queue',    meta: { permission: 'queue.view' } },
     { path: '/patients',        component: PatientsView,      name: 'patients', meta: { permission: 'patients.view' } },
-    { path: '/patients/:id',    component: PatientView,       name: 'patient',  props: true, meta: { permission: 'patients.view' } },
+    { path: '/patients/:id',    component: PatientView,     name: 'patient',  props: true, meta: { permission: 'patients.view' } },
     { path: '/archive',         component: ArchiveView,       name: 'archive',  meta: { permission: 'archive.view' } },
     { path: '/dashboard',       component: DashboardView,     name: 'dashboard', meta: { permission: 'dashboard.view' } },
     { path: '/expenses',        component: ExpensesView,      name: 'expenses', meta: { permission: 'expenses.view' } },
@@ -31,6 +33,8 @@ const router = createRouter({
     { path: '/vendors',         component: VendorsView,       name: 'vendors',  meta: { permission: 'vendors.view' } },
     { path: '/doctors',         component: DoctorsView,       name: 'doctors',  meta: { permission: 'users.manage' } },
     { path: '/receptionists',   component: ReceptionistsView, name: 'receptionists', meta: { permission: 'users.manage' } },
+    { path: '/profile',          component: ProfileView,       name: 'profile',  meta: { permission: 'dashboard.view' } },
+    { path: '/roles',           component: RolesView,         name: 'roles',    meta: { permission: 'users.manage' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });

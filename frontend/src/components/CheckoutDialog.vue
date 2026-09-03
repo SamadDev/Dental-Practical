@@ -11,7 +11,7 @@
             role="radio"
             :aria-checked="form.method === m"
             class="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
                    focus-visible:ring-offset-1"
             :class="form.method === m
               ? 'border-brand-600 bg-brand-600 text-white shadow-sm'

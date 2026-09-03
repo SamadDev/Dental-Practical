@@ -49,7 +49,7 @@ const totalSections = modules.length;
 
 <style scoped>
 .section-tile {
-  @apply flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white p-3 text-center shadow transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
+  @apply flex min-h-[110px] flex-col items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white p-3 text-center shadow transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
 }
 .section-tile-icon {
   @apply grid h-9 w-9 place-items-center rounded-md shadow-sm ring-1 ring-black/5;

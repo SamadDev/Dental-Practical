@@ -23,7 +23,7 @@
               type="button"
               class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400
                      transition-colors hover:bg-slate-100 hover:text-slate-700
-                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               :aria-label="$t('common.close')"
               @click="close"
             >

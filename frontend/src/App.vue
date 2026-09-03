@@ -1,7 +1,6 @@
 <template>
-  <div :dir="lang.dir" class="app-shell min-h-screen text-slate-900">
+  <div :dir="lang.dir" class="main-section antialiased relative font-nunito text-sm text-slate-900 min-h-screen">
     <router-view v-if="$route.name === 'login'" />
-
     <AppLayout v-else />
   </div>
 </template>

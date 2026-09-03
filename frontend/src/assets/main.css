@@ -50,7 +50,7 @@
 
     body {
         font-family: 'Inter', sans-serif;
-        font-size: 15px;
+        font-size: 14px;
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
     }
 
@@ -473,6 +473,11 @@ html[dir="ltr"] .main-content {
 
 html[dir="rtl"] .main-content {
     margin-right: 260px;
+}
+
+/* Main section */
+.main-section {
+    min-height: 100vh;
 }
 
 /* Dark mode */

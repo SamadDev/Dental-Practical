@@ -16,16 +16,6 @@
         text-align: right;
     }
 
-    html[dir="rtl"] {
-        overflow-x: hidden;
-        overflow-y: scroll;
-    }
-
-    html[dir="rtl"] *::-webkit-scrollbar {
-        left: 0;
-        right: auto;
-    }
-
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -325,7 +315,7 @@
         color: #4361ee;
     }
 
-    /* Tables */
+    /* Tables - Vristo Style */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -349,7 +339,7 @@
 
     table thead tr th,
     table tfoot tr th {
-        font-weight: 600;
+        font-weight: 700;
     }
 
     table tbody tr {
@@ -397,6 +387,231 @@
     .shadow-card-hover {
         box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
     }
+}
+
+/* DataTable Styles - Vristo */
+.datatable {
+    font-family: 'Nunito', sans-serif;
+}
+
+.datatable > div {
+    color: #1f2937;
+}
+
+html.dark .datatable > div {
+    color: #e0e6ed;
+}
+
+.datatable .bh-table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.datatable .bh-table-responsive table thead tr th {
+    font-weight: 700;
+    background: #f6f8fa;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+html.dark .datatable .bh-table-responsive table thead tr th {
+    background: #1a2941;
+    border-color: #334155;
+}
+
+.datatable .bh-pagination {
+    font-weight: 500;
+}
+
+.datatable .bh-pagination .bh-page-item {
+    width: 36px;
+    height: 36px;
+    background: white;
+    color: #3b3f5c;
+    border: 1px solid #e0e6ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+html.dark .datatable .bh-pagination .bh-page-item {
+    background: #191e3a;
+    color: #e0e6ed;
+    border-color: #334155;
+}
+
+.datatable .bh-pagination .bh-page-item:hover {
+    background: #4361ee;
+    color: white;
+    border-color: #4361ee;
+}
+
+.datatable .bh-pagination .bh-page-item.bh-active {
+    background: #4361ee;
+    color: white;
+    border-color: #4361ee;
+}
+
+.datatable .bh-pagination select {
+    border-radius: 0.375rem;
+    border: 1px solid #e0e6ed;
+    background: white;
+    padding: 0.375rem 2rem 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+html.dark .datatable .bh-pagination select {
+    background: #121e32;
+    border-color: #17263c;
+    color: #e0e6ed;
+}
+
+.datatable .bh-filter div button {
+    display: block;
+}
+
+.datatable .bh-sort svg polygon {
+    fill: #3b3f5c;
+}
+
+html.dark .datatable .bh-sort svg polygon {
+    fill: #e0e6ed;
+}
+
+.datatable .bh-filter .bh-form-control {
+    border-color: #e0e6ed;
+    background: white;
+}
+
+html.dark .datatable .bh-filter .bh-form-control {
+    background: #121e32;
+    border-color: #17263c;
+    color: #e0e6ed;
+}
+
+.datatable .bh-filter > button {
+    border-color: #e0e6ed;
+    background: white;
+    color: #3b3f5c;
+}
+
+html.dark .datatable .bh-filter > button {
+    background: #3b3f5c;
+    color: #e0e6ed;
+    border-color: #3b3f5c;
+}
+
+.datatable .bh-filter-menu button {
+    background: white;
+}
+
+html.dark .datatable .bh-filter-menu button {
+    background: #1b2e4b;
+    color: #e0e6ed;
+}
+
+.datatable .bh-filter-menu button:hover {
+    background: #f6f8fa;
+}
+
+html.dark .datatable .bh-filter-menu button:hover {
+    background: #181f32;
+    color: #e0e6ed;
+}
+
+.datatable .bh-filter-menu button.active {
+    background: #f6f8fa;
+}
+
+html.dark .datatable .bh-filter-menu button.active {
+    background: #181f32;
+}
+
+.datatable .bh-table-responsive input[type='checkbox'] + div {
+    border-radius: 0.25rem;
+    border: 2px solid #e0e6ed;
+    background: transparent;
+}
+
+.datatable .bh-table-responsive input[type='checkbox']:checked + div,
+.datatable .bh-table-responsive input[type='checkbox']:indeterminate + div {
+    background: #4361ee;
+    border-color: #4361ee;
+}
+
+.datatable .bh-table-responsive table.table-bordered thead tr th,
+.datatable .bh-table-responsive table.table-bordered tbody tr td {
+    border-color: #191e3a;
+}
+
+.datatable .bh-table-responsive table th.bh-sticky,
+.datatable .bh-table-responsive table td.bh-sticky {
+    background: #f6f8fa;
+}
+
+html.dark .datatable .bh-table-responsive table th.bh-sticky,
+html.dark .datatable .bh-table-responsive table td.bh-sticky {
+    background: #1a2941;
+}
+
+.datatable .bh-table-hover tbody tr:hover {
+    background: rgba(67, 97, 238, 0.05) !important;
+}
+
+.datatable .bh-table-striped tbody tr:nth-child(odd) {
+    background: rgba(67, 97, 238, 0.03);
+}
+
+/* Enhanced table borders */
+.datatable .bh-table-responsive table {
+    border-collapse: collapse;
+    border: 1px solid #e5e7eb;
+}
+
+html.dark .datatable .bh-table-responsive table {
+    border-color: #334155;
+}
+
+.datatable .bh-table-responsive table thead tr th {
+    border-bottom: 2px solid #d1d5db;
+    border-right: 1px solid #e5e7eb;
+}
+
+html.dark .datatable .bh-table-responsive table thead tr th {
+    border-color: #334155;
+}
+
+.datatable .bh-table-responsive table thead tr th:last-child {
+    border-right: none;
+}
+
+.datatable .bh-table-responsive table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+html.dark .datatable .bh-table-responsive table tbody tr {
+    border-color: #334155;
+}
+
+.datatable .bh-table-responsive table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.datatable .bh-table-responsive table tbody td {
+    border-right: 1px solid #e5e7eb;
+    background: white;
+}
+
+html.dark .datatable .bh-table-responsive table tbody td {
+    border-color: #334155;
+    background: rgba(26, 41, 65, 0.3);
+}
+
+.datatable .bh-table-responsive table tbody td:last-child {
+    border-right: none;
 }
 
 /* App shell */

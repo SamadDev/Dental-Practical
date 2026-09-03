@@ -124,6 +124,9 @@ const LIB = {
   shield: {
     paths: ['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'],
   },
+  menu: {
+    paths: ['M3 12h18', 'M3 6h18', 'M3 18h18'],
+  },
 };
 
 const paths = computed(() => LIB[props.name]?.paths ?? []);

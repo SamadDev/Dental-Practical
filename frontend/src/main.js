@@ -13,6 +13,7 @@ import { useLangStore } from './store/lang';
 import { useAuth } from './composables/useAuth';
 import { useToast } from './composables/useToast';
 import './assets/main.css';
+import './assets/datatable.css';
 
 library.add(fas);
 dom.watch();

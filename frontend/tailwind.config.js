@@ -5,7 +5,6 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
         nunito: ['Inter', 'sans-serif'],
       },
       colors: {
@@ -13,18 +12,6 @@ export default {
           DEFAULT: '#4361ee',
           light: '#eef2ff',
           'dark-light': 'rgba(67,97,238,.15)',
-        },
-        brand: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#5a6ef0',
-          600: '#4361ee',
-          700: '#374cd1',
-          800: '#2f3fa8',
-          900: '#2b3a85',
         },
         secondary: {
           DEFAULT: '#8b5cf6',
@@ -66,6 +53,8 @@ export default {
           light: '#e0e6ed',
           dark: '#888ea8',
         },
+        'white-light': 'rgba(255, 255, 255, 0.4)',
+        'white-dark': '#e0e6ed',
       },
       boxShadow: {
         'card': '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',

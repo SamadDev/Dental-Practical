@@ -29,7 +29,7 @@
               >
                 <div class="flex items-center">
                   <Icon :name="item.icon" class="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span class="ltr:pl-3 rtl:pr-3 font-sans font-bold text-base">{{ $t(`nav.${item.name}`) }}</span>
+                  <span class="ltr:pl-3 rtl:pr-3 font-sans font-semibold text-sm">{{ $t(`nav.${item.name}`) }}</span>
                 </div>
               </router-link>
             </li>
@@ -47,7 +47,7 @@
               >
                 <div class="flex items-center">
                   <Icon :name="item.icon" class="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span class="ltr:pl-3 rtl:pr-3 font-sans font-bold text-base">{{ $t(`nav.${item.name}`) }}</span>
+                  <span class="ltr:pl-3 rtl:pr-3 font-sans font-semibold text-sm">{{ $t(`nav.${item.name}`) }}</span>
                 </div>
               </router-link>
             </li>

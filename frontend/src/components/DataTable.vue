@@ -213,6 +213,16 @@ function ariaSort(col) {
 </script>
 
 <style scoped>
+/* Table with thin borders */
+.data-table {
+  @apply w-full min-w-max text-sm border-collapse;
+}
+
+.data-table th,
+.data-table td {
+  @apply border border-gray-200 dark:border-gray-700;
+}
+
 .table-shell {
   @apply overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-card;
 }

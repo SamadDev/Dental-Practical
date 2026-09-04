@@ -6,7 +6,6 @@
         <p class="mt-0.5 text-sm text-slate-500">{{ $t('plans.title_hint') }}</p>
         <p v-if="!loading" class="mt-2 text-xs text-slate-400">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
-      <button v-if="can('payment_plans.create')" class="btn-primary no-print" @click="openCreate" :title="$t('plans.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -40,34 +39,6 @@
       </div>
     </div>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('plans.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button
-          type="button"
-          :class="filters.with_overdue ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.with_overdue = !filters.with_overdue; reload()"
-        >⏰ {{ $t('plans.installment_status.overdue') }}</button>
-      </template>
-
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('aqsat.status')">
-          <select :id="id" v-model="filters.status" class="field-select" @change="reload">
-            <option value="">{{ $t('common.all') }}</option>
-            <option value="active">{{ $t('plans.status.active') }}</option>
-            <option value="completed">{{ $t('plans.status.completed') }}</option>
-            <option value="defaulted">{{ $t('plans.status.defaulted') }}</option>
-            <option value="cancelled">{{ $t('plans.status.cancelled') }}</option>
-          </select>
-        </FormField>
-      </template>
-    </DataTableFilters>
-
     <DataTable
       :columns="columns"
       :rows="rows"
@@ -79,11 +50,42 @@
       empty-icon="🗓"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('plans.title')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #filters>
+        <button
+          type="button"
+          :class="filters.with_overdue ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="filters.with_overdue = !filters.with_overdue; reload()"
+        >⏰ {{ $t('plans.installment_status.overdue') }}</button>
+      </template>
+
+      <template #advanced-filters>
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-4 gap-4">
+            <FormField v-slot="{ id }" :label="$t('aqsat.status')">
+              <select :id="id" v-model="filters.status" class="form-input form-input-sm" @change="reload">
+                <option value="">{{ $t('common.all') }}</option>
+                <option value="active">{{ $t('plans.status.active') }}</option>
+                <option value="completed">{{ $t('plans.status.completed') }}</option>
+                <option value="defaulted">{{ $t('plans.status.defaulted') }}</option>
+                <option value="cancelled">{{ $t('plans.status.cancelled') }}</option>
+              </select>
+            </FormField>
+          </div>
+        </div>
+      </template>
+
+      <template #toolbar-right>
+        <AddButton :label="$t('plans.new')" @click="openCreate" />
+      </template>
       <template #cell(patient)="{ row }">
         <div class="leading-tight">
           <div class="font-medium text-slate-900">{{ row.patient?.name ?? '—' }}</div>
@@ -264,6 +266,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal         from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';

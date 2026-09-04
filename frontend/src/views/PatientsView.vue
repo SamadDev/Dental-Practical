@@ -1,70 +1,9 @@
 <template>
   <section>
-    <header class="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight">{{ $t('patient.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
-      </div>
-      <button v-if="can('patients.create')" class="btn-primary" @click="openAdd" :title="$t('patient.new')"><Icon name="plus" :size="16" /></button>
-    </header>
-
     <p v-if="error" role="alert"
        class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       <span aria-hidden="true">⚠</span> {{ error }}
     </p>
-
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('patient.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button
-          type="button"
-          :class="filters.has_debt ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.has_debt = !filters.has_debt; reload()"
-        >
-          💰 {{ $t('archive.filter_with_debt') }}
-          <span v-if="stats.with_debt != null" class="chip-count"
-                :class="filters.has_debt ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.with_debt }}
-          </span>
-        </button>
-        <button
-          type="button"
-          :class="filters.appointment === 'upcoming' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="toggleAppointment('upcoming')"
-        >
-          📅 {{ $t('table.upcoming') }}
-          <span v-if="stats.upcoming != null" class="chip-count"
-                :class="filters.appointment === 'upcoming' ? 'bg-white/20' : 'bg-slate-100'">
-            {{ stats.upcoming }}
-          </span>
-        </button>
-      </template>
-
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('table.age_min')">
-          <input :id="id" v-model="filters.age_min" type="number" min="0" max="120" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.age_max')">
-          <input :id="id" v-model="filters.age_max" type="number" min="0" max="120" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('patient.appointment_date')">
-          <select :id="id" v-model="filters.appointment" class="field-select" @change="reload">
-            <option value="">{{ $t('common.all') }}</option>
-            <option value="upcoming">{{ $t('table.upcoming') }}</option>
-            <option value="past">{{ $t('table.past') }}</option>
-            <option value="none">{{ $t('table.no_appointment') }}</option>
-          </select>
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.registered_from')">
-          <input :id="id" v-model="filters.created_from" type="date" class="field" @change="reload" />
-        </FormField>
-      </template>
-    </DataTableFilters>
 
     <DataTable
       :columns="columns"
@@ -77,13 +16,76 @@
       empty-icon="🧑‍⚕️"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('patient.title')"
       row-clickable
-      @row-click="openPatient"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
+      @row-click="openPatient"
     >
+      <template #filters>
+        <button
+          type="button"
+          :class="filters.has_debt ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="filters.has_debt = !filters.has_debt; reload()"
+        >
+          💰 {{ $t('archive.filter_with_debt') }}
+          <span v-if="stats.with_debt != null" class="ml-1 px-1.5 py-0.5 rounded text-[10px]" :class="filters.has_debt ? 'bg-white/20' : 'bg-slate-200'">
+            {{ stats.with_debt }}
+          </span>
+        </button>
+        <button
+          type="button"
+          :class="filters.appointment === 'upcoming' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="toggleAppointment('upcoming')"
+        >
+          📅 {{ $t('table.upcoming') }}
+          <span v-if="stats.upcoming != null" class="ml-1 px-1.5 py-0.5 rounded text-[10px]" :class="filters.appointment === 'upcoming' ? 'bg-white/20' : 'bg-slate-200'">
+            {{ stats.upcoming }}
+          </span>
+        </button>
+        <button
+          type="button"
+          :class="isTodayFilter ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="toggleTodayFilter"
+        >
+          📆 Today
+        </button>
+      </template>
+
+      <template #advanced-filters>
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <FormField v-slot="{ id }" :label="$t('table.age_min')">
+              <input :id="id" v-model="filters.age_min" type="number" min="0" max="120" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('table.age_max')">
+              <input :id="id" v-model="filters.age_max" type="number" min="0" max="120" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('patient.appointment_date')">
+              <select :id="id" v-model="filters.appointment" class="form-input form-input-sm" @change="reload">
+                <option value="">{{ $t('common.all') }}</option>
+                <option value="upcoming">{{ $t('table.upcoming') }}</option>
+                <option value="past">{{ $t('table.past') }}</option>
+                <option value="none">{{ $t('table.no_appointment') }}</option>
+              </select>
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('table.registered_from')">
+              <input :id="id" v-model="filters.created_from" type="date" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+          </div>
+        </div>
+      </template>
+
+      <template #toolbar-right>
+        <AddButton v-if="can('patients.create')" label="Add +" @click="openAdd" />
+      </template>
       <template #cell(name)="{ row }">
         <div class="flex items-center gap-2">
           <div class="min-w-0">
@@ -159,6 +161,10 @@
                        bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
             ✓ {{ $t('queue.in_queue') }}
           </span>
+          <a v-if="row.phone" :href="formatPhoneForWhatsApp(row.phone)" target="_blank" rel="noopener noreferrer"
+             class="btn-ghost btn-sm" title="WhatsApp">
+            💬
+          </a>
           <button v-if="can('patients.edit')" class="btn-ghost btn-sm" @click.stop="openEdit(row)" :title="$t('common.edit')"><Icon name="edit" :size="14" /></button>
           <button v-if="can('patients.delete')" class="btn-danger btn-sm" @click.stop="askDelete(row)" :title="$t('common.delete')"><Icon name="trash" :size="14" /></button>
         </div>
@@ -195,81 +201,135 @@
     </DataTable>
 
     <!-- Add / Edit form -->
-    <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')">
-      <form class="space-y-4" novalidate @submit.prevent="askSave">
-        <FormField v-slot="{ id }" :label="$t('patient.name')" :error="errors.name" required>
-          <input :id="id" ref="nameInput" v-model="form.name" class="field"
-                 :class="{ 'field-error': errors.name }"
-                 :aria-invalid="!!errors.name || undefined"
-                 :placeholder="$t('patient.name')"
-                 autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" />
-        </FormField>
-
-        <FormField :label="$t('patient.phone')" :error="errors.phone">
-          <div class="flex gap-0 rounded-lg border overflow-hidden" :class="errors.phone ? 'border-red-400' : 'border-slate-300 focus-within:border-indigo-500'">
-            <span class="inline-flex items-center px-3 bg-slate-100 text-slate-500 text-sm font-mono select-none border-r border-slate-200">🇮🇶 +964</span>
-            <input ref="phoneInput" v-model="form.phone" type="tel" dir="ltr" inputmode="tel"
-                   class="flex-1 px-3 py-2 font-mono outline-none bg-white"
-                   placeholder="770 123 4567"
-                   @input="form.phone = formatPhoneDigits($event.target.value)" />
+    <Modal v-model="showForm" :title="editingId ? $t('common.edit') : $t('patient.new')" size="md">
+      <div class="space-y-4">
+        <!-- Step 1: Essential Info (Always Visible) -->
+        <div class="bg-gradient-to-r from-indigo-50 to-white rounded-xl p-5 border border-indigo-100">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">1</span>
+            <span class="text-sm font-semibold text-indigo-700">Essential Information</span>
           </div>
-        </FormField>
 
-        <!-- Age + Gender on one row, with gender as a quick segmented toggle -->
-        <FormField :label="`${$t('patient.age')} / ${$t('patient.gender')}`">
-          <div class="flex gap-2">
-            <input v-model.number="form.age" type="number" min="0" max="120"
-                   inputmode="numeric" class="field" :class="{ 'field-error': errors.age }"
-                   placeholder="—" style="max-width:110px" />
-            <!-- Gender segmented toggle -->
-            <div class="flex rounded-lg border border-slate-200 bg-slate-50 overflow-hidden" role="group" :aria-label="$t('patient.gender')">
-              <button type="button" @click="form.gender = form.gender === 'male' ? '' : 'male'"
-                      :class="form.gender === 'male' ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-100'"
-                      class="px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-                ♂ {{ $t('patient.gender_male') }}
-              </button>
-              <button type="button" @click="form.gender = form.gender === 'female' ? '' : 'female'"
-                      :class="form.gender === 'female' ? 'bg-pink-500 text-white' : 'text-slate-600 hover:bg-slate-100'"
-                      class="px-3 py-2 text-sm font-medium border-l border-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500">
-                ♀ {{ $t('patient.gender_female') }}
-              </button>
+          <div class="space-y-4">
+            <div>
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">
+                Name <span class="text-red-500">*</span>
+                <span class="ml-1 text-slate-400 font-normal">(Press Enter to go to phone)</span>
+              </label>
+              <input ref="nameInput" v-model="form.name" type="text" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
+                     placeholder="Full name"
+                     class="w-full rounded-lg border-2 px-4 py-3 text-base outline-none transition-colors"
+                     :class="errors.name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-indigo-500'"
+                     @keydown.enter="$refs.phoneInput.focus()" />
+              <p v-if="errors.name" class="mt-1 text-xs text-red-500">{{ errors.name[0] }}</p>
+            </div>
+
+            <div>
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">
+                Phone
+                <span class="ml-1 text-slate-400 font-normal">(Auto-formatted)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🇮🇶</span>
+                <input ref="phoneInput" :value="form.phone" @input="form.phone = formatPhoneDigits($event.target.value)"
+                       type="tel" dir="ltr" inputmode="tel" placeholder="770 123 4567"
+                       class="w-full rounded-lg border-2 border-slate-200 px-4 py-3 pl-10 font-mono text-base outline-none transition-colors focus:border-indigo-500"
+                       @keydown.enter="quickSave" />
+              </div>
+              <p v-if="errors.phone" class="mt-1 text-xs text-red-500">{{ errors.phone[0] }}</p>
             </div>
           </div>
-        </FormField>
-
-        <FormField v-slot="{ id }" :label="$t('patient.medical_notes')"
-                   :hint="$t('patient.notes_hint')">
-          <textarea :id="id" v-model="form.medical_notes" rows="2" class="field-textarea"
-                    :placeholder="$t('patient.medical_notes')"></textarea>
-        </FormField>
-
-        <!-- Appointment date is collapsed behind a toggle so most forms stay minimal -->
-        <div>
-          <button type="button" @click="showAppointmentField = !showAppointmentField"
-                  class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus:outline-none">
-            <Icon :name="showAppointmentField ? 'minus' : 'plus'" :size="14" />
-            {{ showAppointmentField ? $t('patient.hide_appointment') : $t('patient.add_appointment') }}
-          </button>
-          <FormField v-if="showAppointmentField" :label="`📅 ${$t('patient.appointment_date')}`" class="mt-2">
-            <div class="flex gap-2">
-              <input v-model="form.appointment_date" type="datetime-local" class="field flex-1" />
-              <button v-if="form.appointment_date" type="button" @click="form.appointment_date = ''" class="btn-ghost btn-sm" :title="$t('common.clear')">✕</button>
-            </div>
-          </FormField>
         </div>
-      </form>
+
+        <!-- Quick Actions Bar -->
+        <div class="flex items-center justify-between">
+          <button type="button" @click="showAdvanced = !showAdvanced"
+                  class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+            {{ showAdvanced ? '− Hide' : '+ Show' }} more options
+          </button>
+          <div class="text-xs text-slate-400">
+            {{ form.name ? 'Ready to save' : 'Enter name to continue' }}
+          </div>
+        </div>
+
+        <!-- Step 2: Optional Info (Collapsible) -->
+        <div v-if="showAdvanced" class="space-y-4">
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">2</span>
+              <span class="text-sm font-semibold text-slate-600">Optional Details</span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-slate-600">Age</label>
+                <input v-model.number="form.age" type="number" min="0" max="120" inputmode="numeric"
+                       placeholder="—" class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500" />
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-slate-600">Gender</label>
+                <div class="flex rounded-lg border-2 border-slate-200 overflow-hidden">
+                  <button type="button" @click="form.gender = form.gender === 'male' ? '' : 'male'"
+                          :class="form.gender === 'male' ? 'bg-indigo-500 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'"
+                          class="flex-1 px-4 py-2.5 text-sm font-medium transition-colors">
+                    ♂ Male
+                  </button>
+                  <button type="button" @click="form.gender = form.gender === 'female' ? '' : 'female'"
+                          :class="form.gender === 'female' ? 'bg-pink-500 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'"
+                          class="flex-1 px-4 py-2.5 text-sm font-medium border-l border-slate-200 transition-colors">
+                    ♀ Female
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">Address</label>
+              <input v-model="form.address" type="text" placeholder="Street address"
+                     class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500" />
+            </div>
+
+            <div class="mt-4">
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">Medical Notes</label>
+              <div class="mb-2 flex flex-wrap gap-1.5">
+                <button v-for="note in medicalNoteTemplates" :key="note.text" type="button"
+                        @click="appendMedicalNote(note.text)"
+                        class="px-2 py-1 text-xs rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                  {{ note.icon }} {{ note.label }}
+                </button>
+              </div>
+              <textarea v-model="form.medical_notes" rows="2" placeholder="Notes..."
+                        class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Appointment Section -->
+          <div class="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400 text-xs font-bold text-white">3</span>
+              <span class="text-sm font-semibold text-indigo-600">Schedule Appointment</span>
+            </div>
+
+            <div class="mb-3 flex flex-wrap gap-2">
+              <button v-for="preset in appointmentPresets" :key="preset.label" type="button"
+                      @click="setAppointmentPreset(preset)"
+                      class="px-3 py-1.5 text-xs rounded-full border border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-100 transition-colors font-medium">
+                {{ preset.icon }} {{ preset.label }}
+              </button>
+            </div>
+            <input v-model="form.appointment_date" type="datetime-local"
+                   class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500" />
+          </div>
+        </div>
+      </div>
 
       <template #footer>
-        <button type="button" class="btn-ghost" @click="showForm = false">
-          {{ $t('common.cancel') }}
-        </button>
-        <!-- Save & Add Another: only for new patients -->
-        <button v-if="!editingId" type="button" class="btn-secondary" @click="saveAndAddAnother"
-                :disabled="saving">
+        <button type="button" class="btn-ghost" @click="showForm = false">Cancel</button>
+        <button v-if="!editingId" type="button" class="btn-secondary" @click="saveAndAddAnother" :disabled="saving">
           {{ $t('patient.save_add_another') }}
         </button>
-        <button type="button" class="btn-primary" @click="askSave">
-          {{ $t('common.save') }}
+        <button type="button" class="btn-primary" @click="quickSave">
+          {{ editingId ? 'Save Changes' : $t('common.save') }}
         </button>
       </template>
     </Modal>
@@ -306,6 +366,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -323,13 +384,47 @@ const router = useRouter();
 const { can } = useAuth();
 const toast = useToast();
 
+const medicalNoteTemplates = [
+  { icon: '⚠', label: 'Allergy', text: 'Allergic to: ' },
+  { icon: '❤️', label: 'Heart', text: 'Heart condition: ' },
+  { icon: '💉', label: 'Diabetes', text: 'Diabetic' },
+  { icon: '🤰', label: 'Pregnant', text: 'Pregnant' },
+  { icon: '🩸', label: 'Blood Thinner', text: 'On blood thinners' },
+  { icon: '😷', label: 'Asthma', text: 'Asthmatic' },
+];
+
+const appointmentPresets = [
+  { icon: '📅', label: 'Today', days: 0, hour: 9 },
+  { icon: '📅', label: 'Tomorrow', days: 1, hour: 9 },
+  { icon: '📅', label: 'Next Week', days: 7, hour: 10 },
+];
+
+function getPresetDatetime(days, hour) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  d.setHours(hour, 0, 0, 0);
+  return d.toISOString().slice(0, 16);
+}
+
+function setAppointmentPreset(preset) {
+  form.appointment_date = getPresetDatetime(preset.days, preset.hour);
+}
+
+function appendMedicalNote(text) {
+  if (form.value.medical_notes) {
+    form.value.medical_notes += '\n' + text;
+  } else {
+    form.value.medical_notes = text;
+  }
+}
+
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,
   activeFilterCount, isFiltered,
   load, reload, onSearchInput, toggleSort, resetFilters, goToPage,
 } = useDataTable('/patients', {
   filters: {
-    has_debt: false, appointment: '',
+    has_debt: false, appointment: '', appointment_date: '',
     age_min: '', age_max: '', created_from: '',
   },
   sort: 'created_at',
@@ -356,6 +451,7 @@ const queueIds = ref(new Set());
 const pendingPatient = ref(null);
 const saving = ref(false);
 const showAppointmentField = ref(false);
+const showAdvanced = ref(false);
 const nameInput = ref(null);
 const phoneInput = ref(null);
 
@@ -368,8 +464,8 @@ const confirmDeleteMsg = ref('');
 // Default to a blank appointment — most patients are walk-ins. Date is only
 // collected when the user explicitly opts in via the "Add appointment" toggle.
 const emptyForm = () => ({
-  name: '', phone: '', age: null, gender: '', medical_notes: '',
-  appointment_date: '',
+  name: '', phone: '', age: null, gender: '',
+  address: '', medical_notes: '', appointment_date: '',
 });
 const form = ref(emptyForm());
 const errors = ref({});
@@ -411,6 +507,18 @@ function toggleAppointment(value) {
   reload();
 }
 
+const isTodayFilter = computed(() => {
+  if (!filters.appointment_date) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return filters.appointment_date === today;
+});
+
+function toggleTodayFilter() {
+  const today = new Date().toISOString().slice(0, 10);
+  filters.appointment_date = isTodayFilter.value ? '' : today;
+  reload();
+}
+
 async function loadSidecars() {
   try {
     const [queueRes, statsRes] = await Promise.all([
@@ -430,24 +538,23 @@ function openAdd() {
   form.value = emptyForm();
   errors.value = {};
   showAppointmentField.value = false;
+  showAdvanced.value = false;
   showForm.value = true;
-  // Auto-focus the name field once the modal has rendered.
   nextTick(() => nameInput.value?.focus());
 }
 
 function openEdit(p) {
   editingId.value = p.id;
-  // Format phone for display; form stores grouped digits for the API.
   form.value = {
     name: p.name,
     phone: formatPhoneDigits((p.phone || '').replace(/\s/g, '')),
     age: p.age || null,
     gender: p.gender || '',
+    address: p.address || '',
     medical_notes: p.medical_notes || '',
     appointment_date: toLocalInput(p.appointment_date),
   };
   errors.value = {};
-  // Show the appointment field only if the patient actually has one.
   showAppointmentField.value = !!p.appointment_date;
   showForm.value = true;
 }
@@ -455,6 +562,11 @@ function openEdit(p) {
 function askSave() {
   if (!validate()) return;
   showConfirmSave.value = true;
+}
+
+function quickSave() {
+  if (!validate()) return;
+  save();
 }
 
 async function save() {

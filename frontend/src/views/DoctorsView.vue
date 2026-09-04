@@ -5,20 +5,11 @@
         <h2 class="text-2xl font-bold tracking-tight">{{ $t('doctors.title') }}</h2>
         <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
       </div>
-      <button v-if="can('users.manage')" class="btn-primary no-print" @click="openCreate" :title="$t('doctors.add')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert" class="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
       <span aria-hidden="true">⚠</span>{{ error }}
     </p>
-
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('doctors.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    />
 
     <DataTable
       :columns="columns"
@@ -31,11 +22,17 @@
       empty-icon="🩺"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('doctors.title')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #toolbar-right>
+        <AddButton v-if="can('users.manage')" :label="$t('doctors.add')" @click="openCreate" />
+      </template>
       <template #cell(name)="{ row }">
         <div class="flex items-center gap-2.5">
           <span class="inline-flex w-8 h-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" :style="{ backgroundColor: row.color || '#6366f1' }">{{ row.initials }}</span>
@@ -123,10 +120,11 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';
@@ -196,4 +194,6 @@ async function doDelete() {
   catch (e) { formError.value = e.userMessage || 'Delete failed'; }
   finally { saving.value = false; }
 }
+
+onMounted(load);
 </script>

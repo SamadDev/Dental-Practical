@@ -1,88 +1,32 @@
 <template>
   <section>
-    <header class="mb-3 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight">{{ $t('archive.title') }}</h2>
-        <p v-if="!loading" class="mt-0.5 text-sm text-slate-500">{{ meta.total }} {{ $t('common.results') }}</p>
-      </div>
-      <button class="btn-ghost btn-sm no-print" @click="print">
-        🖨 {{ $t('common.print') }}
-      </button>
-    </header>
-
     <p v-if="error" role="alert"
        class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       <span aria-hidden="true">⚠</span> {{ error }}
     </p>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('archive.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button
-          type="button"
-          :class="preset === 'today' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'today' ? '' : 'today')"
-        >{{ $t('dashboard.presets.today') }}</button>
-        <button
-          type="button"
-          :class="preset === 'last_7' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'last_7' ? '' : 'last_7')"
-        >{{ $t('dashboard.presets.last_7') }}</button>
-        <button
-          type="button"
-          :class="preset === 'this_month' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'this_month' ? '' : 'this_month')"
-        >{{ $t('dashboard.presets.this_month') }}</button>
-
-        <span class="mx-1 h-5 w-px bg-slate-200"></span>
-
-        <button
-          type="button"
-          :class="filters.settlement === 'outstanding' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="toggleSettlement('outstanding')"
-        >💰 {{ $t('archive.filter_with_debt') }}</button>
-        <button
-          type="button"
-          :class="filters.settlement === 'settled' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="toggleSettlement('settled')"
-        >✓ {{ $t('table.settled') }}</button>
-        <button
-          type="button"
-          :class="filters.has_xray ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.has_xray = !filters.has_xray; reload()"
-        >🦴 {{ $t('table.has_xray') }}</button>
-      </template>
-
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('archive.date_from')">
-          <input :id="id" v-model="filters.from" type="date" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('archive.date_to')">
-          <input :id="id" v-model="filters.to" type="date" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.visit_type')">
-          <select :id="id" v-model="filters.visit_type" class="field-select" @change="reload">
-            <option value="">{{ $t('common.all') }}</option>
-            <option value="walk_in">{{ $t('queue.type.walk_in') }}</option>
-            <option value="phone">{{ $t('queue.type.phone') }}</option>
-            <option value="whatsapp">{{ $t('queue.type.whatsapp') }}</option>
-          </select>
-        </FormField>
-        <div class="grid grid-cols-2 gap-3">
-          <FormField v-slot="{ id }" :label="$t('table.min_total')">
-            <input :id="id" v-model="filters.min_total" type="number" min="0" class="field" @change="reload" />
-          </FormField>
-          <FormField v-slot="{ id }" :label="$t('table.max_total')">
-            <input :id="id" v-model="filters.max_total" type="number" min="0" class="field" @change="reload" />
-          </FormField>
+    <!-- Summary Stats -->
+    <div class="mb-5 grid gap-3 md:grid-cols-4">
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Total Visits</div>
+        <div class="mt-3 flex items-end justify-between">
+          <span class="text-2xl font-bold text-slate-900">{{ meta.total }}</span>
+          <span class="text-xs text-slate-500">{{ $t('common.results') }}</span>
         </div>
-      </template>
-    </DataTableFilters>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Total Revenue</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ format(totals?.total_amount_paid) }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Outstanding</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-amber-700">{{ format(totals?.total_short_term_debt) }}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Avg per Visit</div>
+        <div class="mt-3 font-mono text-xl font-bold tabular-nums text-slate-700">{{ meta.total > 0 ? format(totals?.total_amount_paid / meta.total) : '0' }}</div>
+      </div>
+    </div>
 
     <DataTable
       :columns="columns"
@@ -95,11 +39,96 @@
       empty-icon="🗂"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('archive.title')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #filters>
+        <button
+          type="button"
+          :class="preset === 'today' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'today' ? '' : 'today')"
+        >{{ $t('dashboard.presets.today') }}</button>
+        <button
+          type="button"
+          :class="preset === 'last_7' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'last_7' ? '' : 'last_7')"
+        >{{ $t('dashboard.presets.last_7') }}</button>
+        <button
+          type="button"
+          :class="preset === 'this_month' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'this_month' ? '' : 'this_month')"
+        >{{ $t('dashboard.presets.this_month') }}</button>
+
+        <span class="mx-1 h-5 w-px bg-gray-300"></span>
+
+        <button
+          type="button"
+          :class="filters.settlement === 'outstanding' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="toggleSettlement('outstanding')"
+        >💰 {{ $t('archive.filter_with_debt') }}</button>
+        <button
+          type="button"
+          :class="filters.settlement === 'settled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="toggleSettlement('settled')"
+        >✓ {{ $t('table.settled') }}</button>
+        <button
+          type="button"
+          :class="filters.has_xray ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="filters.has_xray = !filters.has_xray; reload()"
+        >🦴 {{ $t('table.has_xray') }}</button>
+      </template>
+
+      <template #advanced-filters>
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <FormField v-slot="{ id }" :label="$t('archive.date_from')">
+              <input :id="id" v-model="filters.from" type="date" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('archive.date_to')">
+              <input :id="id" v-model="filters.to" type="date" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('table.visit_type')">
+              <select :id="id" v-model="filters.visit_type" class="form-input form-input-sm" @change="reload">
+                <option value="">{{ $t('common.all') }}</option>
+                <option value="walk_in">{{ $t('queue.type.walk_in') }}</option>
+                <option value="phone">{{ $t('queue.type.phone') }}</option>
+                <option value="whatsapp">{{ $t('queue.type.whatsapp') }}</option>
+              </select>
+            </FormField>
+            <FormField v-slot="{ id }" :label="'Treatment'">
+              <input :id="id" v-model="filters.treatment_name" type="text"
+                     :placeholder="'Search treatment...'"
+                     class="form-input form-input-sm" @input="reload" />
+            </FormField>
+            <div class="flex gap-2">
+              <FormField v-slot="{ id }" :label="$t('table.min_total')" class="flex-1">
+                <input :id="id" v-model="filters.min_total" type="number" min="0" class="form-input form-input-sm" @change="reload" />
+              </FormField>
+              <FormField v-slot="{ id }" :label="$t('table.max_total')" class="flex-1">
+                <input :id="id" v-model="filters.max_total" type="number" min="0" class="form-input form-input-sm" @change="reload" />
+              </FormField>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #toolbar-right>
+        <button class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium" @click="print">
+          🖨 {{ $t('common.print') }}
+        </button>
+      </template>
+
       <template #cell(patient)="{ row }">
         <span class="font-medium text-slate-900">{{ row.patient?.name || '—' }}</span>
       </template>
@@ -153,6 +182,10 @@
 
       <template #cell(actions)="{ row }">
         <div class="flex items-center justify-end gap-1.5">
+          <button v-if="can('queue.manage')" class="btn-ghost btn-sm" :title="'Add to Queue'"
+                  @click.stop="addToQueue(row)">
+            <Icon name="plus" :size="14" />
+          </button>
           <button class="btn-ghost btn-sm" :title="$t('visit.book_followup')"
                   @click.stop="openFollowup(row)">
             <Icon name="calendar" :size="14" />
@@ -253,8 +286,12 @@ import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
+import { useAuth } from '../composables/useAuth';
+import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
+const { can } = useAuth();
+const toast = useToast();
 
 const {
   rows, totals, loading, error, search, filters, sort, dir, perPage, meta,
@@ -263,7 +300,7 @@ const {
 } = useDataTable('/visits/archive', {
   filters: {
     from: '', to: '', settlement: '', has_xray: false,
-    visit_type: '', min_total: '', max_total: '',
+    visit_type: '', min_total: '', max_total: '', treatment_name: '',
   },
   sort: 'created_at',
   dir: 'desc',
@@ -370,6 +407,15 @@ async function bookFollowup() {
     showFollowup.value = false;
   } finally {
     bookingFollowup.value = false;
+  }
+}
+
+async function addToQueue(row) {
+  try {
+    await api.post('/visits', { patient_id: row.patient_id, visit_type: row.visit_type || 'walk_in' });
+    toast.success(`${row.patient?.name || 'Patient'} added to queue`);
+  } catch (e) {
+    toast.error(e.response?.data?.message || 'Failed to add to queue');
   }
 }
 

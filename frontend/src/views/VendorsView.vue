@@ -7,7 +7,6 @@
       </div>
       <div class="flex gap-2 no-print">
         <button class="btn-ghost" @click="openPO" :title="$t('po.new')"><Icon name="plus" :size="16" /></button>
-        <button class="btn-primary" @click="openCreate" :title="$t('vendors.new')"><Icon name="plus" :size="16" /></button>
       </div>
     </header>
 
@@ -80,14 +79,6 @@
     </div>
 
     <!-- Vendors table -->
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('vendors.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    />
-
     <DataTable
       :columns="columns"
       :rows="rows"
@@ -99,11 +90,18 @@
       empty-icon="🏭"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('vendors.title')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #toolbar-right>
+        <button class="btn-ghost btn-sm" @click="openPO"><Icon name="plus" :size="14" /></button>
+        <AddButton :label="$t('vendors.new')" @click="openCreate" />
+      </template>
       <template #cell(name)="{ row }">
         <div class="leading-tight">
           <div class="font-medium text-slate-900">{{ row.name }}</div>
@@ -281,6 +279,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';

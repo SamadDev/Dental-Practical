@@ -7,17 +7,17 @@
       </div>
     </header>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid gap-3 lg:grid-cols-2">
       <!-- Roles List -->
       <div class="card overflow-hidden">
-        <div class="border-b border-slate-200 px-5 py-4">
-          <h3 class="font-semibold text-slate-900">{{ $t('roles.roles') }}</h3>
+        <div class="border-b border-slate-200 px-4 py-3">
+          <h3 class="font-semibold text-slate-900 text-sm">{{ $t('roles.roles') }}</h3>
         </div>
         <div class="divide-y divide-slate-100">
           <div
             v-for="role in roles"
             :key="role.id"
-            class="flex items-center justify-between px-5 py-3 transition-colors hover:bg-slate-50 cursor-pointer"
+            class="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-slate-50 cursor-pointer"
             :class="selectedRole?.id === role.id ? 'bg-brand-50' : ''"
             @click="selectRole(role)"
           >
@@ -41,13 +41,13 @@
           <p class="mt-1 text-sm text-slate-500">{{ selectedRole.description }}</p>
         </div>
 
-        <div class="p-5">
-          <p class="mb-3 text-sm font-medium text-slate-700">{{ $t('roles.permissions') }}</p>
-          <div class="grid gap-2 sm:grid-cols-2">
+        <div class="px-4 py-3">
+          <p class="mb-2 text-xs font-medium text-slate-700">{{ $t('roles.permissions') }}</p>
+          <div class="grid gap-1.5 sm:grid-cols-2">
             <div
               v-for="perm in allPermissions"
               :key="perm.key"
-              class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors"
+              class="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 transition-colors text-xs"
               :class="hasPermission(perm.key) ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'"
             >
               <span
@@ -66,10 +66,10 @@
         </div>
 
         <!-- Users with this role -->
-        <div class="border-t border-slate-200 p-5">
-          <p class="mb-3 text-sm font-medium text-slate-700">{{ $t('roles.users_with_role') }} ({{ roleUsers.length }})</p>
-          <div v-if="roleUsers.length" class="space-y-2">
-            <div v-for="user in roleUsers" :key="user.id" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+        <div class="border-t border-slate-200 px-4 py-3">
+          <p class="mb-2 text-xs font-medium text-slate-700">{{ $t('roles.users_with_role') }} ({{ roleUsers.length }})</p>
+          <div v-if="roleUsers.length" class="space-y-1.5">
+            <div v-for="user in roleUsers" :key="user.id" class="flex items-center justify-between rounded-lg border border-slate-200 px-2.5 py-1.5">
               <div class="min-w-0">
                 <p class="font-medium text-slate-900 truncate">{{ user.name }}</p>
                 <p class="text-xs text-slate-500 truncate">{{ user.email }}</p>

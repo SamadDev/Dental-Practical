@@ -59,55 +59,6 @@
       <span aria-hidden="true">⚠</span>{{ formError || error }}
     </p>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('expense.search_placeholder')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button
-          type="button"
-          :class="preset === 'today' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'today' ? '' : 'today')"
-        >
-          {{ $t('dashboard.presets.today') }}
-        </button>
-        <button
-          type="button"
-          :class="preset === 'last_7' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'last_7' ? '' : 'last_7')"
-        >
-          {{ $t('dashboard.presets.last_7') }}
-        </button>
-        <button
-          type="button"
-          :class="preset === 'this_month' ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="applyPreset(preset === 'this_month' ? '' : 'this_month')"
-        >
-          {{ $t('dashboard.presets.this_month') }}
-        </button>
-      </template>
-
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('archive.date_from')">
-          <input :id="id" v-model="filters.from" type="date" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('archive.date_to')">
-          <input :id="id" v-model="filters.to" type="date" class="field" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.min_amount')">
-          <input :id="id" v-model="filters.min_amount" type="number" min="0" inputmode="numeric"
-                 class="field font-mono" placeholder="0" @change="reload" />
-        </FormField>
-        <FormField v-slot="{ id }" :label="$t('table.max_amount')">
-          <input :id="id" v-model="filters.max_amount" type="number" min="0" inputmode="numeric"
-                 class="field font-mono" placeholder="—" @change="reload" />
-        </FormField>
-      </template>
-    </DataTableFilters>
-
     <DataTable
       :columns="columns"
       :rows="rows"
@@ -119,11 +70,57 @@
       empty-icon="🧾"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('expense.search_placeholder')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #filters>
+        <button
+          type="button"
+          :class="preset === 'today' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'today' ? '' : 'today')"
+        >{{ $t('dashboard.presets.today') }}</button>
+        <button
+          type="button"
+          :class="preset === 'last_7' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'last_7' ? '' : 'last_7')"
+        >{{ $t('dashboard.presets.last_7') }}</button>
+        <button
+          type="button"
+          :class="preset === 'this_month' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="applyPreset(preset === 'this_month' ? '' : 'this_month')"
+        >{{ $t('dashboard.presets.this_month') }}</button>
+      </template>
+
+      <template #advanced-filters>
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-4 gap-4">
+            <FormField v-slot="{ id }" :label="$t('archive.date_from')">
+              <input :id="id" v-model="filters.from" type="date" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('archive.date_to')">
+              <input :id="id" v-model="filters.to" type="date" class="form-input form-input-sm" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('table.min_amount')">
+              <input :id="id" v-model="filters.min_amount" type="number" min="0" class="form-input form-input-sm font-mono" placeholder="0" @change="reload" />
+            </FormField>
+            <FormField v-slot="{ id }" :label="$t('table.max_amount')">
+              <input :id="id" v-model="filters.max_amount" type="number" min="0" class="form-input form-input-sm font-mono" placeholder="—" @change="reload" />
+            </FormField>
+          </div>
+        </div>
+      </template>
+
+      <template #toolbar-right>
+        <AddButton :label="$t('expense.new')" @click="openCreate" />
+      </template>
       <template #cell(created_at)="{ row }">
         <span class="whitespace-nowrap text-slate-600">{{ formatDateTime(row.created_at) }}</span>
       </template>
@@ -194,6 +191,7 @@ import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
 import DataTable          from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import IqdInput      from '../components/IqdInput.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';

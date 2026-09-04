@@ -1,198 +1,270 @@
 <template>
   <section>
-    <header class="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight">{{ $t('queue.title') }}</h2>
-        <p v-if="!loading && queue.length" class="mt-0.5 text-sm text-slate-500">
-          {{ queue.length }} {{ $t('common.results') }}
-        </p>
-      </div>
-      <button v-if="can('queue.manage')" class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
-    </header>
-
-    <div v-if="loading" class="card divide-y divide-slate-100 dark:divide-slate-700/50">
-      <div v-for="n in 4" :key="n" class="flex items-center gap-4 p-4">
-        <div class="flex-1 space-y-2">
-          <div class="h-4 w-44 animate-pulse rounded bg-slate-200 dark:bg-slate-700"></div>
-          <div class="h-3 w-28 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+    <!-- Header -->
+    <div class="card mt-3 border border-slate-200 px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Queue</h2>
+          <p v-if="!loading && queue.length" class="text-xs text-slate-500">{{ queue.length }} patients waiting</p>
         </div>
-        <div class="h-8 w-40 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+        <AddButton v-if="can('queue.manage')" label="Add Patient" @click="openAdd" />
       </div>
     </div>
 
-    <div v-else-if="!queue.length"
-         class="card flex flex-col items-center gap-3 p-12 text-center">
-      <span class="text-4xl opacity-30" aria-hidden="true">🪑</span>
-      <p class="text-slate-500 dark:text-slate-400">{{ $t('queue.empty') }}</p>
-      <button v-if="can('queue.manage')" class="btn-primary" @click="openAdd" :title="$t('queue.add_walk_in')"><Icon name="plus" :size="16" /></button>
+    <!-- Loading -->
+    <div v-if="loading" class="mt-3 space-y-2">
+      <div v-for="n in 3" :key="n" class="card border border-slate-200 p-4">
+        <div class="flex items-center gap-4">
+          <div class="h-10 w-10 rounded-full bg-slate-200 animate-pulse"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 w-32 rounded bg-slate-200 animate-pulse"></div>
+            <div class="h-3 w-24 rounded bg-slate-100 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <ul v-else class="card divide-y divide-slate-200 dark:divide-slate-700/50 overflow-hidden">
-      <li
-        v-for="(v, i) in queue" :key="v.id"
-        class="flex flex-wrap items-center gap-3 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
-      >
-        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 dark:bg-slate-800
-                     text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
-          {{ i + 1 }}
-        </span>
+    <!-- Empty State -->
+    <div v-else-if="!queue.length" class="card mt-3 border border-slate-200 p-12 text-center">
+      <span class="text-4xl">🪑</span>
+      <p class="mt-2 text-slate-500">No patients in queue</p>
+      <AddButton v-if="can('queue.manage')" label="Add Patient" @click="openAdd" class="mt-3" />
+    </div>
 
-        <div class="min-w-0 flex-1">
+    <!-- Queue List -->
+    <ul v-else class="mt-3 space-y-2">
+      <li v-for="(v, i) in queue" :key="v.id"
+          class="card border border-slate-200 p-4">
+        <div class="flex flex-wrap items-start gap-3">
+          <!-- Position -->
+          <div class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
+            {{ i + 1 }}
+          </div>
+
+          <!-- Patient Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-slate-900">{{ v.patient.name }}</span>
+              <StatusBadge kind="queue_status" :value="v.queue_status" />
+              <span v-if="v.treatment_name" class="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                {{ v.treatment_name }}
+              </span>
+            </div>
+            <div class="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <a v-if="v.patient.phone" :href="formatPhoneForWhatsApp(v.patient.phone)" target="_blank" rel="noopener noreferrer"
+                 class="flex items-center gap-1 font-mono hover:text-indigo-600">
+                💬 {{ formatPhoneForDisplay(v.patient.phone) }}
+              </a>
+              <span v-if="v.patient.appointment_date" class="flex items-center gap-1">
+                📅 {{ formatDateTime(v.patient.appointment_date) }}
+              </span>
+              <span v-if="v.patient.last_visit_at" class="text-slate-400">
+                Previous: {{ formatDateTime(v.patient.last_visit_at) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions -->
           <div class="flex flex-wrap items-center gap-2">
-            <span class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ v.patient.name }}</span>
-            <StatusBadge kind="queue_status" :value="v.queue_status" />
-            <span v-if="v.treatment_name"
-                  class="inline-flex max-w-[160px] items-center truncate rounded-full border border-violet-200
-                         bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700
-                         dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
-                  :title="v.treatment_name">
-              {{ v.treatment_name }}
-            </span>
-            <span v-if="v.patient.appointment_date" class="chip-date">
-              <Icon name="calendar" :size="12" /> {{ formatDateTime(v.patient.appointment_date) }}
-            </span>
+            <button v-if="v.queue_status === 'pending'" class="btn-success btn-sm" @click="askSetActive(v)">
+              Start
+            </button>
+            <button v-if="v.queue_status === 'active'" class="btn-primary btn-sm" @click="openCheckout(v)">
+              Checkout
+            </button>
+            <router-link :to="`/patients/${v.patient_id}`" class="btn-ghost btn-sm">
+              View
+            </router-link>
+            <button v-if="can('queue.manage')" class="btn-ghost btn-sm text-red-500" @click="askRemove(v)">
+              Remove
+            </button>
           </div>
-          <div class="mt-1" dir="ltr">
-            <a v-if="v.patient.phone" :href="formatPhoneForWhatsApp(v.patient.phone)" target="_blank" rel="noopener noreferrer"
-               class="font-mono text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 underline-offset-2 transition-colors flex items-center gap-1"
-               :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(v.patient.phone) })">
-              <span class="text-indigo-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
-              {{ formatPhoneForDisplay(v.patient.phone) }}
-            </a>
-            <span v-else class="text-slate-400 dark:text-slate-500 text-xs">—</span>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-1.5">
-          <button v-if="v.queue_status === 'pending'" class="btn-success btn-sm"
-                  @click="askSetActive(v)">
-            <Icon name="play" :size="14" /> {{ $t('queue.status.active') }}
-          </button>
-          <button v-if="v.queue_status === 'active'" class="btn-primary btn-sm"
-                  @click="openCheckout(v)">
-            <Icon name="credit-card" :size="14" /> {{ $t('visit.checkout') }}
-          </button>
-          <router-link :to="`/patients/${v.patient_id}`" class="btn-ghost btn-sm"
-                       :aria-label="$t('patient.title')">
-            <Icon name="user" :size="14" />
-          </router-link>
-          <button v-if="can('queue.manage')" class="btn-danger btn-sm" @click="askRemove(v)">
-            <Icon name="x" :size="14" /> {{ $t('queue.remove') }}
-          </button>
         </div>
       </li>
     </ul>
 
-    <!-- Add to queue -->
-    <Modal v-model="showAdd" :title="$t('queue.add_walk_in')">
+    <!-- Add to Queue Modal -->
+    <Modal v-model="showAdd" title="Add Patient to Queue">
       <div class="space-y-4">
-        <FormField v-slot="{ id }" :label="$t('common.search')" :hint="$t('queue.search_hint')">
-          <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center
-                         text-slate-400" aria-hidden="true"><Icon name="search" :size="14" /></span>
-            <input
-              :id="id" v-model="addForm.search" type="search" autocomplete="off"
-              class="field ps-9" :placeholder="$t('patient.search_placeholder')"
-              @input="onSearchInput"
-            />
-          </div>
-        </FormField>
+        <!-- Search -->
+        <div class="relative">
+          <input v-model="addForm.search" type="search" autocomplete="off"
+                 placeholder="Search by name or phone..."
+                 class="w-full rounded-lg border border-slate-300 px-4 py-3 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                 @input="onSearchInput" />
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+        </div>
 
-        <!-- Selected patient confirmation -->
-        <div v-if="addForm.patient_id"
-             class="flex items-center justify-between gap-3 rounded-lg border
-                    border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/30 px-3 py-2.5">
-          <span class="flex min-w-0 items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-300">
-            <span aria-hidden="true"><Icon name="check" :size="14" /></span>
-            <span class="truncate">{{ addForm.patientName }}</span>
-          </span>
-          <button type="button"
-                  class="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-400 underline
-                         underline-offset-2 hover:text-emerald-900 dark:hover:text-emerald-200"
-                  @click="clearSelection">
-            {{ $t('common.clear') }}
+        <!-- Selected Patients Bar -->
+        <div v-if="selectedPatients.length" class="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-bold text-indigo-700">{{ selectedPatients.length }} selected</span>
+            <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium" @click="selectedPatients = []">Clear all</button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="patient in selectedPatients" :key="patient.id"
+                  class="inline-flex items-center gap-1.5 rounded-full bg-white pl-3 pr-2 py-1 text-xs font-medium text-indigo-700 border border-indigo-200">
+              {{ patient.name }}
+              <button type="button" @click="removePatient(patient.id)" class="ml-1 rounded-full hover:bg-indigo-100 p-0.5">✕</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div v-if="searching" class="py-8 text-center text-sm text-slate-500">Searching...</div>
+
+        <div v-else-if="addForm.search && results.length === 0" class="py-6 text-center">
+          <span class="text-3xl">😕</span>
+          <p class="mt-2 text-sm text-slate-500">No patients found</p>
+          <button type="button" class="btn-primary btn-sm mt-3" @click="quickAddPatient">
+            + Create "{{ addForm.search }}"
           </button>
         </div>
 
-        <p v-else-if="searching" class="text-sm text-slate-500 dark:text-slate-400">{{ $t('queue.searching') }}</p>
-
-        <ul v-else-if="results.length"
-            class="max-h-56 divide-y divide-slate-100 dark:divide-slate-700 overflow-y-auto rounded-lg
-                   border border-slate-200 dark:border-slate-700">
-          <li v-for="p in results" :key="p.id">
-            <button
-              type="button"
-              class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-start
-                     transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:outline-none"
-              @click="selectPatient(p)"
-            >
-              <span class="min-w-0">
-                <span class="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{ p.name }}</span>
-                <span v-if="p.phone" class="block font-mono text-xs text-slate-500 dark:text-slate-400" dir="ltr">
-                  <a :href="formatPhoneForWhatsApp(p.phone)" target="_blank" rel="noopener noreferrer"
-                     class="flex items-center gap-1 hover:text-indigo-600 transition-colors"
-                     :aria-label="$t('patient.whatsapp_tooltip', { phone: formatPhoneForDisplay(p.phone) })">
-                    <span class="text-indigo-600" aria-hidden="true"><Icon name="comment" :size="12" /></span>
-                    {{ formatPhoneForDisplay(p.phone) }}
-                  </a>
-                </span>
-              </span>
-              <span v-if="p.appointment_date" class="chip-date shrink-0">
-                <Icon name="calendar" :size="12" /> {{ formatDateTime(p.appointment_date) }}
-              </span>
-            </button>
+        <ul v-else-if="results.length" class="max-h-72 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
+          <li v-for="patient in results" :key="patient.id">
+            <div @click="togglePatient(patient)"
+                 :class="isSelected(patient.id) ? 'bg-indigo-50' : 'hover:bg-slate-50'"
+                 class="flex cursor-pointer items-center gap-3 px-4 py-3">
+              <!-- Checkbox indicator -->
+              <div :class="isSelected(patient.id) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 bg-white'"
+                   class="flex h-5 w-5 items-center justify-center rounded border">
+                <span v-if="isSelected(patient.id)" class="text-white text-xs">✓</span>
+              </div>
+              <!-- Patient info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-medium text-slate-900">{{ patient.name }}</p>
+                  <span v-if="patient.outstanding_debt > 0" class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                    Due: {{ formatIQD(patient.outstanding_debt) }}
+                  </span>
+                  <span v-if="patient.severe_allergies_count > 0" class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                    ⚠ Allergy
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 mt-0.5">
+                  <span v-if="patient.phone" class="font-mono text-xs text-slate-500">{{ formatPhoneForDisplay(patient.phone) }}</span>
+                  <span v-if="patient.visits_count" class="text-xs text-slate-400">{{ patient.visits_count }} visits</span>
+                  <span v-if="patient.appointment_date" class="text-xs text-indigo-500">
+                    📅 {{ formatDateTime(patient.appointment_date) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </li>
         </ul>
 
-        <p v-else-if="addForm.search.trim().length >= 2"
-           class="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 px-3 py-6 text-center
-                  text-sm text-slate-500 dark:text-slate-400">
-          {{ $t('common.no_results') }}
-        </p>
+        <div v-else-if="!addForm.search" class="py-8 text-center">
+          <span class="text-3xl">👇</span>
+          <p class="mt-2 text-sm text-slate-500">Type to search for patients</p>
+        </div>
 
-        <!-- Treatment tag for this visit -->
-        <FormField v-slot="{ id }" :label="$t('visit.treatment')" :hint="$t('visit.treatment_ph')">
-          <input :id="id" v-model="addForm.treatment_name" class="field"
-                 :placeholder="$t('visit.treatment_ph')" />
-        </FormField>
+        <!-- Treatment -->
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">Treatment (optional)</label>
+          <div class="flex flex-wrap gap-2 mb-2">
+            <button v-for="t in commonTreatments" :key="t"
+                    type="button"
+                    @click="addForm.treatment_name = addForm.treatment_name === t ? '' : t"
+                    :class="addForm.treatment_name === t ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'"
+                    class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors">
+              {{ t }}
+            </button>
+          </div>
+          <input v-model="addForm.treatment_name" type="text"
+                 placeholder="Or type custom treatment..."
+                 class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+        </div>
       </div>
 
       <template #footer>
-        <button type="button" class="btn-ghost" @click="showAdd = false">
-          {{ $t('common.cancel') }}
-        </button>
-        <button type="button" class="btn-primary" :disabled="!addForm.patient_id"
-                @click="askAddVisit">
-          {{ $t('common.submit') }}
+        <button type="button" class="btn-ghost" @click="showAdd = false">Cancel</button>
+        <button type="button" class="btn-primary" :disabled="!selectedPatients.length" @click="askAddVisit">
+          Add {{ selectedPatients.length ? `(${selectedPatients.length})` : '' }} to Queue
         </button>
       </template>
     </Modal>
 
     <ConfirmDialog
       v-model="showConfirmActive"
-      :title="$t('common.confirm_action')"
-      :message="confirmActiveMsg"
-      :confirm-label="$t('queue.status.active')"
+      title="Start Treatment?"
+      message="This will mark the patient as in treatment."
+      confirm-label="Start"
       :danger="false"
       @confirmed="doSetActive"
     />
     <ConfirmDialog
       v-model="showConfirmAdd"
-      :title="$t('common.confirm_queue')"
+      title="Add to Queue?"
       :message="confirmAddMsg"
-      :confirm-label="$t('queue.add_walk_in')"
+      confirm-label="Add"
       :danger="false"
       @confirmed="addVisit"
     />
     <ConfirmDialog
       v-model="showConfirmRemove"
-      :title="$t('common.confirm_remove')"
+      title="Remove from Queue?"
       :message="confirmRemoveMsg"
-      :confirm-label="$t('queue.remove')"
+      confirm-label="Remove"
       @confirmed="removeFromQueue"
     />
 
     <CheckoutDialog v-model="showCheckout" :visit="activeVisit" @completed="onCheckedOut" />
+
+    <!-- Quick Add Patient Modal -->
+    <Modal v-model="showQuickAdd" title="Quick Add Patient">
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">Name <span class="text-red-500">*</span></label>
+          <input v-model="quickAddForm.name" type="text" autofocus
+                 placeholder="Patient full name"
+                 class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">Phone</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">🇮🇶 +964</span>
+            <input v-model="quickAddForm.phone" type="tel" dir="ltr" inputmode="tel"
+                   placeholder="770 123 4567"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2.5 pl-16 font-mono text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-slate-600">Age</label>
+            <input v-model.number="quickAddForm.age" type="number" min="0" max="120" inputmode="numeric"
+                   placeholder="—" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-slate-600">Gender</label>
+            <div class="flex rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+              <button type="button" @click="quickAddForm.gender = quickAddForm.gender === 'male' ? '' : 'male'"
+                      :class="quickAddForm.gender === 'male' ? 'bg-indigo-500 text-white' : 'text-slate-600 hover:bg-slate-200'"
+                      class="flex-1 px-3 py-2.5 text-sm font-medium transition-colors">
+                ♂ Male
+              </button>
+              <button type="button" @click="quickAddForm.gender = quickAddForm.gender === 'female' ? '' : 'female'"
+                      :class="quickAddForm.gender === 'female' ? 'bg-pink-500 text-white' : 'text-slate-600 hover:bg-slate-200'"
+                      class="flex-1 px-3 py-2.5 text-sm font-medium border-l border-slate-200 transition-colors">
+                ♀ Female
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">Treatment</label>
+          <input v-model="quickAddForm.treatment_name" type="text"
+                 :placeholder="addForm.treatment_name || 'Treatment...'"
+                 class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+        </div>
+      </div>
+      <template #footer>
+        <button type="button" class="btn-ghost" @click="showQuickAdd = false">Cancel</button>
+        <button type="button" class="btn-primary" :disabled="savingQuickAdd" @click="doQuickAdd">
+          {{ savingQuickAdd ? 'Creating...' : 'Create & Add to Queue' }}
+        </button>
+      </template>
+    </Modal>
   </section>
 </template>
 
@@ -203,19 +275,27 @@ import StatusBadge    from '../components/StatusBadge.vue';
 import Modal          from '../components/Modal.vue';
 import ConfirmDialog  from '../components/ConfirmDialog.vue';
 import CheckoutDialog from '../components/CheckoutDialog.vue';
-import FormField      from '../components/FormField.vue';
-import Icon from '../components/Icon.vue';
+import AddButton      from '../components/AddButton.vue';
 import { formatDateTime } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
+import { formatIQD } from '../utils/iqd';
 import { useAuth } from '../composables/useAuth';
+import { useToast } from '../composables/useToast';
 
 const { can } = useAuth();
+const toast = useToast();
+
+const commonTreatments = [
+  'Checkup', 'Cleaning', 'Filling', 'Extraction', 'Root Canal',
+  'Crown', 'Bridge', 'Whitening', 'X-Ray', 'Consultation'
+];
 
 const queue   = ref([]);
 const loading = ref(true);
 
 const showAdd   = ref(false);
-const addForm   = ref({ search: '', patient_id: null, patientName: '' });
+const addForm   = ref({ search: '', treatment_name: '' });
+const selectedPatients = ref([]); // Store full patient objects
 const results   = ref([]);
 const searching = ref(false);
 
@@ -230,6 +310,10 @@ const showConfirmRemove = ref(false);
 const confirmActiveMsg  = ref('');
 const confirmAddMsg     = ref('');
 const confirmRemoveMsg  = ref('');
+
+const showQuickAdd = ref(false);
+const quickAddForm = ref({ name: '', phone: '', age: null, gender: '', treatment_name: '' });
+const savingQuickAdd = ref(false);
 
 async function load() {
   loading.value = true;
@@ -249,18 +333,17 @@ async function load() {
 }
 
 function openAdd() {
-  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: '' };
+  addForm.value = { search: '', treatment_name: '' };
+  selectedPatients.value = [];
   results.value = [];
   showAdd.value = true;
 }
 
 let searchTimer;
 function onSearchInput() {
-  addForm.value.patient_id  = null;
-  addForm.value.patientName = '';
   clearTimeout(searchTimer);
   const q = addForm.value.search.trim();
-  if (q.length < 2) { results.value = []; searching.value = false; return; }
+  if (q.length < 1) { results.value = []; searching.value = false; return; }
   searching.value = true;
   searchTimer = setTimeout(searchPatients, 300);
 }
@@ -276,37 +359,101 @@ async function searchPatients() {
   }
 }
 
-function selectPatient(p) {
-  addForm.value.patient_id  = p.id;
-  addForm.value.patientName = p.name;
-  addForm.value.search      = p.name;
+function clearSelection() {
+  addForm.value = { search: '', treatment_name: '' };
+  selectedPatients.value = [];
   results.value = [];
 }
 
-function clearSelection() {
-  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: addForm.value.treatment_name };
-  results.value = [];
+function toggleAll() {
+  if (selectedPatients.value.length === results.value.length) {
+    selectedPatients.value = [];
+  } else {
+    selectedPatients.value = [...results.value];
+  }
+}
+
+function isSelected(id) {
+  return selectedPatients.value.some(p => p.id === id);
+}
+
+function togglePatient(patient) {
+  const idx = selectedPatients.value.findIndex(p => p.id === patient.id);
+  if (idx === -1) {
+    selectedPatients.value.push(patient);
+  } else {
+    selectedPatients.value.splice(idx, 1);
+  }
+}
+
+function removePatient(id) {
+  selectedPatients.value = selectedPatients.value.filter(p => p.id !== id);
+}
+
+function quickAddPatient() {
+  quickAddForm.value = {
+    name: addForm.value.search,
+    phone: '',
+    age: null,
+    gender: '',
+    treatment_name: addForm.value.treatment_name || '',
+  };
+  showQuickAdd.value = true;
+}
+
+async function doQuickAdd() {
+  if (!quickAddForm.value.name.trim()) {
+    toast.error('Name is required');
+    return;
+  }
+  savingQuickAdd.value = true;
+  try {
+    const { data } = await api.post('/patients', {
+      name: quickAddForm.value.name,
+      phone: quickAddForm.value.phone || null,
+      age: quickAddForm.value.age || null,
+      gender: quickAddForm.value.gender || '',
+    });
+    showQuickAdd.value = false;
+    toast.success(`Patient "${data.name}" created`);
+    await api.post('/visits', {
+      patient_id: data.id,
+      visit_type: 'walk_in',
+      treatment_name: quickAddForm.value.treatment_name || null,
+    });
+    toast.success('Patient added to queue');
+    addForm.value.search = '';
+    results.value = [];
+    await load();
+  } catch (e) {
+    toast.error(e.response?.data?.message || 'Failed to create patient');
+  } finally {
+    savingQuickAdd.value = false;
+  }
 }
 
 function askAddVisit() {
-  confirmAddMsg.value = `"${addForm.value.patientName}"`;
+  confirmAddMsg.value = `Add ${selectedPatients.value.length} patient${selectedPatients.value.length > 1 ? 's' : ''} to the queue?`;
   showConfirmAdd.value = true;
 }
 
 async function addVisit() {
-  await api.post('/visits', {
-    patient_id: addForm.value.patient_id,
-    visit_type: 'walk_in',
-    treatment_name: addForm.value.treatment_name || null,
-  });
+  for (const patient of selectedPatients.value) {
+    await api.post('/visits', {
+      patient_id: patient.id,
+      visit_type: 'walk_in',
+      treatment_name: addForm.value.treatment_name || null,
+    });
+  }
   showAdd.value = false;
-  addForm.value = { search: '', patient_id: null, patientName: '', treatment_name: '' };
+  addForm.value = { search: '', treatment_name: '' };
+  selectedPatients.value = [];
   await load();
 }
 
 function askSetActive(v) {
   pendingVisit.value = v;
-  confirmActiveMsg.value = `"${v.patient.name}"`;
+  confirmActiveMsg.value = `Start treatment for "${v.patient.name}"?`;
   showConfirmActive.value = true;
 }
 
@@ -318,7 +465,7 @@ async function doSetActive() {
 
 function askRemove(v) {
   pendingVisit.value = v;
-  confirmRemoveMsg.value = `"${v.patient.name}"`;
+  confirmRemoveMsg.value = `Remove "${v.patient.name}" from the queue?`;
   showConfirmRemove.value = true;
 }
 

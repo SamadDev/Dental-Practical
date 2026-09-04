@@ -10,7 +10,6 @@
           </template>
         </p>
       </div>
-      <button class="btn-primary no-print" @click="openCreate" :title="$t('inventory.new')"><Icon name="plus" :size="16" /></button>
     </header>
 
     <p v-if="error" role="alert"
@@ -38,36 +37,6 @@
       </div>
     </div>
 
-    <DataTableFilters
-      v-model:search="search"
-      :placeholder="$t('inventory.title')"
-      :active-count="activeFilterCount"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
-      <template #chips>
-        <button
-          type="button"
-          :class="filters.low_stock ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.low_stock = !filters.low_stock; reload()"
-        >📉 {{ $t('inventory.low_stock') }}</button>
-        <button
-          type="button"
-          :class="filters.expiring ? 'filter-chip-on' : 'filter-chip-off'"
-          @click="filters.expiring = !filters.expiring; reload()"
-        >⏳ {{ $t('inventory.expiring') }}</button>
-      </template>
-
-      <template #advanced>
-        <FormField v-slot="{ id }" :label="$t('inventory.category')">
-          <select :id="id" v-model="filters.category" class="field-select" @change="reload">
-            <option value="">{{ $t('common.all') }} — {{ $t('inventory.categories') }}</option>
-            <option v-for="c in categories" :key="c.category" :value="c.category">{{ c.category }}</option>
-          </select>
-        </FormField>
-      </template>
-    </DataTableFilters>
-
     <DataTable
       :columns="columns"
       :rows="rows"
@@ -79,11 +48,45 @@
       empty-icon="📦"
       :meta="meta"
       :per-page="perPage"
+      :search="search"
+      :placeholder="$t('inventory.title')"
       @sort="toggleSort"
       @page="goToPage"
       @update:per-page="(n) => (perPage = n)"
+      @input="onSearchInput"
       @reset="resetFilters"
     >
+      <template #filters>
+        <button
+          type="button"
+          :class="filters.low_stock ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="filters.low_stock = !filters.low_stock; reload()"
+        >📉 {{ $t('inventory.low_stock') }}</button>
+        <button
+          type="button"
+          :class="filters.expiring ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+          @click="filters.expiring = !filters.expiring; reload()"
+        >⏳ {{ $t('inventory.expiring') }}</button>
+      </template>
+
+      <template #advanced-filters>
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-4 gap-4">
+            <FormField v-slot="{ id }" :label="$t('inventory.category')">
+              <select :id="id" v-model="filters.category" class="form-input form-input-sm" @change="reload">
+                <option value="">{{ $t('common.all') }} — {{ $t('inventory.categories') }}</option>
+                <option v-for="c in categories" :key="c.category" :value="c.category">{{ c.category }}</option>
+              </select>
+            </FormField>
+          </div>
+        </div>
+      </template>
+
+      <template #toolbar-right>
+        <AddButton :label="$t('inventory.new')" @click="openCreate" />
+      </template>
       <template #cell(name)="{ row }">
         <div class="leading-tight">
           <div class="font-medium text-slate-900">{{ row.name }}</div>
@@ -223,6 +226,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
+import AddButton from '../components/AddButton.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
 import Modal     from '../components/Modal.vue';
 import FormField from '../components/FormField.vue';

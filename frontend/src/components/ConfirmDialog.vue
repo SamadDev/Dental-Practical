@@ -15,7 +15,7 @@
             <div class="flex items-start gap-3.5">
               <span
                 class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg"
-                :class="danger ? 'bg-red-50 text-red-600' : 'bg-brand-50 text-brand-600'"
+                :class="danger ? 'bg-red-50 text-red-600' : 'bg-primary-light text-primary'"
                 aria-hidden="true"
               >
                 {{ danger ? '⚠' : '?' }}
@@ -39,7 +39,7 @@
               class="btn"
               :class="danger
                 ? 'bg-red-600 text-white shadow-sm hover:bg-red-700'
-                : 'bg-brand-600 text-white shadow-sm hover:bg-brand-700'"
+                : 'bg-primary text-white shadow-sm hover:bg-primary/90'"
               @click="confirm"
             >
               {{ confirmLabel || $t('common.yes') }}

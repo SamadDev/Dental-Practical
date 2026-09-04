@@ -45,6 +45,25 @@
         </div>
 
         <AppFooter />
+
+        <!-- Keyboard Shortcuts Hint -->
+        <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 hidden md:flex items-center gap-3 bg-slate-800/90 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">N</kbd> New Patient
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">Q</kbd> Queue
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">A</kbd> Archive
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">P</kbd> Patients
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">D</kbd> Dashboard
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -58,6 +77,7 @@ import AppFooter from '../components/layout/AppFooter.vue';
 
 const showTopButton = ref(false);
 const isDarkMode = ref(false);
+const isShowPageLoader = ref(false);
 
 onMounted(() => {
   window.onscroll = () => {

@@ -80,6 +80,9 @@
       </div>
       <VueApexCharts type="bar" height="280" :options="expensesChartOptions" :series="expensesSeries" />
     </div>
+
+    <!-- Patient Form Settings -->
+    <PatientFieldsSettings />
   </div>
 </template>
 
@@ -88,6 +91,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VueApexCharts from 'vue3-apexcharts';
 import FontAwesomeIcon from '../components/FontAwesomeIcon.vue';
+import PatientFieldsSettings from '../components/PatientFieldsSettings.vue';
 import api from '../utils/axios';
 import { formatIQD } from '../utils/iqd';
 

@@ -14,6 +14,7 @@ import { useAuth } from './composables/useAuth';
 import { useToast } from './composables/useToast';
 import './assets/main.css';
 import './assets/datatable.css';
+import '@bhplugin/vue3-datatable/dist/style.css';
 
 library.add(fas);
 dom.watch();

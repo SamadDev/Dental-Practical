@@ -136,7 +136,7 @@ function isActive(path) {
   height: 100vh;
   position: fixed;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   z-index: 40;
 }
 
@@ -241,7 +241,7 @@ function isActive(path) {
 .menu-item--active::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 3px;

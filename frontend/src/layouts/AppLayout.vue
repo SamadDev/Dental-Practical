@@ -91,7 +91,9 @@ import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import OfflineIndicator from '../components/OfflineIndicator.vue';
+import { useLangStore } from '../store/lang';
 
+const lang = useLangStore();
 const showTopButton = ref(false);
 const isDarkMode = ref(false);
 const isShowPageLoader = ref(false);

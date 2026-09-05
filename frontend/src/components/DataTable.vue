@@ -67,8 +67,8 @@
     <div class="table-wrapper">
       <!-- Desktop Table -->
       <div class="hidden lg:block">
-        <div class="table-container overflow-x-auto">
-          <table class="data-table w-full min-w-max text-sm">
+        <div class="table-container">
+          <table class="data-table w-full text-sm">
             <thead class="data-table-head">
               <tr>
                 <th
@@ -334,7 +334,6 @@ function ariaSort(col) {
 /* Table with thin borders */
 .data-table {
   width: 100%;
-  min-width: max-content;
   font-size: 14px;
   border-collapse: collapse;
   border-spacing: 0;

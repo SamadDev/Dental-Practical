@@ -51,20 +51,16 @@
       <transition name="sidebar">
         <aside
           v-show="sidebarOpen || isDesktop"
-          class="sidebar fixed top-0 bottom-0 w-[280px] z-50 lg:z-40"
-          :class="isRtl ? 'end-0' : 'start-0'"
+          class="sidebar fixed top-0 bottom-0 w-[280px] z-50 lg:z-40 start-0"
         >
           <AppSidebar @close="sidebarOpen = false" />
         </aside>
       </transition>
 
-      <div
-        class="main-content flex flex-col flex-1 min-h-screen"
-        :class="isRtl ? 'lg:me-[280px]' : 'lg:ms-[280px]'"
-      >
+      <div class="main-content flex flex-col flex-1 min-h-screen lg:ms-[280px]">
         <AppHeader @toggle-sidebar="toggleSidebar" />
 
-        <div class="p-4 md:p-6 animation">
+        <div class="p-4 md:p-6 animation flex-1">
           <router-view />
         </div>
 
@@ -94,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
@@ -107,8 +103,6 @@ const isDarkMode = ref(false);
 const isShowPageLoader = ref(false);
 const sidebarOpen = ref(false);
 const isDesktop = ref(false);
-
-const isRtl = computed(() => langStore.isRtl);
 
 const checkDesktop = () => {
   isDesktop.value = window.innerWidth >= 1024;
@@ -139,6 +133,7 @@ onMounted(() => {
 });
 
 // Watch for language changes
+import { watch } from 'vue';
 watch(() => langStore.current, () => {
   document.documentElement.setAttribute('dir', langStore.dir);
   document.documentElement.setAttribute('lang', langStore.current);

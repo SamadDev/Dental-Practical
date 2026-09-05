@@ -1,0 +1,218 @@
+/* ============================================
+   PRINT STYLES
+   Print styles for receipts, patient cards, and reports
+   ============================================ */
+
+@media print {
+  /* Hide elements not needed for printing */
+  .no-print,
+  .sidebar,
+  .header,
+  .footer,
+  .btn,
+  .dropdown,
+  .modal-footer,
+  .keyboard-shortcuts-hint,
+  [role="toolbar"],
+  .hide-on-print {
+    display: none !important;
+  }
+
+  /* Reset background colors */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  /* Ensure white background for all containers */
+  .bg-white,
+  .panel,
+  .card,
+  .bg-slate-50,
+  .bg-gray-50,
+  .dark\:bg-gray-800 {
+    background: white !important;
+    border-color: #ddd !important;
+  }
+
+  /* Improve text readability */
+  .text-slate-600,
+  .text-slate-500,
+  .text-gray-500 {
+    color: #333 !important;
+  }
+
+  .text-slate-700,
+  .text-gray-700,
+  .text-slate-900 {
+    color: #111 !important;
+  }
+
+  /* Use system fonts for printing */
+  * {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+
+  /* Links - show URL after link text */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+  }
+
+  /* Avoid page breaks inside tables */
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Avoid page breaks inside cards */
+  .card,
+  .panel {
+    page-break-inside: avoid;
+  }
+
+  /* Headers at top of each page */
+  thead {
+    display: table-header-group;
+  }
+
+  /* Footer with page numbers */
+  @page:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Receipt specific styles */
+  .receipt {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px dashed #ccc;
+  }
+
+  .receipt-header {
+    text-align: center;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+
+  .receipt-items {
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .receipt-total {
+    font-weight: bold;
+    font-size: 14pt;
+    margin-top: 10px;
+  }
+
+  /* Patient card styles */
+  .patient-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .patient-card-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Visit summary */
+  .visit-summary {
+    margin-bottom: 20px;
+  }
+
+  .visit-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dotted #eee;
+  }
+
+  /* Invoice styles */
+  .invoice {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+
+  .invoice-table th {
+    background: #f5f5f5;
+  }
+
+  /* Treatment plan */
+  .treatment-plan {
+    margin-bottom: 20px;
+  }
+
+  .treatment-item {
+    padding: 10px;
+    border-left: 3px solid #E73F1E;
+    margin-bottom: 10px;
+    background: #f9f9f9;
+  }
+
+  /* Lab results */
+  .lab-result {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .lab-result-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+  }
+
+  /* Dental chart print */
+  .dental-chart-print {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* Avoid cutting images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Force background prints */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

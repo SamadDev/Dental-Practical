@@ -1,89 +1,100 @@
 <template>
-  <header class="z-40 shadow-lg bg-white dark:bg-[#1a1f2e] border-b border-gray-200 dark:border-gray-700">
-    <div class="shadow-sm">
-      <div class="relative bg-gradient-to-r from-gray-50 via-gray-50 to-gray-100 dark:from-[#1a1f2e] dark:via-[#1a1f2e] dark:to-[#252b3a] flex w-full items-center px-5 py-3">
-        <div class="flex items-center ltr:mr-auto rtl:ml-auto">
-          <button
-            href="javascript:;"
-            class="flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60 ltr:mr-2 rtl:ml-2"
-            @click="toggleSidebar"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 12h18M3 6h18M3 18h18" />
-            </svg>
-          </button>
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white">{{ pageTitle }}</h2>
+  <header class="app-header">
+    <div class="header-content">
+      <!-- Left: Menu button + Title -->
+      <div class="header-left">
+        <button
+          type="button"
+          class="menu-toggle"
+          @click="toggleSidebar"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          </svg>
+        </button>
+        <div class="header-title">
+          <h1 class="title-text">{{ pageTitle }}</h1>
+        </div>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="header-right">
+        <!-- Date/Time -->
+        <div class="header-datetime">
+          <span class="datetime-text">{{ currentDate }}</span>
         </div>
 
-        <div class="flex items-center space-x-1.5 ltr:space-x-reverse">
+        <!-- Print Button -->
+        <button
+          type="button"
+          class="header-btn"
+          @click="print"
+          title="Print"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+        </button>
+
+        <!-- Language Dropdown -->
+        <div class="header-dropdown">
           <button
-            href="javascript:;"
-            class="flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-            @click="print"
+            type="button"
+            class="header-btn"
+            @click="showLangDropdown = !showLangDropdown"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-              <rect x="6" y="14" width="12" height="8"/>
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
             </svg>
           </button>
-
-          <div class="dropdown shrink-0">
+          <div v-if="showLangDropdown" class="dropdown-menu">
             <button
+              v-for="langOption in languages"
+              :key="langOption.code"
               type="button"
-              class="flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-              @click="showLangDropdown = !showLangDropdown"
+              class="dropdown-item"
+              :class="{ 'dropdown-item--active': lang.current === langOption.code }"
+              @click="changeLanguage(langOption.code)"
             >
-              <Icon name="globe" class="w-5 h-5" />
+              {{ langOption.label }}
             </button>
-            <ul v-if="showLangDropdown" class="grid grid-cols-2 gap-2 p-2 w-[200px] font-semibold">
-              <li v-for="langOption in languages" :key="langOption.code">
-                <button
-                  type="button"
-                  class="w-full flex items-center hover:text-primary"
-                  :class="lang.current === langOption.code ? 'text-primary bg-primary/10' : 'text-gray-700 dark:text-gray-300'"
-                  @click="changeLanguage(langOption.code)"
-                >
-                  {{ langOption.label }}
-                </button>
-              </li>
-            </ul>
           </div>
+        </div>
 
-          <div class="dropdown shrink-0">
-            <button
-              type="button"
-              class="relative group block"
-              @click="showUserDropdown = !showUserDropdown"
-            >
-              <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+        <!-- User Dropdown -->
+        <div class="header-dropdown">
+          <button
+            type="button"
+            class="user-btn"
+            @click="showUserDropdown = !showUserDropdown"
+          >
+            <div class="user-avatar">
+              {{ userInitials }}
+            </div>
+          </button>
+          <div v-if="showUserDropdown" class="dropdown-menu dropdown-menu--user">
+            <div class="user-info">
+              <div class="user-avatar-lg">
                 {{ userInitials }}
               </div>
+              <div class="user-details">
+                <span class="user-name">{{ user?.name }}</span>
+                <span class="user-email">{{ user?.email }}</span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button
+              type="button"
+              class="dropdown-item dropdown-item--danger"
+              @click="handleLogout"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+              {{ $t('common.logout') }}
             </button>
-            <ul v-if="showUserDropdown" class="!py-0 w-[200px] font-semibold">
-              <li>
-                <div class="flex items-center px-4 py-4">
-                  <div class="flex-none">
-                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
-                      {{ userInitials }}
-                    </div>
-                  </div>
-                  <div class="ltr:pl-4 rtl:pr-4 truncate">
-                    <h4 class="text-base">{{ user?.name }}</h4>
-                    <span class="text-black/60 dark:text-dark-light/60">{{ user?.email }}</span>
-                  </div>
-                </div>
-              </li>
-              <li class="border-t border-white-light dark:border-white-light/10">
-                <button
-                  type="button"
-                  class="text-danger !py-3 flex items-center"
-                  @click="handleLogout"
-                >
-                  <Icon name="log-out" class="w-4 h-4 ltr:mr-2 rtl:ml-2 rotate-90" />
-                  {{ $t('common.logout') }}
-                </button>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
@@ -95,7 +106,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import Icon from '../Icon.vue';
 import { useLangStore } from '../../store/lang';
 import { useAuth } from '../../composables/useAuth';
 
@@ -107,6 +117,7 @@ const emit = defineEmits(['toggle-sidebar']);
 
 const showLangDropdown = ref(false);
 const showUserDropdown = ref(false);
+const currentDate = ref('');
 
 const languages = [
   { code: 'en', label: 'English' },
@@ -124,6 +135,19 @@ const pageTitle = computed(() => {
   if (name) return t(`nav.${name}`, route.name);
   return '';
 });
+
+function updateDateTime() {
+  const now = new Date();
+  const options = {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+  currentDate.value = now.toLocaleDateString('en-US', options);
+}
 
 function changeLanguage(code) {
   lang.set(code);
@@ -146,13 +170,15 @@ function print() {
 }
 
 function handleClickOutside(event) {
-  if (!event.target.closest('.dropdown')) {
+  if (!event.target.closest('.header-dropdown')) {
     showLangDropdown.value = false;
     showUserDropdown.value = false;
   }
 }
 
 onMounted(() => {
+  updateDateTime();
+  setInterval(updateDateTime, 60000);
   document.addEventListener('click', handleClickOutside);
 });
 
@@ -160,3 +186,287 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 </script>
+
+<style scoped>
+.app-header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+html.dark .app-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.menu-toggle:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+html.dark .menu-toggle:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+html.dark .title-text {
+  color: #f1f5f9;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-datetime {
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+html.dark .header-datetime {
+  background: #334155;
+}
+
+.datetime-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+html.dark .datetime-text {
+  color: #94a3b8;
+}
+
+.header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.header-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+html.dark .header-btn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.header-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 180px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+}
+
+html.dark .dropdown-menu {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  border-radius: 8px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+html.dark .dropdown-item {
+  color: #cbd5e1;
+}
+
+html.dark .dropdown-item:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.dropdown-item--active {
+  background: #FEE2E2;
+  color: #dc2626;
+}
+
+html.dark .dropdown-item--active {
+  background: rgba(231, 63, 30, 0.2);
+  color: #fca5a5;
+}
+
+.dropdown-item--danger {
+  color: #dc2626;
+}
+
+.dropdown-item--danger:hover {
+  background: #FEE2E2;
+}
+
+html.dark .dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E73F1E 0%, #dc2626 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(231, 63, 30, 0.3);
+  transition: transform 0.2s;
+}
+
+.user-btn:hover .user-avatar {
+  transform: scale(1.05);
+}
+
+.dropdown-menu--user {
+  min-width: 240px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.user-avatar-lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E73F1E 0%, #dc2626 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.dark .user-name {
+  color: #f1f5f9;
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.dark .user-email {
+  color: #94a3b8;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.5rem 0;
+}
+
+html.dark .dropdown-divider {
+  background: #334155;
+}
+
+@media (max-width: 768px) {
+  .header-datetime {
+    display: none;
+  }
+}
+</style>

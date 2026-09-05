@@ -27,30 +27,34 @@
     <!-- Stats Grid -->
     <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       <div v-for="i in 6" :key="i" class="panel animate-pulse">
-        <div class="h-10 w-10 bg-gray-200 rounded-lg mb-3"></div>
+        <div class="h-10 w-10 bg-gray-200 rounded-xl mb-3"></div>
         <div class="h-6 bg-gray-200 rounded w-20 mb-2"></div>
         <div class="h-4 bg-gray-200 rounded w-16"></div>
       </div>
     </div>
 
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-      <div v-for="card in statCards" :key="card.id" class="panel hover:shadow-lg transition-shadow duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white" :style="{ background: card.gradient }">
-            <FontAwesomeIcon :icon="card.icon" />
-          </div>
-          <span v-if="card.trendClass" class="text-xs font-semibold px-2 py-1 rounded" :class="card.trendClass === 'up' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'">
-            <FontAwesomeIcon :icon="card.trendClass === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" class="mr-1" />
-          </span>
+      <div
+        v-for="card in statCards"
+        :key="card.id"
+        class="stat-card group"
+      >
+        <div class="stat-icon" :style="{ background: card.gradient }">
+          <FontAwesomeIcon :icon="card.icon" class="text-white text-lg" />
         </div>
-        <div class="text-2xl font-bold text-gray-800 dark:text-white mb-1">{{ formatValue(card.value) }}</div>
-        <div class="text-xs text-gray-500 font-medium">{{ $t(`dashboard.${card.label}`) }}</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ formatValue(card.value) }}</div>
+          <div class="stat-label">{{ $t(`dashboard.${card.label}`) }}</div>
+        </div>
+        <span v-if="card.trendClass" class="stat-trend" :class="card.trendClass === 'up' ? 'trend-up' : 'trend-down'">
+          <FontAwesomeIcon :icon="card.trendClass === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" />
+        </span>
       </div>
     </div>
 
     <!-- Quick Actions -->
     <div class="mb-6">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h2>
+      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Quick Actions</h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         <router-link
           v-for="action in quickActions"
@@ -58,11 +62,11 @@
           :to="action.path"
           class="quick-action-card"
         >
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white mb-2" :style="{ background: action.bgColor }">
-            <FontAwesomeIcon :icon="action.icon" class="text-lg" />
+          <div class="quick-action-icon" :style="{ background: action.bgColor }">
+            <FontAwesomeIcon :icon="action.icon" class="text-white text-lg" />
           </div>
-          <span class="text-sm font-medium text-gray-700">{{ action.label }}</span>
-          <span v-if="action.shortcut" class="text-[10px] text-gray-400 mt-1">{{ action.shortcut }}</span>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ action.label }}</span>
+          <span v-if="action.shortcut" class="text-[10px] text-slate-400 font-mono">{{ action.shortcut }}</span>
         </router-link>
       </div>
     </div>
@@ -71,8 +75,10 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <div class="panel lg:col-span-2">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <FontAwesomeIcon icon="fa-chart-area" class="text-primary" />
+          <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <FontAwesomeIcon icon="fa-chart-area" class="text-primary text-sm" />
+            </div>
             {{ $t('dashboard.revenue_trend') }}
           </h3>
         </div>
@@ -81,8 +87,10 @@
 
       <div class="panel">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <FontAwesomeIcon icon="fa-chart-pie" class="text-success" />
+          <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+              <FontAwesomeIcon icon="fa-chart-pie" class="text-success text-sm" />
+            </div>
             {{ $t('dashboard.patients_by_status') }}
           </h3>
         </div>
@@ -92,8 +100,10 @@
 
     <div class="panel">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-          <FontAwesomeIcon icon="fa-chart-bar" class="text-warning" />
+        <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+            <FontAwesomeIcon icon="fa-chart-bar" class="text-warning text-sm" />
+          </div>
           {{ $t('dashboard.expenses_breakdown') }}
         </h3>
       </div>
@@ -278,22 +288,148 @@ onMounted(load);
   margin: 0 auto;
 }
 
+/* Stat Card */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--card-accent, #E73F1E), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+html.dark .stat-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+html.dark .stat-value {
+  color: #f1f5f9;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.dark .stat-label {
+  color: #94a3b8;
+}
+
+.stat-trend {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+}
+
+.trend-up {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.trend-down {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Quick Action Card */
 .quick-action-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   text-align: center;
   transition: all 0.2s ease;
   text-decoration: none;
+  gap: 0.5rem;
 }
 
 .quick-action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   border-color: #E73F1E;
+}
+
+.quick-action-card:hover .quick-action-icon {
+  transform: scale(1.1);
+}
+
+html.dark .quick-action-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.quick-action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 </style>

@@ -1,154 +1,208 @@
+/* DataTable Custom Styles */
 .datatable > div {
-    @apply text-black dark:text-white-dark;
+    color: #1e293b;
+}
+
+html.dark .datatable > div {
+    color: #e2e8f0;
 }
 
 .datatable .bh-table-responsive {
-    @apply rounded-none;
+    border-radius: 0;
 }
 
-.datatable .bh-table-responsive table thead tr th {
-    @apply font-bold;
+.datatable .bh-table {
+    font-size: 0.875rem;
 }
 
+/* Pagination */
 .datatable .bh-pagination {
-    @apply font-medium;
+    font-weight: 500;
 }
 
 .datatable .bh-pagination .bh-page-item {
-    @apply w-9 h-9 bg-white-light text-dark border-white-light dark:border-[#191e3a] dark:bg-[#191e3a] dark:text-white-light hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: white;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+html.dark .datatable .bh-pagination .bh-page-item {
+    background: #1e293b;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+.datatable .bh-pagination .bh-page-item:hover {
+    background: #E73F1E;
+    color: white;
+    border-color: #E73F1E;
 }
 
 .datatable .bh-pagination .bh-page-item.bh-active {
-    @apply bg-primary text-white;
-}
-
-.datatable .bh-pagination .bh-page-item.bh-active {
-    @apply dark:bg-primary dark:text-white;
+    background: #E73F1E;
+    color: white;
+    border-color: #E73F1E;
 }
 
 .datatable .bh-pagination select {
-    @apply rounded-md border border-[#e0e6ed] bg-white pl-2 pr-4 py-1.5 text-sm font-semibold text-black focus:border-primary focus:ring-transparent dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark dark:focus:border-primary;
+    border-radius: 0.375rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    padding: 0.25rem 2rem 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+html.dark .datatable .bh-pagination select {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
 }
 
 .datatable .bh-pagination .bh-pagination-number {
-    @apply rtl:!ml-0 rtl:sm:mr-auto rtl:space-x-reverse;
+    margin-left: 0;
+    margin-right: 0;
 }
 
-.datatable .bh-pagination .bh-pagination-info > span {
-    @apply rtl:mr-0 rtl:ml-2;
-}
-
-.datatable.invoice-table .bh-pagination {
-    @apply px-5;
-}
-
+/* Filter */
 .datatable .bh-filter div button {
-    @apply block;
+    display: block;
 }
 
+/* Sort */
 .datatable .bh-sort svg polygon {
-    @apply dark:text-dark;
+    color: #64748b;
 }
 
+html.dark .datatable .bh-sort svg polygon {
+    color: #94a3b8;
+}
+
+/* Form Control */
 .datatable .bh-filter .bh-form-control {
-    @apply dark:!border-[#17263c] dark:!bg-[#121e32] dark:!text-white-dark dark:focus:!ring-transparent;
+    border-color: #e2e8f0;
 }
 
+html.dark .datatable .bh-filter .bh-form-control {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+/* Filter Menu */
 .datatable .bh-filter > button {
-    @apply dark:border-dark dark:bg-dark dark:text-white-dark dark:hover:text-white-light;
+    border-color: #e2e8f0;
+    background: white;
+    color: #475569;
+}
+
+html.dark .datatable .bh-filter > button {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
 }
 
 .datatable .bh-filter-menu button {
-    @apply dark:bg-[#1b2e4b] dark:hover:bg-[#181f32] dark:hover:text-white-dark;
+    background: white;
+}
+
+html.dark .datatable .bh-filter-menu button {
+    background: #1e293b;
+    color: #cbd5e1;
+}
+
+html.dark .datatable .bh-filter-menu button:hover {
+    background: #334155;
 }
 
 .datatable .bh-filter-menu button.active {
-    @apply dark:bg-[#181f32];
+    background: #334155;
 }
 
+/* Checkbox */
 .datatable .bh-table-responsive input[type='checkbox'] + div {
-    @apply rounded border-2 border-[#e0e6ed] bg-transparent text-primary dark:border-[#253b5c];
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    background: transparent;
 }
 
 .datatable .bh-table-responsive input[type='checkbox']:checked + div,
 .datatable .bh-table-responsive input[type='checkbox']:indeterminate + div {
-    @apply !bg-primary border-primary;
+    background: #E73F1E;
+    border-color: #E73F1E;
 }
 
-.datatable .bh-table-responsive table.table-bordered thead tr th,
-.datatable .bh-table-responsive table.table-bordered tbody tr td {
-    @apply dark:border-[#191e3a];
-}
-
+/* Sticky Columns */
 .datatable .bh-table-responsive table th.bh-sticky,
 .datatable .bh-table-responsive table td.bh-sticky {
-    @apply bg-[#f6f8fa]  dark:bg-[#1a2941];
+    background: #f8fafc;
 }
 
-.datatable .bh-filter-menu {
-    @apply min-w-max;
+html.dark .datatable .bh-table-responsive table th.bh-sticky,
+html.dark .datatable .bh-table-responsive table td.bh-sticky {
+    background: #1e293b;
 }
 
+/* Table Bordered */
+.datatable .bh-table-responsive table.bh-table-bordered thead tr th,
+.datatable .bh-table-responsive table.bh-table-bordered tbody tr td {
+    border-color: #e2e8f0;
+}
+
+html.dark .datatable .bh-table-responsive table.bh-table-bordered thead tr th,
+html.dark .datatable .bh-table-responsive table.bh-table-bordered tbody tr td {
+    border-color: #334155;
+}
+
+/* Table Hover */
+.datatable .bh-table-responsive table.bh-table-hover tbody tr:hover {
+    background: #f8fafc !important;
+}
+
+html.dark .datatable .bh-table-responsive table.bh-table-hover tbody tr:hover {
+    background: #1e293b !important;
+}
+
+/* Table Striped */
+.datatable .bh-table-responsive table.bh-table-striped tbody tr:nth-child(odd) {
+    background: rgba(241, 245, 249, 0.5);
+}
+
+html.dark .datatable .bh-table-responsive table.bh-table-striped tbody tr:nth-child(odd) {
+    background: rgba(30, 41, 59, 0.5);
+}
+
+/* Next Prev Pagination */
 .next-prev-pagination .bh-pagination > div {
-    @apply flex-col justify-center;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .next-prev-pagination .bh-pagination .bh-pagination-number {
-    @apply ltr:ml-0 rtl:mr-0;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .next-prev-pagination .bh-pagination .bh-page-item {
-    @apply w-max rounded-md px-5 py-2 bg-transparent border-primary text-primary dark:bg-transparent dark:border-primary dark:text-primary;
+    width: auto;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 1px solid #E73F1E;
+    color: #E73F1E;
 }
 
-.datatable .bh-table-responsive table.bh-table-bordered tbody tr td,
-.datatable .bh-table-responsive table.bh-table-bordered thead tr th {
-    @apply border-white-light/40 dark:border-[#191e3a];
-}
-
-.datatable .bh-table-responsive table.bh-table-hover tbody tr {
-    @apply hover:!bg-white-light/20 dark:hover:!bg-[#1a2941]/40;
-}
-
-.datatable .bh-table-responsive table.bh-table-striped tbody tr:nth-child(odd) {
-    @apply !bg-white-light/20 dark:!bg-[#1a2941]/40;
-}
-
-.datatable .bh-sort {
-    @apply rtl:ml-0 rtl:mr-3;
-}
-
-.datatable .bh-table-responsive table tbody tr td,
-.datatable .bh-table-responsive table tfoot tr th,
-.datatable .bh-table-responsive table thead tr th {
-    @apply rtl:text-right;
-}
-
-/* Enhanced table borders for better row separation */
-.datatable .bh-table-responsive table {
-    @apply border-collapse border border-gray-200 dark:border-gray-700;
-}
-
-.datatable .bh-table-responsive table thead tr th {
-    @apply border-b border-gray-300 dark:border-gray-600 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50;
-}
-
-.datatable .bh-table-responsive table thead tr th:last-child {
-    @apply border-r-0;
-}
-
-.datatable .bh-table-responsive table tbody tr {
-    @apply border-b border-gray-200 dark:border-gray-700;
-}
-
-.datatable .bh-table-responsive table tbody tr:last-child {
-    @apply border-b border-gray-200 dark:border-gray-700;
-}
-
-.datatable .bh-table-responsive table tbody td {
-    @apply border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/30;
-}
-
-.datatable .bh-table-responsive table tbody td:last-child {
-    @apply border-r-0;
+html.dark .next-prev-pagination .bh-pagination .bh-page-item {
+    background: transparent;
+    border-color: #E73F1E;
+    color: #E73F1E;
 }

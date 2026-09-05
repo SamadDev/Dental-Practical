@@ -48,6 +48,25 @@
       </div>
     </div>
 
+    <!-- Quick Actions -->
+    <div class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <router-link
+          v-for="action in quickActions"
+          :key="action.path"
+          :to="action.path"
+          class="quick-action-card"
+        >
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white mb-2" :style="{ background: action.bgColor }">
+            <FontAwesomeIcon :icon="action.icon" class="text-lg" />
+          </div>
+          <span class="text-sm font-medium text-gray-700">{{ action.label }}</span>
+          <span v-if="action.shortcut" class="text-[10px] text-gray-400 mt-1">{{ action.shortcut }}</span>
+        </router-link>
+      </div>
+    </div>
+
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <div class="panel lg:col-span-2">
@@ -107,6 +126,15 @@ const timeRangeOptions = [
   { label: 'last_30_days', value: 30 },
   { label: 'last_90_days', value: 90 },
 ];
+
+const quickActions = computed(() => [
+  { path: '/patients/new', label: t('patient.new'), icon: 'fa-user-plus', bgColor: '#E73F1E', shortcut: 'N' },
+  { path: '/queue', label: t('nav.queue'), icon: 'fa-clipboard-list', bgColor: '#4361ee', shortcut: 'Q' },
+  { path: '/calendar', label: t('calendar.title'), icon: 'fa-calendar', bgColor: '#8b5cf6', shortcut: 'C' },
+  { path: '/patients', label: t('nav.patients'), icon: 'fa-users', bgColor: '#00ab55', shortcut: 'P' },
+  { path: '/archive', label: t('nav.archive'), icon: 'fa-archive', bgColor: '#e2a03f', shortcut: 'A' },
+  { path: '/expenses', label: t('nav.expenses'), icon: 'fa-receipt', bgColor: '#e7515a', shortcut: 'E' },
+]);
 
 const rangeLabel = computed(() => {
   const days = selectedDays.value;
@@ -248,5 +276,24 @@ onMounted(load);
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
+}
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #E73F1E;
 }
 </style>

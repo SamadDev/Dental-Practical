@@ -135,9 +135,8 @@ watch(() => props.visit, async (v) => {
     aqsat_contract_id: v.aqsat_contract_id || null,
   };
   error.value = '';
-  // Load this patient's active installment contracts.
   if (v.patient_id) {
-    const { data } = await api.get('/aqsat-contracts', {
+    const { data } = await api.get('/payment-plans', {
       params: { patient_id: v.patient_id, status: 'active' },
     });
     contracts.value = data;

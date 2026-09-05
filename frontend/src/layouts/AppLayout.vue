@@ -1,5 +1,8 @@
 <template>
   <div class="relative min-h-screen" :class="{ 'dark text-white-dark': isDarkMode }">
+    <!-- Offline Indicator -->
+    <OfflineIndicator />
+
     <div
       v-if="isShowPageLoader"
       class="fixed inset-0 bg-white/20 dark:bg-[#060818]/20 z-[60] flex justify-center items-center"
@@ -45,16 +48,12 @@
       <!-- Sidebar -->
       <aside
         class="sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 lg:z-40"
-        :class="[
-          lang.isRtl ? 'rtl' : 'ltr',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        ]"
-        dir="ltr"
+        :class="sidebarOpen ? 'translate-x-0' : (lang.isRtl ? 'translate-x-full rtl:-translate-x-full' : '-translate-x-full')"
       >
         <AppSidebar @close="sidebarOpen = false" />
       </aside>
 
-      <div class="main-content flex flex-col flex-1 min-h-screen lg:ml-[260px]">
+      <div class="main-content flex flex-col flex-1 min-h-screen lg:ms-[260px]">
         <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
 
         <div class="p-4 md:p-6 animation">
@@ -91,6 +90,7 @@ import { ref, onMounted } from 'vue';
 import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
+import OfflineIndicator from '../components/OfflineIndicator.vue';
 
 const showTopButton = ref(false);
 const isDarkMode = ref(false);

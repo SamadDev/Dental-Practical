@@ -15,6 +15,7 @@ import DoctorsView        from '../views/DoctorsView.vue';
 import ReceptionistsView  from '../views/ReceptionistsView.vue';
 import ProfileView        from '../views/ProfileView.vue';
 import RolesView          from '../views/RolesView.vue';
+import CalendarView       from '../views/CalendarView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -27,13 +28,14 @@ const router = createRouter({
     { path: '/patients/:id',    component: PatientView,     name: 'patient',  props: true, meta: { permission: 'patients.view' } },
     { path: '/archive',         component: ArchiveView,       name: 'archive',  meta: { permission: 'archive.view' } },
     { path: '/dashboard',       component: DashboardView,     name: 'dashboard', meta: { permission: 'dashboard.view' } },
+    { path: '/calendar',        component: CalendarView,      name: 'calendar', meta: { permission: 'queue.view' } },
     { path: '/expenses',        component: ExpensesView,      name: 'expenses', meta: { permission: 'expenses.view' } },
     { path: '/payment-plans',   component: PaymentPlansView,  name: 'plans',    meta: { permission: 'payment_plans.view' } },
     { path: '/inventory',       component: InventoryView,     name: 'inventory', meta: { permission: 'inventory.view' } },
     { path: '/vendors',         component: VendorsView,       name: 'vendors',  meta: { permission: 'vendors.view' } },
     { path: '/doctors',         component: DoctorsView,       name: 'doctors',  meta: { permission: 'users.manage' } },
     { path: '/receptionists',   component: ReceptionistsView, name: 'receptionists', meta: { permission: 'users.manage' } },
-    { path: '/profile',          component: ProfileView,       name: 'profile',  meta: { permission: 'dashboard.view' } },
+    { path: '/profile',         component: ProfileView,       name: 'profile',  meta: { permission: 'dashboard.view' } },
     { path: '/roles',           component: RolesView,         name: 'roles',    meta: { permission: 'users.manage' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

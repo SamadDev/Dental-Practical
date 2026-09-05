@@ -1,8 +1,6 @@
 <template>
   <aside
-    class="sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-40 transition-all duration-300"
-    :class="lang.isRtl ? 'rtl' : 'ltr'"
-    dir="ltr"
+    class="sidebar min-h-screen h-full top-0 bottom-0 w-[260px] bg-white dark:bg-gray-800"
   >
     <nav class="bg-white dark:bg-gray-800 h-full">
       <div class="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -79,13 +77,14 @@ const { can } = useAuth();
 const allRoutes = [
   { name: 'home',       path: '/home',          icon: 'home' },
   { name: 'queue',      path: '/queue',         icon: 'calendar' },
+  { name: 'calendar',   path: '/calendar',      icon: 'calendar-alt' },
   { name: 'patients',   path: '/patients',       icon: 'users' },
   { name: 'archive',    path: '/archive',        icon: 'archive' },
-  { name: 'dashboard',  path: '/dashboard',       icon: 'bar-chart' },
-  { name: 'plans',      path: '/payment-plans', icon: 'credit-card' },
+  { name: 'dashboard',  path: '/dashboard',      icon: 'bar-chart' },
+  { name: 'plans',      path: '/payment-plans',  icon: 'credit-card' },
   { name: 'inventory',  path: '/inventory',     icon: 'package' },
-  { name: 'vendors',    path: '/vendors',       icon: 'factory' },
-  { name: 'expenses',   path: '/expenses',     icon: 'receipt' },
+  { name: 'vendors',    path: '/vendors',        icon: 'factory' },
+  { name: 'expenses',   path: '/expenses',       icon: 'receipt' },
 ];
 
 const managementRoutes = [

@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Dental Practi-Smart"
+    "title": "Dental Practi-Smart",
+    "offline_mode": "You're offline. Some features may be limited."
   },
   "nav": {
     "workspace": "Menu",
@@ -195,6 +196,17 @@
     "insurance_placeholder": "Policy number if applicable",
     "consent": "Patient Consent",
     "consent_text": "I agree to receive dental treatment and understand the associated risks."
+  },
+  "calendar": {
+    "title": "Appointment Calendar",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "no_appointments": "No appointments",
+    "more": "more",
+    "appointment_details": "Appointment Details",
+    "date": "Date",
+    "time": "Time"
   },
   "queue": {
     "title": "Today's Queue",

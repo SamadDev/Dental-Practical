@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <div class="fixed bottom-6 ltr:right-6 rtl:left-6 z-50">
+    <div class="fixed bottom-6 end-6 z-50">
       <button
         v-if="showTopButton"
         type="button"
@@ -52,13 +52,16 @@
         <aside
           v-show="sidebarOpen || isDesktop"
           class="sidebar fixed top-0 bottom-0 w-[280px] z-50 lg:z-40"
-          :class="sidebarRtlClass"
+          :class="lang.isRtl ? 'end-0' : 'start-0'"
         >
           <AppSidebar @close="sidebarOpen = false" />
         </aside>
       </transition>
 
-      <div class="main-content flex flex-col flex-1 min-h-screen lg:ms-[280px]" :class="{ 'lg:ms-0': !isDesktop }">
+      <div
+        class="main-content flex flex-col flex-1 min-h-screen"
+        :class="lang.isRtl ? 'lg:me-[280px]' : 'lg:ms-[280px]'"
+      >
         <AppHeader @toggle-sidebar="toggleSidebar" />
 
         <div class="p-4 md:p-6 animation">
@@ -68,7 +71,7 @@
         <AppFooter />
 
         <!-- Keyboard Shortcuts Hint -->
-        <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 hidden xl:flex items-center gap-3 bg-slate-800/90 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
+        <div class="fixed bottom-4 start-1/2 -translate-x-1/2 z-40 hidden xl:flex items-center gap-3 bg-slate-800/90 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
           <span class="flex items-center gap-1">
             <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">N</kbd> New Patient
           </span>
@@ -91,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
@@ -114,24 +117,17 @@ const checkDesktop = () => {
   }
 };
 
-const sidebarRtlClass = computed(() => {
-  if (lang.isRtl) {
-    return 'right-0 lg:right-0';
-  }
-  return 'left-0 lg:left-0';
-});
-
 const toggleSidebar = () => {
-  if (isDesktop.value) {
-    sidebarOpen.value = !sidebarOpen.value;
-  } else {
-    sidebarOpen.value = !sidebarOpen.value;
-  }
+  sidebarOpen.value = !sidebarOpen.value;
 };
 
 onMounted(() => {
   checkDesktop();
   window.addEventListener('resize', checkDesktop);
+
+  // Set initial direction
+  document.documentElement.setAttribute('dir', lang.dir);
+  document.documentElement.setAttribute('lang', lang.current);
 
   window.onscroll = () => {
     showTopButton.value = document.body.scrollTop > 50 || document.documentElement.scrollTop > 50;
@@ -151,7 +147,6 @@ const goToTop = () => {
 </script>
 
 <style scoped>
-/* Sidebar transitions */
 .sidebar-enter-active,
 .sidebar-leave-active {
   transition: transform 0.3s ease;
@@ -167,7 +162,6 @@ html[dir="rtl"] .sidebar-leave-to {
   transform: translateX(100%);
 }
 
-/* Overlay transitions */
 .overlay-enter-active,
 .overlay-leave-active {
   transition: opacity 0.3s ease;

@@ -39,22 +39,27 @@
 
     <div class="main-container text-slate-700 dark:text-gray-300 min-h-screen flex">
       <!-- Mobile Overlay -->
-      <div
-        v-if="sidebarOpen"
-        class="fixed inset-0 bg-black/50 z-40 lg:hidden"
-        @click="sidebarOpen = false"
-      ></div>
+      <transition name="overlay">
+        <div
+          v-if="sidebarOpen"
+          class="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+          @click="sidebarOpen = false"
+        ></div>
+      </transition>
 
       <!-- Sidebar -->
-      <aside
-        class="sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 lg:z-40"
-        :class="sidebarOpen ? 'translate-x-0' : (lang.isRtl ? 'translate-x-full rtl:-translate-x-full' : '-translate-x-full')"
-      >
-        <AppSidebar @close="sidebarOpen = false" />
-      </aside>
+      <transition name="sidebar">
+        <aside
+          v-show="sidebarOpen || isDesktop"
+          class="sidebar fixed top-0 bottom-0 w-[280px] z-50 lg:z-40"
+          :class="sidebarRtlClass"
+        >
+          <AppSidebar @close="sidebarOpen = false" />
+        </aside>
+      </transition>
 
-      <div class="main-content flex flex-col flex-1 min-h-screen lg:ms-[260px]">
-        <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+      <div class="main-content flex flex-col flex-1 min-h-screen lg:ms-[280px]" :class="{ 'lg:ms-0': !isDesktop }">
+        <AppHeader @toggle-sidebar="toggleSidebar" />
 
         <div class="p-4 md:p-6 animation">
           <router-view />
@@ -86,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
@@ -98,8 +103,36 @@ const showTopButton = ref(false);
 const isDarkMode = ref(false);
 const isShowPageLoader = ref(false);
 const sidebarOpen = ref(false);
+const isDesktop = ref(false);
+
+const checkDesktop = () => {
+  isDesktop.value = window.innerWidth >= 1024;
+  if (isDesktop.value) {
+    sidebarOpen.value = true;
+  } else {
+    sidebarOpen.value = false;
+  }
+};
+
+const sidebarRtlClass = computed(() => {
+  if (lang.isRtl) {
+    return 'right-0 lg:right-0';
+  }
+  return 'left-0 lg:left-0';
+});
+
+const toggleSidebar = () => {
+  if (isDesktop.value) {
+    sidebarOpen.value = !sidebarOpen.value;
+  } else {
+    sidebarOpen.value = !sidebarOpen.value;
+  }
+};
 
 onMounted(() => {
+  checkDesktop();
+  window.addEventListener('resize', checkDesktop);
+
   window.onscroll = () => {
     showTopButton.value = document.body.scrollTop > 50 || document.documentElement.scrollTop > 50;
   };
@@ -107,8 +140,41 @@ onMounted(() => {
   isDarkMode.value = document.querySelector('html')?.classList.contains('dark') || false;
 });
 
+onUnmounted(() => {
+  window.removeEventListener('resize', checkDesktop);
+});
+
 const goToTop = () => {
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
 };
 </script>
+
+<style scoped>
+/* Sidebar transitions */
+.sidebar-enter-active,
+.sidebar-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.sidebar-enter-from,
+.sidebar-leave-to {
+  transform: translateX(-100%);
+}
+
+html[dir="rtl"] .sidebar-enter-from,
+html[dir="rtl"] .sidebar-leave-to {
+  transform: translateX(100%);
+}
+
+/* Overlay transitions */
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
+}
+</style>

@@ -224,7 +224,7 @@
               <p v-if="errors.name" class="mt-1 text-xs text-red-500">{{ errors.name[0] }}</p>
             </div>
 
-            <div>
+            <div v-if="isFieldVisible('phone')">
               <label class="mb-1.5 block text-xs font-medium text-slate-600">
                 Phone
                 <span class="ml-1 text-slate-400 font-normal">(Auto-formatted)</span>
@@ -261,12 +261,12 @@
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
-              <div>
+              <div v-if="isFieldVisible('age')">
                 <label class="mb-1.5 block text-xs font-medium text-slate-600">Age</label>
                 <input v-model.number="form.age" type="number" min="0" max="120" inputmode="numeric"
                        placeholder="—" class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500" />
               </div>
-              <div>
+              <div v-if="isFieldVisible('gender')">
                 <label class="mb-1.5 block text-xs font-medium text-slate-600">Gender</label>
                 <div class="flex rounded-lg border-2 border-slate-200 overflow-hidden">
                   <button type="button" @click="form.gender = form.gender === 'male' ? '' : 'male'"
@@ -283,13 +283,13 @@
               </div>
             </div>
 
-            <div class="mt-4">
+            <div v-if="isFieldVisible('address')" class="mt-4">
               <label class="mb-1.5 block text-xs font-medium text-slate-600">Address</label>
               <input v-model="form.address" type="text" placeholder="Street address"
                      class="w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500" />
             </div>
 
-            <div class="mt-4">
+            <div v-if="isFieldVisible('medical_notes')" class="mt-4">
               <label class="mb-1.5 block text-xs font-medium text-slate-600">Medical Notes</label>
               <div class="mb-2 flex flex-wrap gap-1.5">
                 <button v-for="note in medicalNoteTemplates" :key="note.text" type="button"
@@ -304,7 +304,7 @@
           </div>
 
           <!-- Appointment Section -->
-          <div class="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100">
+          <div v-if="isFieldVisible('appointment_date')" class="bg-indigo-50/50 rounded-xl p-5 border border-indigo-100">
             <div class="flex items-center gap-2 mb-3">
               <span class="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400 text-xs font-bold text-white">3</span>
               <span class="text-sm font-semibold text-indigo-600">Schedule Appointment</span>
@@ -375,6 +375,7 @@ import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import { usePatientFormFields } from '../composables/usePatientFormFields';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
@@ -383,6 +384,7 @@ const { t } = useI18n();
 const router = useRouter();
 const { can } = useAuth();
 const toast = useToast();
+const { isFieldVisible } = usePatientFormFields();
 
 const medicalNoteTemplates = [
   { icon: '⚠', label: 'Allergy', text: 'Allergic to: ' },

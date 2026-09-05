@@ -52,7 +52,7 @@
         <aside
           v-show="sidebarOpen || isDesktop"
           class="sidebar fixed top-0 bottom-0 w-[280px] z-50 lg:z-40"
-          :class="lang.isRtl ? 'end-0' : 'start-0'"
+          :class="isRtl ? 'end-0' : 'start-0'"
         >
           <AppSidebar @close="sidebarOpen = false" />
         </aside>
@@ -60,7 +60,7 @@
 
       <div
         class="main-content flex flex-col flex-1 min-h-screen"
-        :class="lang.isRtl ? 'lg:me-[280px]' : 'lg:ms-[280px]'"
+        :class="isRtl ? 'lg:me-[280px]' : 'lg:ms-[280px]'"
       >
         <AppHeader @toggle-sidebar="toggleSidebar" />
 
@@ -94,19 +94,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import AppSidebar from '../components/layout/AppSidebar.vue';
 import AppHeader from '../components/layout/AppHeader.vue';
 import AppFooter from '../components/layout/AppFooter.vue';
 import OfflineIndicator from '../components/OfflineIndicator.vue';
 import { useLangStore } from '../store/lang';
 
-const lang = useLangStore();
+const langStore = useLangStore();
 const showTopButton = ref(false);
 const isDarkMode = ref(false);
 const isShowPageLoader = ref(false);
 const sidebarOpen = ref(false);
 const isDesktop = ref(false);
+
+const isRtl = computed(() => langStore.isRtl);
 
 const checkDesktop = () => {
   isDesktop.value = window.innerWidth >= 1024;
@@ -126,14 +128,20 @@ onMounted(() => {
   window.addEventListener('resize', checkDesktop);
 
   // Set initial direction
-  document.documentElement.setAttribute('dir', lang.dir);
-  document.documentElement.setAttribute('lang', lang.current);
+  document.documentElement.setAttribute('dir', langStore.dir);
+  document.documentElement.setAttribute('lang', langStore.current);
 
   window.onscroll = () => {
     showTopButton.value = document.body.scrollTop > 50 || document.documentElement.scrollTop > 50;
   };
 
   isDarkMode.value = document.querySelector('html')?.classList.contains('dark') || false;
+});
+
+// Watch for language changes
+watch(() => langStore.current, () => {
+  document.documentElement.setAttribute('dir', langStore.dir);
+  document.documentElement.setAttribute('lang', langStore.current);
 });
 
 onUnmounted(() => {

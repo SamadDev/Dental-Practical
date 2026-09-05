@@ -14,6 +14,17 @@
           </div>
           <span class="text-lg font-bold text-gray-800 dark:text-white">DancDent</span>
         </router-link>
+
+        <!-- Mobile Close Button -->
+        <button
+          type="button"
+          class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          @click="$emit('close')"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
 
       <div class="h-[calc(100vh-80px)] overflow-y-auto py-4">
@@ -23,6 +34,7 @@
               :to="item.path"
               class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
               :class="$route.path === item.path || $route.path.startsWith(item.path + '/') ? 'bg-primary/10 text-primary dark:bg-primary/20 font-medium' : ''"
+              @click="$emit('close')"
             >
               <Icon :name="item.icon" class="h-5 w-5 flex-shrink-0" />
               <span class="text-sm font-medium">{{ $t(`nav.${item.name}`) }}</span>
@@ -40,6 +52,7 @@
                 :to="item.path"
                 class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
                 :class="$route.path === item.path || $route.path.startsWith(item.path + '/') ? 'bg-primary/10 text-primary dark:bg-primary/20 font-medium' : ''"
+                @click="$emit('close')"
               >
                 <Icon :name="item.icon" class="h-5 w-5 flex-shrink-0" />
                 <span class="text-sm font-medium">{{ $t(`nav.${item.name}`) }}</span>
@@ -57,6 +70,8 @@ import { computed } from 'vue';
 import Icon from '../Icon.vue';
 import { useLangStore } from '../../store/lang';
 import { useAuth } from '../../composables/useAuth';
+
+defineEmits(['close']);
 
 const lang = useLangStore();
 const { can } = useAuth();

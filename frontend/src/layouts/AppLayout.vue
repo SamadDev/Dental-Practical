@@ -5,7 +5,7 @@
       class="fixed inset-0 bg-white/20 dark:bg-[#060818]/20 z-[60] flex justify-center items-center"
     >
       <div class="mb-20">
-        <svg width="64" height="64" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg" fill="#4361ee">
+        <svg width="64" height="64" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg" fill="#E73F1E">
           <path
             d="M67.447 58c5.523 0 10-4.477 10-10s-4.477-10-10-10-10 4.477-10 10 4.477 10 10 10zm9.448 9.447c0 5.523 4.477 10 10 10 5.522 0 10-4.477 10-10s-4.478-10-10-10c-5.523 0-10 4.477-10 10zm-9.448 9.448c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10s10-4.478 10-10c0-5.523-4.477-10-10-10zM58 67.447c0-5.523-4.477-10-10-10s-10 4.477-10 10 4.477 10 10 10 10-4.477 10-10z"
           >
@@ -35,19 +35,36 @@
     </div>
 
     <div class="main-container text-slate-700 dark:text-gray-300 min-h-screen flex">
-      <AppSidebar />
+      <!-- Mobile Overlay -->
+      <div
+        v-if="sidebarOpen"
+        class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        @click="sidebarOpen = false"
+      ></div>
 
-      <div class="main-content flex flex-col flex-1 min-h-screen">
-        <AppHeader />
+      <!-- Sidebar -->
+      <aside
+        class="sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 lg:z-40"
+        :class="[
+          lang.isRtl ? 'rtl' : 'ltr',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        ]"
+        dir="ltr"
+      >
+        <AppSidebar @close="sidebarOpen = false" />
+      </aside>
 
-        <div class="p-6 animation">
+      <div class="main-content flex flex-col flex-1 min-h-screen lg:ml-[260px]">
+        <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+
+        <div class="p-4 md:p-6 animation">
           <router-view />
         </div>
 
         <AppFooter />
 
         <!-- Keyboard Shortcuts Hint -->
-        <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 hidden md:flex items-center gap-3 bg-slate-800/90 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
+        <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 hidden xl:flex items-center gap-3 bg-slate-800/90 text-white text-xs px-4 py-2 rounded-full backdrop-blur-sm">
           <span class="flex items-center gap-1">
             <kbd class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] font-mono">N</kbd> New Patient
           </span>
@@ -78,6 +95,7 @@ import AppFooter from '../components/layout/AppFooter.vue';
 const showTopButton = ref(false);
 const isDarkMode = ref(false);
 const isShowPageLoader = ref(false);
+const sidebarOpen = ref(false);
 
 onMounted(() => {
   window.onscroll = () => {

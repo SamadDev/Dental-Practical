@@ -103,6 +103,7 @@ const route = useRoute();
 const { t, locale } = useI18n();
 const lang = useLangStore();
 const { user, logout } = useAuth();
+const emit = defineEmits(['toggle-sidebar']);
 
 const showLangDropdown = ref(false);
 const showUserDropdown = ref(false);
@@ -137,7 +138,7 @@ async function handleLogout() {
 }
 
 function toggleSidebar() {
-  // Emit event to toggle sidebar
+  emit('toggle-sidebar');
 }
 
 function print() {

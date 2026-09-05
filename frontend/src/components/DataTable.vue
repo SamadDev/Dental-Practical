@@ -1,25 +1,18 @@
 <template>
-  <div class="pb-0 mt-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+  <div class="pb-0 mt-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
     <!-- Header Bar: Search + Actions -->
     <div class="flex flex-col lg:flex-row gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
       <!-- Search -->
       <div class="flex-1 min-w-0">
         <div class="relative">
-          <i class="fas fa-search absolute top-1/2 -translate-y-1/2 text-gray-400 text-xs" :class="isRtl ? 'end-3' : 'start-3'"></i>
+          <i class="fas fa-search absolute top-1/2 -translate-y-1/2 text-gray-400 text-xs start-3"></i>
           <input
             type="text"
-            class="form-input form-input-sm w-full py-2"
-            :class="isRtl ? 'pe-10 ps-4' : 'ps-9 pe-4'"
+            class="form-input form-input-sm w-full py-2 ps-9 pe-4"
             :placeholder="placeholder || 'Search'"
             :value="search"
             @input="$emit('input', $event.target.value)"
           />
-          <button v-if="supportsVoice" type="button"
-                  class="absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                  :class="isRtl ? 'start-2' : 'end-2'"
-                  @click="startVoiceSearch">
-            <i class="fas fa-microphone text-xs" :class="{ 'text-red-500 animate-pulse': isListening }"></i>
-          </button>
         </div>
       </div>
 
@@ -42,8 +35,7 @@
             <i class="fas fa-columns text-[10px]"></i>
             <span class="hidden sm:inline">Cols</span>
           </button>
-          <ul v-if="showColumnMenu" class="dropdown-menu absolute z-50 mt-1 min-w-[150px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-              :class="isRtl ? 'start-0' : 'end-0'">
+          <ul v-if="showColumnMenu" class="dropdown-menu absolute z-50 mt-1 min-w-[150px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800 end-0">
             <li v-for="col in columns" :key="col.key">
               <label class="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <input
@@ -67,30 +59,27 @@
     <div class="table-wrapper">
       <!-- Desktop Table -->
       <div class="hidden lg:block">
-        <div class="table-container">
+        <div class="table-container overflow-x-auto">
           <table class="data-table w-full text-sm">
             <thead class="data-table-head">
               <tr>
                 <th
                   v-for="col in visibleCols" :key="col.key"
                   scope="col"
-                  class="px-4 py-3.5 font-semibold text-end text-[11px] uppercase tracking-wider whitespace-nowrap transition-colors"
+                  class="px-4 py-3.5 font-semibold text-sm uppercase tracking-wider whitespace-nowrap transition-colors text-start"
                   :class="[
                     col.thClass,
                     col.printHidden ? 'no-print' : '',
-                    col.sticky === 'start' ? 'sticky z-20' : '',
-                    col.sticky === 'end' ? 'sticky z-20' : '',
                     sort === col.key ? 'bg-indigo-50/70 dark:bg-indigo-950/30' : '',
                   ]"
                   :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
                   :aria-sort="ariaSort(col)"
                 >
-                  <div class="flex items-center gap-1.5" :class="col.align === 'end' ? 'justify-end' : 'justify-start'">
+                  <div class="flex items-center gap-1.5">
                     <button
                       v-if="col.sortable"
                       type="button"
                       class="group inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:hover:bg-gray-700"
-                      :class="col.align === 'end' ? 'flex-row-reverse' : ''"
                       @click="$emit('sort', col.key, col.initialDir || 'asc')"
                     >
                       <span
@@ -153,13 +142,10 @@
               >
                 <td
                   v-for="col in visibleCols" :key="col.key"
-                  class="px-4 py-3.5 align-middle whitespace-nowrap"
+                  class="px-4 py-3.5 align-middle whitespace-nowrap text-sm"
                   :class="[
-                    col.align === 'end' ? 'text-end' : 'text-start',
                     col.tdClass,
                     col.printHidden ? 'no-print' : '',
-                    col.sticky === 'start' ? 'sticky z-10 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-[inset_8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
-                    col.sticky === 'end' ? 'sticky z-10 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-[inset_-8px_0_8px_-8px_rgba(0,0,0,0.04)]' : '',
                   ]"
                   :style="col.width ? { width: col.width, minWidth: col.width } : undefined"
                 >
@@ -230,7 +216,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import DataTablePagination from './DataTablePagination.vue';
-import { useLangStore } from '../store/lang';
 
 const props = defineProps({
   columns:        { type: Array,   required: true },
@@ -252,43 +237,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['sort', 'reset', 'row-click', 'page', 'update:perPage', 'input']);
-
-const langStore = useLangStore();
-const isRtl = computed(() => langStore.isRtl);
-
-// Voice search
-const supportsVoice = ref(false);
-const isListening = ref(false);
-let recognition = null;
-
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  supportsVoice.value = true;
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = 'en-US';
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    emit('input', transcript);
-    isListening.value = false;
-  };
-
-  recognition.onend = () => {
-    isListening.value = false;
-  };
-
-  recognition.onerror = () => {
-    isListening.value = false;
-  };
-}
-
-function startVoiceSearch() {
-  if (!supportsVoice.value || isListening.value) return;
-  isListening.value = true;
-  recognition.start();
-}
 
 // Column visibility
 const showColumnMenu = ref(false);

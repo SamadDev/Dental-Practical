@@ -1,116 +1,156 @@
 <template>
-  <div class="dashboard-container">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-          <FontAwesomeIcon icon="fa-chart-pie" class="text-white text-lg" />
+  <div class="dashboard-v2">
+    <!-- Header -->
+    <header class="dash-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <FontAwesomeIcon icon="fa-chart-pie" />
         </div>
-        <div>
-          <h1 class="text-xl font-bold text-gray-800 dark:text-white">{{ $t('dashboard.title') }}</h1>
-          <p class="text-sm text-gray-500">{{ rangeLabel }}</p>
+        <div class="brand-text">
+          <h1>{{ $t('dashboard.title') }}</h1>
+          <span class="brand-sub">{{ rangeLabel }}</span>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <select v-model="selectedDays" @change="load" class="form-input form-input-sm w-auto">
+      <div class="header-controls">
+        <select v-model="selectedDays" @change="load" class="control-select">
           <option v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
             {{ $t(`dashboard.${opt.label}`) }}
           </option>
         </select>
       </div>
+    </header>
+
+    <!-- Error -->
+    <div v-if="error" class="error-toast">
+      <FontAwesomeIcon icon="fa-circle-exclamation" />
+      <span>{{ $t('dashboard.load_error') }}</span>
+      <button @click="load">{{ $t('dashboard.retry') }}</button>
     </div>
 
-    <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-      {{ $t('dashboard.load_error') }}
-      <button @click="load" class="underline ml-2">{{ $t('dashboard.retry') }}</button>
-    </div>
-
-    <!-- Stats Grid -->
-    <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-      <div v-for="i in 6" :key="i" class="panel animate-pulse">
-        <div class="h-10 w-10 bg-gray-200 rounded-xl mb-3"></div>
-        <div class="h-6 bg-gray-200 rounded w-20 mb-2"></div>
-        <div class="h-4 bg-gray-200 rounded w-16"></div>
-      </div>
-    </div>
-
-    <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-      <div
-        v-for="card in statCards"
-        :key="card.id"
-        class="stat-card group"
-      >
-        <div class="stat-icon" :style="{ background: card.gradient }">
-          <FontAwesomeIcon :icon="card.icon" class="text-white text-lg" />
+    <!-- Stats Row -->
+    <section class="stats-row">
+      <template v-if="loading">
+        <div v-for="i in 6" :key="i" class="stat-tile skeleton">
+          <div class="tile-icon-skel"></div>
+          <div class="tile-data">
+            <div class="skel-bar w-16"></div>
+            <div class="skel-bar w-24 mt-2"></div>
+          </div>
         </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ formatValue(card.value) }}</div>
-          <div class="stat-label">{{ $t(`dashboard.${card.label}`) }}</div>
+      </template>
+      <template v-else>
+        <div
+          v-for="(stat, idx) in statCards"
+          :key="stat.id"
+          class="stat-tile"
+          :class="stat.class"
+          :style="{ '--delay': idx * 60 + 'ms' }"
+        >
+          <div class="tile-bg">
+            <svg class="tile-pattern" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <circle cx="80" cy="20" r="60" fill="currentColor" opacity="0.08"/>
+              <circle cx="20" cy="80" r="40" fill="currentColor" opacity="0.05"/>
+            </svg>
+          </div>
+          <div class="tile-icon">
+            <FontAwesomeIcon :icon="stat.icon" />
+          </div>
+          <div class="tile-content">
+            <div class="tile-value">{{ formatValue(stat.value) }}</div>
+            <div class="tile-label">{{ $t(`dashboard.${stat.label}`) }}</div>
+          </div>
+          <div class="tile-meta" v-if="stat.trend">
+            <span class="meta-badge" :class="stat.trend">
+              <FontAwesomeIcon :icon="stat.trend === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" />
+              {{ stat.change }}%
+            </span>
+          </div>
         </div>
-        <span v-if="card.trendClass" class="stat-trend" :class="card.trendClass === 'up' ? 'trend-up' : 'trend-down'">
-          <FontAwesomeIcon :icon="card.trendClass === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" />
-        </span>
+      </template>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+      <!-- Revenue Area -->
+      <div class="chart-block primary-block">
+        <div class="block-header">
+          <div class="block-info">
+            <div class="block-icon primary">
+              <FontAwesomeIcon icon="fa-chart-area" />
+            </div>
+            <div>
+              <h3>{{ $t('dashboard.revenue_trend') }}</h3>
+              <p>{{ formatValue(metrics.true_net_profit) }} {{ $t('dashboard.true_net_profit') }}</p>
+            </div>
+          </div>
+          <span class="time-badge">{{ selectedDays }}d</span>
+        </div>
+        <div class="chart-area">
+          <VueApexCharts type="area" height="260" :options="revenueChartOptions" :series="revenueSeries" />
+        </div>
       </div>
-    </div>
+
+      <!-- Side Cards -->
+      <div class="side-cards">
+        <!-- Patients Donut -->
+        <div class="chart-block donut-block">
+          <div class="block-header">
+            <div class="block-info">
+              <div class="block-icon success">
+                <FontAwesomeIcon icon="fa-pie-chart" />
+              </div>
+              <div>
+                <h3>{{ $t('dashboard.patients_by_status') }}</h3>
+                <p>{{ totalPatients }} {{ $t('common.total') }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-area donut-area">
+            <VueApexCharts type="donut" height="200" :options="patientsChartOptions" :series="patientsSeries" />
+          </div>
+        </div>
+
+        <!-- Expenses Bar -->
+        <div class="chart-block bar-block">
+          <div class="block-header">
+            <div class="block-info">
+              <div class="block-icon warning">
+                <FontAwesomeIcon icon="fa-chart-bar" />
+              </div>
+              <div>
+                <h3>{{ $t('dashboard.expenses_breakdown') }}</h3>
+                <p>{{ formatValue(metrics.total_expenses) }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-area">
+            <VueApexCharts type="bar" height="160" :options="expensesChartOptions" :series="expensesSeries" />
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Quick Actions -->
-    <div class="mb-6">
-      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Quick Actions</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+    <section class="actions-section">
+      <h2 class="section-heading">{{ $t('dashboard.settings') }}</h2>
+      <div class="actions-grid">
         <router-link
           v-for="action in quickActions"
           :key="action.path"
           :to="action.path"
-          class="quick-action-card"
+          class="action-card"
+          :style="{ '--clr': action.bgColor }"
         >
-          <div class="quick-action-icon" :style="{ background: action.bgColor }">
-            <FontAwesomeIcon :icon="action.icon" class="text-white text-lg" />
+          <div class="action-icon">
+            <FontAwesomeIcon :icon="action.icon" />
           </div>
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ action.label }}</span>
-          <span v-if="action.shortcut" class="text-[10px] text-slate-400 font-mono">{{ action.shortcut }}</span>
+          <span class="action-label">{{ action.label }}</span>
+          <FontAwesomeIcon class="action-arrow" icon="fa-angle-right" />
         </router-link>
       </div>
-    </div>
+    </section>
 
-    <!-- Charts Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-      <div class="panel lg:col-span-2">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FontAwesomeIcon icon="fa-chart-area" class="text-primary text-sm" />
-            </div>
-            {{ $t('dashboard.revenue_trend') }}
-          </h3>
-        </div>
-        <VueApexCharts type="area" height="280" :options="revenueChartOptions" :series="revenueSeries" />
-      </div>
-
-      <div class="panel">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
-              <FontAwesomeIcon icon="fa-chart-pie" class="text-success text-sm" />
-            </div>
-            {{ $t('dashboard.patients_by_status') }}
-          </h3>
-        </div>
-        <VueApexCharts type="donut" height="220" :options="patientsChartOptions" :series="patientsSeries" />
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
-            <FontAwesomeIcon icon="fa-chart-bar" class="text-warning text-sm" />
-          </div>
-          {{ $t('dashboard.expenses_breakdown') }}
-        </h3>
-      </div>
-      <VueApexCharts type="bar" height="280" :options="expensesChartOptions" :series="expensesSeries" />
-    </div>
-
-    <!-- Patient Form Settings -->
+    <!-- Settings -->
     <PatientFieldsSettings />
   </div>
 </template>
@@ -138,13 +178,18 @@ const timeRangeOptions = [
 ];
 
 const quickActions = computed(() => [
-  { path: '/patients/new', label: t('patient.new'), icon: 'fa-user-plus', bgColor: '#E73F1E', shortcut: 'N' },
-  { path: '/queue', label: t('nav.queue'), icon: 'fa-clipboard-list', bgColor: '#4361ee', shortcut: 'Q' },
-  { path: '/calendar', label: t('calendar.title'), icon: 'fa-calendar', bgColor: '#8b5cf6', shortcut: 'C' },
-  { path: '/patients', label: t('nav.patients'), icon: 'fa-users', bgColor: '#00ab55', shortcut: 'P' },
-  { path: '/archive', label: t('nav.archive'), icon: 'fa-archive', bgColor: '#e2a03f', shortcut: 'A' },
-  { path: '/expenses', label: t('nav.expenses'), icon: 'fa-receipt', bgColor: '#e7515a', shortcut: 'E' },
+  { path: '/patients/new', label: t('patient.new'), icon: 'fa-user-plus', bgColor: '#E73F1E' },
+  { path: '/queue', label: t('nav.queue'), icon: 'fa-list-check', bgColor: '#3b82f6' },
+  { path: '/calendar', label: t('calendar.title'), icon: 'fa-calendar', bgColor: '#8b5cf6' },
+  { path: '/patients', label: t('nav.patients'), icon: 'fa-users', bgColor: '#10b981' },
+  { path: '/archive', label: t('nav.archive'), icon: 'fa-archive', bgColor: '#f59e0b' },
+  { path: '/expenses', label: t('nav.expenses'), icon: 'fa-file-invoice-dollar', bgColor: '#ef4444' },
 ]);
+
+const totalPatients = computed(() => {
+  if (!metrics.value.patients_data) return 0;
+  return metrics.value.patients_data.reduce((a, b) => a + b, 0);
+});
 
 const rangeLabel = computed(() => {
   const days = selectedDays.value;
@@ -154,111 +199,57 @@ const rangeLabel = computed(() => {
 });
 
 const statCards = computed(() => [
-  {
-    id: 'true_net_profit',
-    label: 'true_net_profit',
-    value: metrics.value.true_net_profit || 0,
-    icon: 'fa-chart-line',
-    gradient: 'linear-gradient(135deg, #00ab55 0%, #008f4c 100%)',
-    trendClass: 'up',
-  },
-  {
-    id: 'total_cash_collected',
-    label: 'total_cash_collected',
-    value: metrics.value.total_cash_collected || 0,
-    icon: 'fa-dollar-sign',
-    gradient: 'linear-gradient(135deg, #4361ee 0%, #3451d1 100%)',
-    trendClass: 'up',
-  },
-  {
-    id: 'active_customer_debt',
-    label: 'active_customer_debt',
-    value: metrics.value.active_customer_debt || 0,
-    icon: 'fa-users',
-    gradient: 'linear-gradient(135deg, #e7515a 0%, #d44352 100%)',
-    trendClass: 'down',
-  },
-  {
-    id: 'upcoming_aqsat_revenue',
-    label: 'upcoming_aqsat_revenue',
-    value: metrics.value.upcoming_aqsat_revenue || 0,
-    icon: 'fa-calendar-check',
-    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7648e0 100%)',
-    trendClass: 'up',
-  },
-  {
-    id: 'total_expenses',
-    label: 'total_expenses',
-    value: metrics.value.total_expenses || 0,
-    icon: 'fa-file-invoice-dollar',
-    gradient: 'linear-gradient(135deg, #e2a03f 0%, #cc8f38 100%)',
-    trendClass: 'down',
-  },
-  {
-    id: 'total_patients',
-    label: 'total_patients',
-    value: metrics.value.total_patients || 0,
-    icon: 'fa-user-plus',
-    gradient: 'linear-gradient(135deg, #2196f3 0%, #1c87d9 100%)',
-    trendClass: 'up',
-  },
+  { id: 'true_net_profit', label: 'true_net_profit', value: metrics.value.true_net_profit || 0, icon: 'fa-chart-line', class: 'tile-green', trend: 'up', change: 12 },
+  { id: 'total_cash_collected', label: 'total_cash_collected', value: metrics.value.total_cash_collected || 0, icon: 'fa-sack-dollar', class: 'tile-blue', trend: 'up', change: 8 },
+  { id: 'active_customer_debt', label: 'active_customer_debt', value: metrics.value.active_customer_debt || 0, icon: 'fa-hand-holding-dollar', class: 'tile-red', trend: 'down', change: 5 },
+  { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', class: 'tile-purple', trend: 'up', change: 15 },
+  { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', class: 'tile-orange', trend: 'down', change: 3 },
+  { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-users', class: 'tile-primary', trend: 'up', change: 22 },
 ]);
 
 const revenueChartOptions = computed(() => ({
-  chart: { toolbar: { show: false }, fontFamily: 'inherit', sparkline: { enabled: false } },
+  chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
   stroke: { curve: 'smooth', width: 3 },
-  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [0, 100] } },
-  colors: ['#4361ee'],
+  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 100] } },
+  colors: ['#E73F1E'],
   dataLabels: { enabled: false },
   xaxis: {
     categories: metrics.value.revenue_labels || [],
-    labels: { style: { colors: '#6b7280', fontSize: '12px' } },
+    labels: { style: { colors: '#9ca3af', fontSize: '11px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#6b7280', fontSize: '12px' }, formatter: (val) => formatIQD(val) } },
-  grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: false } } },
-  tooltip: { theme: 'light', y: { formatter: (val) => formatIQD(val) } },
+  yaxis: { labels: { style: { colors: '#9ca3af', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  grid: { borderColor: '#1f2937', strokeDashArray: 3, xaxis: { lines: { show: false } } },
+  tooltip: { theme: 'dark', y: { formatter: (v) => formatIQD(v) } },
 }));
 
 const revenueSeries = computed(() => [{ name: t('dashboard.revenue'), data: metrics.value.revenue_data || [] }]);
 
 const patientsChartOptions = computed(() => ({
-  legend: { position: 'bottom', fontSize: '13px', labels: { colors: '#6b7280' }, markers: { width: 8, height: 8, radius: 4 }, itemMargin: { horizontal: 12 } },
-  chart: { fontFamily: 'inherit' },
+  legend: { position: 'bottom', fontSize: '11px', labels: { colors: '#9ca3af' }, markers: { width: 8, height: 8, radius: 8 }, itemMargin: { horizontal: 6 } },
+  chart: { fontFamily: 'inherit', background: 'transparent' },
   labels: metrics.value.patients_labels || [],
-  colors: ['#00ab55', '#4361ee', '#e7515a', '#e2a03f', '#8b5cf6'],
+  colors: ['#10b981', '#3b82f6', '#ef4444', '#E73F1E', '#8b5cf6'],
   stroke: { width: 0 },
   dataLabels: { enabled: false },
-  plotOptions: {
-    pie: {
-      donut: {
-        size: '70%',
-        labels: {
-          show: true,
-          name: { fontSize: '14px', color: '#6b7280' },
-          value: { fontSize: '16px', fontWeight: 600, color: '#1f2937', formatter: (val) => val },
-          total: { show: true, label: 'Total', fontSize: '14px', color: '#6b7280', formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0) },
-        },
-      },
-    },
-  },
+  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, name: { fontSize: '11px', color: '#9ca3af' }, value: { fontSize: '14px', fontWeight: 600, color: '#f3f4f6', formatter: (v) => v }, total: { show: true, label: 'Total', fontSize: '11px', color: '#9ca3af', formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0) } } } } },
 }));
 
 const patientsSeries = computed(() => metrics.value.patients_data || []);
 
 const expensesChartOptions = computed(() => ({
-  chart: { toolbar: { show: false }, fontFamily: 'inherit' },
-  plotOptions: { bar: { borderRadius: 8, borderRadiusApplication: 'end', columnWidth: '40%' } },
-  colors: ['#e2a03f'],
+  chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
+  plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', columnWidth: '28%' } },
+  colors: ['#E73F1E'],
   xaxis: {
     categories: metrics.value.expenses_labels || [],
-    labels: { style: { colors: '#6b7280', fontSize: '12px' } },
+    labels: { style: { colors: '#9ca3af', fontSize: '10px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#6b7280', fontSize: '12px' }, formatter: (val) => formatIQD(val) } },
-  grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+  yaxis: { labels: { style: { colors: '#9ca3af', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  grid: { borderColor: '#1f2937', strokeDashArray: 3 },
   dataLabels: { enabled: false },
 }));
 
@@ -283,153 +274,449 @@ onMounted(load);
 </script>
 
 <style scoped>
-.dashboard-container {
+.dashboard-v2 {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 1.5rem 2rem;
+  min-height: 100vh;
+  background: #0f1419;
+  color: #e5e7eb;
 }
 
-/* Stat Card */
-.stat-card {
+/* Header */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #E73F1E 0%, #991b1b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.375rem;
+  box-shadow: 0 8px 24px -4px rgba(231, 63, 30, 0.4);
+}
+
+.brand-text h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f9fafb;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.header-controls {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  transition: all 0.2s ease;
+}
+
+.control-select {
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #1f2937;
+  color: #f3f4f6;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.control-select:focus {
+  border-color: #E73F1E;
+  box-shadow: 0 0 0 3px rgba(231, 63, 30, 0.2);
+}
+
+/* Error Toast */
+.error-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  color: #f87171;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.error-toast button {
+  margin-inline-start: auto;
+  padding: 0.375rem 0.75rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 1200px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Stat Tile */
+.stat-tile {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: #1a1f2e;
+  border-radius: 16px;
+  border: 1px solid #2d3748;
   overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeSlide 0.4s ease backwards;
+  animation-delay: var(--delay, 0ms);
 }
 
-.stat-card::before {
-  content: '';
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--tile-color, #E73F1E);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
+}
+
+.stat-tile.skeleton {
+  animation: none;
+}
+
+.tile-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--card-accent, #E73F1E), transparent);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  inset: 0;
+  pointer-events: none;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.tile-pattern {
+  width: 100%;
+  height: 100%;
+  color: var(--tile-color, #E73F1E);
 }
 
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-html.dark .stat-card {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
+.tile-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 1.125rem;
+  margin-bottom: 0.875rem;
+  background: var(--tile-color, #E73F1E);
+  color: white;
+  box-shadow: 0 4px 12px var(--tile-shadow, rgba(231, 63, 30, 0.3));
 }
 
-.stat-content {
+.tile-content {
   flex: 1;
-  min-width: 0;
 }
 
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
+.tile-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #f9fafb;
+  letter-spacing: -0.02em;
   line-height: 1.2;
-  white-space: nowrap;
+  margin-bottom: 0.25rem;
 }
 
-html.dark .stat-value {
-  color: #f1f5f9;
+.tile-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  font-weight: 600;
 }
 
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-html.dark .stat-label {
-  color: #94a3b8;
-}
-
-.stat-trend {
+.tile-meta {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  top: 0.875rem;
+  inset-inline-end: 0.875rem;
+}
+
+.meta-badge {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.625rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.6875rem;
+  font-weight: 700;
 }
 
-.trend-up {
-  background: #dcfce7;
-  color: #16a34a;
+.meta-badge.up {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
 }
 
-.trend-down {
-  background: #fee2e2;
-  color: #dc2626;
+.meta-badge.down {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
 }
 
-/* Quick Action Card */
-.quick-action-card {
+/* Tile Colors */
+.tile-green { --tile-color: #10b981; --tile-shadow: rgba(16, 185, 129, 0.3); }
+.tile-blue { --tile-color: #3b82f6; --tile-shadow: rgba(59, 130, 246, 0.3); }
+.tile-red { --tile-color: #ef4444; --tile-shadow: rgba(239, 68, 68, 0.3); }
+.tile-purple { --tile-color: #8b5cf6; --tile-shadow: rgba(139, 92, 246, 0.3); }
+.tile-orange { --tile-color: #f59e0b; --tile-shadow: rgba(245, 158, 11, 0.3); }
+.tile-primary { --tile-color: #E73F1E; --tile-shadow: rgba(231, 63, 30, 0.3); }
+
+/* Skeleton */
+.tile-icon-skel {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: 0.875rem;
+}
+
+.skel-bar {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skel-bar.w-16 { width: 64px; }
+.skel-bar.w-24 { width: 96px; }
+.skel-bar.mt-2 { margin-top: 8px; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Charts Section */
+.charts-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 1024px) {
+  .charts-section { grid-template-columns: 1fr; }
+}
+
+.side-cards {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Chart Block */
+.chart-block {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+
+.chart-block:hover {
+  border-color: #4b5563;
+}
+
+.block-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.block-info {
+  display: flex;
   align-items: center;
-  padding: 1.25rem 1rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  text-align: center;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.quick-action-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  border-color: #E73F1E;
-}
-
-.quick-action-card:hover .quick-action-icon {
-  transform: scale(1.1);
-}
-
-html.dark .quick-action-card {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.quick-action-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+.block-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.9375rem;
+}
+
+.block-icon.primary { background: rgba(231, 63, 30, 0.15); color: #E73F1E; }
+.block-icon.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.block-icon.warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+.block-info h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.block-info p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.125rem;
+}
+
+.time-badge {
+  padding: 0.25rem 0.625rem;
+  background: rgba(231, 63, 30, 0.15);
+  color: #E73F1E;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chart-area {
+  margin-top: 0.5rem;
+}
+
+.donut-area {
+  display: flex;
+  justify-content: center;
+}
+
+/* Actions Section */
+.actions-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.875rem;
+}
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--clr);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.action-card:hover {
+  transform: translateX(4px);
+  border-color: var(--clr);
+}
+
+.action-card:hover::before {
+  opacity: 0.06;
+}
+
+html[dir="rtl"] .action-card:hover {
+  transform: translateX(-4px);
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--clr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.9375rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.25s ease;
+}
+
+.action-card:hover .action-icon {
+  transform: scale(1.08);
+}
+
+.action-label {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  position: relative;
+  z-index: 1;
+}
+
+.action-arrow {
+  color: #4b5563;
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 1;
+  transition: all 0.25s ease;
+}
+
+.action-card:hover .action-arrow {
+  color: var(--clr);
+  transform: translateX(3px);
+}
+
+html[dir="rtl"] .action-card:hover .action-arrow {
+  transform: translateX(-3px);
 }
 </style>

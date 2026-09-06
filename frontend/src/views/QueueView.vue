@@ -425,9 +425,9 @@ function askAddVisit() {
 }
 
 async function addVisit() {
-  for (const patient of selectedPatients.value) {
-    await api.post('/visits', { patient_id: patient.id, visit_type: 'walk_in', treatment_name: addForm.value.treatment_name || null });
-  }
+  await Promise.all(selectedPatients.value.map(patient =>
+    api.post('/visits', { patient_id: patient.id, visit_type: 'walk_in', treatment_name: addForm.value.treatment_name || null })
+  ));
   showAdd.value = false;
   addForm.value = { search: '', treatment_name: '' };
   selectedPatients.value = [];

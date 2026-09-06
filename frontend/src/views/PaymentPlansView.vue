@@ -16,25 +16,25 @@
 
     <div class="mb-5 grid gap-3 md:grid-cols-4">
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Active plans</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('plans.active_count') }}</div>
         <div class="mt-3 flex items-end justify-between">
           <span class="text-2xl font-bold text-slate-900">{{ planStats.active }}</span>
-          <span class="text-xs text-emerald-600">{{ planStats.completionRate }}% on track</span>
+          <span class="text-xs text-emerald-600">{{ planStats.completionRate }}% {{ $t('plans.on_track') }}</span>
         </div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Outstanding</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('plans.outstanding') }}</div>
         <div class="mt-3 font-mono text-xl font-bold tabular-nums text-amber-700">{{ fmt(planStats.outstanding) }}</div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Overdue</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('plans.overdue') }}</div>
         <div class="mt-3 flex items-end justify-between">
           <span class="text-2xl font-bold text-red-600">{{ planStats.overdueCount }}</span>
-          <span class="text-xs text-slate-500">installments</span>
+          <span class="text-xs text-slate-500">{{ $t('plans.installments') }}</span>
         </div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Collected</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('plans.collected') }}</div>
         <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ fmt(planStats.collected) }}</div>
       </div>
     </div>
@@ -126,7 +126,7 @@
           <button class="btn-ghost btn-sm" @click="openDetail(row)" :title="$t('common.view')"><Icon name="folder" :size="14" /></button>
           <a v-if="row.patient?.phone && hasDueInstallment(row)" :href="whatsappReminderLink(row)"
              target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm"
-             :title="$t('plans.notify_customer') || 'Send WhatsApp reminder'">
+             :title="$t('plans.send_whatsapp')">
             <Icon name="comment" :size="14" />
           </a>
         </div>
@@ -181,7 +181,7 @@
               <a v-if="detail.patient?.phone && shouldRemindInstallment(ins)"
                  :href="installmentReminderLink(ins)"
                  target="_blank" rel="noopener noreferrer" class="btn-ghost btn-sm"
-                 :title="$t('plans.notify_customer') || 'Send WhatsApp reminder'">
+                 :title="$t('plans.send_whatsapp')">
                 <Icon name="comment" :size="14" />
               </a>
               <button v-if="can('payment_plans.pay')" class="btn-success btn-sm" @click="askPay(ins)" :title="$t('plans.pay')"><Icon name="credit-card" :size="14" /></button>
@@ -224,7 +224,7 @@
           </select>
         </FormField>
         <FormField v-slot="{ id }" :label="$t('plans.plan_name')" required class="sm:col-span-2">
-          <input :id="id" v-model="form.name" class="field" placeholder="Root Canal Treatment Plan" />
+          <input :id="id" v-model="form.name" class="field" :placeholder="$t('plans.plan_name_ph')" />
         </FormField>
         <FormField v-slot="{ id }" :label="$t('plans.total')" required>
           <IqdInput :id="id" v-model="form.total_amount" />
@@ -434,7 +434,9 @@ async function openDetail(plan) {
   try {
     const { data } = await api.get(`/payment-plans/${plan.id}`);
     detail.value = data;
-  } catch { /* keep the list version */ }
+  } catch (e) {
+    console.error('Failed to load plan detail:', e);
+  }
 }
 
 // ---- Pay / waive ----
@@ -492,7 +494,9 @@ async function openCreate() {
     try {
       const { data } = await api.get('/patients', { params: { per_page: 200 } });
       patients.value = data.data ?? data;
-    } catch { /* dropdown stays empty */ }
+    } catch (e) {
+      console.error('Failed to load patients for dropdown:', e);
+    }
   }
 }
 async function create() {

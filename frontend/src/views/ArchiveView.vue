@@ -405,6 +405,9 @@ async function bookFollowup() {
       appointment_date: followupDatetime.value || null,
     });
     showFollowup.value = false;
+    toast.success('Follow-up booked successfully');
+  } catch (e) {
+    toast.error(e.response?.data?.message || 'Failed to book follow-up');
   } finally {
     bookingFollowup.value = false;
   }

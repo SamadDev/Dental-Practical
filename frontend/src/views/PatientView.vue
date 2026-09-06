@@ -718,7 +718,7 @@ async function saveEdit() {
   await load();
 }
 
-const apiOrigin = (import.meta.env.VITE_API_BASE || 'http://192.168.1.50:8000/api/v1').replace(/\/api\/v1\/?$/, '');
+const apiOrigin = (import.meta.env.VITE_API_BASE || '').replace(/\/api\/v1\/?$/, '');
 
 function xrayUrl(path) { return `${apiOrigin}/storage/${path}`; }
 function photoUrl(path) { return `${apiOrigin}/storage/${path}`; }

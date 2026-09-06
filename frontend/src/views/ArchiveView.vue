@@ -8,22 +8,22 @@
     <!-- Summary Stats -->
     <div class="mb-5 grid gap-3 md:grid-cols-4">
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Total Visits</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('archive.total_visits') }}</div>
         <div class="mt-3 flex items-end justify-between">
           <span class="text-2xl font-bold text-slate-900">{{ meta.total }}</span>
           <span class="text-xs text-slate-500">{{ $t('common.results') }}</span>
         </div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Total Revenue</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('archive.total_revenue') }}</div>
         <div class="mt-3 font-mono text-xl font-bold tabular-nums text-emerald-700">{{ format(totals?.total_amount_paid) }}</div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Outstanding</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('archive.outstanding') }}</div>
         <div class="mt-3 font-mono text-xl font-bold tabular-nums text-amber-700">{{ format(totals?.total_short_term_debt) }}</div>
       </div>
       <div class="card p-4">
-        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Avg per Visit</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $t('archive.avg_per_visit') }}</div>
         <div class="mt-3 font-mono text-xl font-bold tabular-nums text-slate-700">{{ meta.total > 0 ? format(totals?.total_amount_paid / meta.total) : '0' }}</div>
       </div>
     </div>

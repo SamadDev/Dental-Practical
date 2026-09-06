@@ -227,7 +227,14 @@
     "more": "more",
     "appointment_details": "Appointment Details",
     "date": "Date",
-    "time": "Time"
+    "time": "Time",
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
   },
   "queue": {
     "title": "Today's Queue",
@@ -399,6 +406,10 @@
   },
   "archive": {
     "title": "Treatment Archive",
+    "total_visits": "Total Visits",
+    "total_revenue": "Total Revenue",
+    "outstanding": "Outstanding",
+    "avg_per_visit": "Avg per Visit",
     "filter_with_debt": "With short-term debt",
     "date_from": "From",
     "date_to": "To",
@@ -601,5 +612,21 @@
     "manage_users": "Manage user roles",
     "change_role": "Change Role",
     "role_updated": "User role updated successfully"
+  },
+  "reminder": {
+    "title": "Send Reminder",
+    "subtitle": "Send a WhatsApp appointment reminder",
+    "send_before": "Remind me before:",
+    "hour": "hour",
+    "day": "day",
+    "days": "days",
+    "week": "week",
+    "custom": "Custom",
+    "custom_time": "Custom reminder time",
+    "message_preview": "Message preview:",
+    "message_template": "Assalamu Alaikum {name},\n\nThis is a reminder for your dental appointment:\n📅 {date}\n\nPlease contact us if you need to reschedule.\n\nThank you!",
+    "send_now": "Send via WhatsApp",
+    "dear_patient": "Dear Patient",
+    "your_appointment": "your appointment"
   }
 }

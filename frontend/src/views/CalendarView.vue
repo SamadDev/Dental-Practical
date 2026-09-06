@@ -216,7 +216,10 @@ const views = [
   { key: 'month', label: t('calendar.month') },
 ];
 
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const dayNames = computed(() => [
+  t('calendar.sun'), t('calendar.mon'), t('calendar.tue'), t('calendar.wed'),
+  t('calendar.thu'), t('calendar.fri'), t('calendar.sat')
+]);
 
 const weekStart = computed(() => {
   const date = new Date(currentDate.value);

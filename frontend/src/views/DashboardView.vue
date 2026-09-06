@@ -1,18 +1,27 @@
 <template>
-  <div class="dashboard-v2">
+  <div class="dashboard">
+    <!-- Background Pattern -->
+    <div class="bg-pattern"></div>
+    
     <!-- Header -->
     <header class="dash-header">
-      <div class="header-brand">
-        <div class="brand-icon">
-          <FontAwesomeIcon icon="fa-chart-pie" />
+      <div class="header-left">
+        <div class="logo-wrap">
+          <div class="logo-icon">
+            <FontAwesomeIcon icon="fa-chart-pie" />
+            <div class="logo-pulse"></div>
+          </div>
         </div>
-        <div class="brand-text">
+        <div class="header-text">
           <h1>{{ $t('dashboard.title') }}</h1>
-          <span class="brand-sub">{{ rangeLabel }}</span>
+          <p class="subtitle">{{ rangeLabel }}</p>
         </div>
       </div>
-      <div class="header-controls">
-        <select v-model="selectedDays" @change="load" class="control-select">
+      <div class="header-right">
+        <button class="icon-btn" @click="load" :disabled="loading">
+          <FontAwesomeIcon :icon="loading ? 'fa-spinner' : 'fa-arrows-rotate'" :spin="loading" />
+        </button>
+        <select v-model="selectedDays" @change="load" class="day-select">
           <option v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
             {{ $t(`dashboard.${opt.label}`) }}
           </option>
@@ -21,20 +30,23 @@
     </header>
 
     <!-- Error -->
-    <div v-if="error" class="error-toast">
+    <div v-if="error" class="error-bar">
       <FontAwesomeIcon icon="fa-circle-exclamation" />
       <span>{{ $t('dashboard.load_error') }}</span>
       <button @click="load">{{ $t('dashboard.retry') }}</button>
     </div>
 
-    <!-- Stats Row -->
-    <section class="stats-row">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
       <template v-if="loading">
-        <div v-for="i in 6" :key="i" class="stat-tile skeleton">
-          <div class="tile-icon-skel"></div>
-          <div class="tile-data">
-            <div class="skel-bar w-16"></div>
-            <div class="skel-bar w-24 mt-2"></div>
+        <div v-for="i in 6" :key="i" class="stat-card loading">
+          <div class="card-glow"></div>
+          <div class="card-inner">
+            <div class="skel-icon"></div>
+            <div class="skel-text">
+              <div class="skel-line w-14"></div>
+              <div class="skel-line w-24 mt-2"></div>
+            </div>
           </div>
         </div>
       </template>
@@ -42,115 +54,113 @@
         <div
           v-for="(stat, idx) in statCards"
           :key="stat.id"
-          class="stat-tile"
+          class="stat-card"
           :class="stat.class"
-          :style="{ '--delay': idx * 60 + 'ms' }"
+          :style="{ '--delay': idx * 80 + 'ms', '--clr': stat.color }"
         >
-          <div class="tile-bg">
-            <svg class="tile-pattern" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <circle cx="80" cy="20" r="60" fill="currentColor" opacity="0.08"/>
-              <circle cx="20" cy="80" r="40" fill="currentColor" opacity="0.05"/>
-            </svg>
-          </div>
-          <div class="tile-icon">
-            <FontAwesomeIcon :icon="stat.icon" />
-          </div>
-          <div class="tile-content">
-            <div class="tile-value">{{ formatValue(stat.value) }}</div>
-            <div class="tile-label">{{ $t(`dashboard.${stat.label}`) }}</div>
-          </div>
-          <div class="tile-meta" v-if="stat.trend">
-            <span class="meta-badge" :class="stat.trend">
-              <FontAwesomeIcon :icon="stat.trend === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" />
-              {{ stat.change }}%
-            </span>
+          <div class="card-glow"></div>
+          <div class="card-inner">
+            <div class="card-icon">
+              <FontAwesomeIcon :icon="stat.icon" />
+            </div>
+            <div class="card-body">
+              <span class="card-value">{{ formatValue(stat.value) }}</span>
+              <span class="card-label">{{ $t(`dashboard.${stat.label}`) }}</span>
+            </div>
+            <div class="card-trend" v-if="stat.trend">
+              <span class="trend" :class="stat.trend">
+                <FontAwesomeIcon :icon="stat.trend === 'up' ? 'fa-up' : 'fa-down'" fixed-width />
+                {{ stat.change }}%
+              </span>
+            </div>
           </div>
         </div>
       </template>
-    </section>
+    </div>
 
-    <!-- Charts Section -->
-    <section class="charts-section">
-      <!-- Revenue Area -->
-      <div class="chart-block primary-block">
-        <div class="block-header">
-          <div class="block-info">
-            <div class="block-icon primary">
-              <FontAwesomeIcon icon="fa-chart-area" />
+    <!-- Charts -->
+    <div class="charts-layout">
+      <!-- Main Chart -->
+      <div class="chart-card main-chart">
+        <div class="chart-header">
+          <div class="chart-meta">
+            <div class="chart-icon primary">
+              <FontAwesomeIcon icon="fa-chart-line" />
             </div>
-            <div>
+            <div class="chart-titles">
               <h3>{{ $t('dashboard.revenue_trend') }}</h3>
-              <p>{{ formatValue(metrics.true_net_profit) }} {{ $t('dashboard.true_net_profit') }}</p>
+              <p>{{ $t('dashboard.true_net_profit') }}: {{ formatValue(metrics.true_net_profit) }}</p>
             </div>
           </div>
-          <span class="time-badge">{{ selectedDays }}d</span>
+          <div class="chart-actions">
+            <span class="days-tag">{{ selectedDays }} {{ $t('common.days') || 'Days' }}</span>
+          </div>
         </div>
-        <div class="chart-area">
-          <VueApexCharts type="area" height="260" :options="revenueChartOptions" :series="revenueSeries" />
+        <div class="chart-wrap">
+          <VueApexCharts type="area" height="280" :options="revenueChartOptions" :series="revenueSeries" />
         </div>
       </div>
 
-      <!-- Side Cards -->
-      <div class="side-cards">
-        <!-- Patients Donut -->
-        <div class="chart-block donut-block">
-          <div class="block-header">
-            <div class="block-info">
-              <div class="block-icon success">
+      <!-- Side Charts -->
+      <div class="side-charts">
+        <!-- Donut -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-meta">
+              <div class="chart-icon success">
                 <FontAwesomeIcon icon="fa-pie-chart" />
               </div>
-              <div>
+              <div class="chart-titles">
                 <h3>{{ $t('dashboard.patients_by_status') }}</h3>
                 <p>{{ totalPatients }} {{ $t('common.total') }}</p>
               </div>
             </div>
           </div>
-          <div class="chart-area donut-area">
-            <VueApexCharts type="donut" height="200" :options="patientsChartOptions" :series="patientsSeries" />
+          <div class="chart-wrap donut-wrap">
+            <VueApexCharts type="donut" height="180" :options="patientsChartOptions" :series="patientsSeries" />
           </div>
         </div>
 
-        <!-- Expenses Bar -->
-        <div class="chart-block bar-block">
-          <div class="block-header">
-            <div class="block-info">
-              <div class="block-icon warning">
+        <!-- Bar -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-meta">
+              <div class="chart-icon warning">
                 <FontAwesomeIcon icon="fa-chart-bar" />
               </div>
-              <div>
+              <div class="chart-titles">
                 <h3>{{ $t('dashboard.expenses_breakdown') }}</h3>
                 <p>{{ formatValue(metrics.total_expenses) }}</p>
               </div>
             </div>
           </div>
-          <div class="chart-area">
-            <VueApexCharts type="bar" height="160" :options="expensesChartOptions" :series="expensesSeries" />
+          <div class="chart-wrap">
+            <VueApexCharts type="bar" height="150" :options="expensesChartOptions" :series="expensesSeries" />
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- Quick Actions -->
-    <section class="actions-section">
-      <h2 class="section-heading">{{ $t('dashboard.settings') }}</h2>
+    <div class="actions-section">
+      <h2 class="section-title">{{ $t('dashboard.settings') }}</h2>
       <div class="actions-grid">
         <router-link
           v-for="action in quickActions"
           :key="action.path"
           :to="action.path"
-          class="action-card"
-          :style="{ '--clr': action.bgColor }"
+          class="action-item"
+          :style="{ '--accent': action.bgColor }"
         >
           <div class="action-icon">
             <FontAwesomeIcon :icon="action.icon" />
           </div>
-          <span class="action-label">{{ action.label }}</span>
-          <FontAwesomeIcon class="action-arrow" icon="fa-angle-right" />
+          <span class="action-text">{{ action.label }}</span>
+          <FontAwesomeIcon class="action-arrow" icon="fa-arrow-right" />
         </router-link>
       </div>
-    </section>
+    </div>
 
-    <!-- Settings -->
     <PatientFieldsSettings />
   </div>
 </template>
@@ -180,9 +190,9 @@ const timeRangeOptions = [
 const quickActions = computed(() => [
   { path: '/patients/new', label: t('patient.new'), icon: 'fa-user-plus', bgColor: '#E73F1E' },
   { path: '/queue', label: t('nav.queue'), icon: 'fa-list-check', bgColor: '#3b82f6' },
-  { path: '/calendar', label: t('calendar.title'), icon: 'fa-calendar', bgColor: '#8b5cf6' },
-  { path: '/patients', label: t('nav.patients'), icon: 'fa-users', bgColor: '#10b981' },
-  { path: '/archive', label: t('nav.archive'), icon: 'fa-archive', bgColor: '#f59e0b' },
+  { path: '/calendar', label: t('calendar.title'), icon: 'fa-calendar-days', bgColor: '#8b5cf6' },
+  { path: '/patients', label: t('nav.patients'), icon: 'fa-user-group', bgColor: '#10b981' },
+  { path: '/archive', label: t('nav.archive'), icon: 'fa-box-archive', bgColor: '#f59e0b' },
   { path: '/expenses', label: t('nav.expenses'), icon: 'fa-file-invoice-dollar', bgColor: '#ef4444' },
 ]);
 
@@ -199,27 +209,27 @@ const rangeLabel = computed(() => {
 });
 
 const statCards = computed(() => [
-  { id: 'true_net_profit', label: 'true_net_profit', value: metrics.value.true_net_profit || 0, icon: 'fa-chart-line', class: 'tile-green', trend: 'up', change: 12 },
-  { id: 'total_cash_collected', label: 'total_cash_collected', value: metrics.value.total_cash_collected || 0, icon: 'fa-sack-dollar', class: 'tile-blue', trend: 'up', change: 8 },
-  { id: 'active_customer_debt', label: 'active_customer_debt', value: metrics.value.active_customer_debt || 0, icon: 'fa-hand-holding-dollar', class: 'tile-red', trend: 'down', change: 5 },
-  { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', class: 'tile-purple', trend: 'up', change: 15 },
-  { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', class: 'tile-orange', trend: 'down', change: 3 },
-  { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-users', class: 'tile-primary', trend: 'up', change: 22 },
+  { id: 'true_net_profit', label: 'true_net_profit', value: metrics.value.true_net_profit || 0, icon: 'fa-money-bill-trend-up', class: 'card-green', color: '#10b981', trend: 'up', change: 12 },
+  { id: 'total_cash_collected', label: 'total_cash_collected', value: metrics.value.total_cash_collected || 0, icon: 'fa-sack-dollar', class: 'card-blue', color: '#3b82f6', trend: 'up', change: 8 },
+  { id: 'active_customer_debt', label: 'active_customer_debt', value: metrics.value.active_customer_debt || 0, icon: 'fa-hand-holding-dollar', class: 'card-red', color: '#ef4444', trend: 'down', change: 5 },
+  { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', class: 'card-purple', color: '#8b5cf6', trend: 'up', change: 15 },
+  { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', class: 'card-orange', color: '#f59e0b', trend: 'down', change: 3 },
+  { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-users', class: 'card-primary', color: '#E73F1E', trend: 'up', change: 22 },
 ]);
 
 const revenueChartOptions = computed(() => ({
   chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
   stroke: { curve: 'smooth', width: 3 },
-  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 100] } },
+  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.02, stops: [0, 100] } },
   colors: ['#E73F1E'],
   dataLabels: { enabled: false },
   xaxis: {
     categories: metrics.value.revenue_labels || [],
-    labels: { style: { colors: '#9ca3af', fontSize: '11px' } },
+    labels: { style: { colors: '#6b7280', fontSize: '11px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#9ca3af', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  yaxis: { labels: { style: { colors: '#6b7280', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
   grid: { borderColor: '#1f2937', strokeDashArray: 3, xaxis: { lines: { show: false } } },
   tooltip: { theme: 'dark', y: { formatter: (v) => formatIQD(v) } },
 }));
@@ -227,28 +237,28 @@ const revenueChartOptions = computed(() => ({
 const revenueSeries = computed(() => [{ name: t('dashboard.revenue'), data: metrics.value.revenue_data || [] }]);
 
 const patientsChartOptions = computed(() => ({
-  legend: { position: 'bottom', fontSize: '11px', labels: { colors: '#9ca3af' }, markers: { width: 8, height: 8, radius: 8 }, itemMargin: { horizontal: 6 } },
+  legend: { position: 'bottom', fontSize: '11px', labels: { colors: '#6b7280' }, markers: { width: 8, height: 8, radius: 8 }, itemMargin: { horizontal: 6 } },
   chart: { fontFamily: 'inherit', background: 'transparent' },
   labels: metrics.value.patients_labels || [],
   colors: ['#10b981', '#3b82f6', '#ef4444', '#E73F1E', '#8b5cf6'],
   stroke: { width: 0 },
   dataLabels: { enabled: false },
-  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, name: { fontSize: '11px', color: '#9ca3af' }, value: { fontSize: '14px', fontWeight: 600, color: '#f3f4f6', formatter: (v) => v }, total: { show: true, label: 'Total', fontSize: '11px', color: '#9ca3af', formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0) } } } } },
+  plotOptions: { pie: { donut: { size: '70%', labels: { show: true, name: { fontSize: '11px', color: '#6b7280' }, value: { fontSize: '14px', fontWeight: 600, color: '#f3f4f6', formatter: (v) => v }, total: { show: true, label: 'Total', fontSize: '11px', color: '#6b7280', formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0) } } } } },
 }));
 
 const patientsSeries = computed(() => metrics.value.patients_data || []);
 
 const expensesChartOptions = computed(() => ({
   chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
-  plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', columnWidth: '28%' } },
+  plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', columnWidth: '32%' } },
   colors: ['#E73F1E'],
   xaxis: {
     categories: metrics.value.expenses_labels || [],
-    labels: { style: { colors: '#9ca3af', fontSize: '10px' } },
+    labels: { style: { colors: '#6b7280', fontSize: '10px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#9ca3af', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  yaxis: { labels: { style: { colors: '#6b7280', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
   grid: { borderColor: '#1f2937', strokeDashArray: 3 },
   dataLabels: { enabled: false },
 }));
@@ -274,97 +284,162 @@ onMounted(load);
 </script>
 
 <style scoped>
-.dashboard-v2 {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1.5rem 2rem;
+.dashboard {
+  position: relative;
   min-height: 100vh;
-  background: #0f1419;
-  color: #e5e7eb;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(180deg, #0a0e14 0%, #111827 100%);
+  overflow: hidden;
+}
+
+/* Background Pattern */
+.bg-pattern {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(231, 63, 30, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Header */
 .dash-header {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 2rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
-.header-brand {
+.header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.brand-icon {
-  width: 52px;
-  height: 52px;
+.logo-wrap {
+  position: relative;
+}
+
+.logo-icon {
+  width: 56px;
+  height: 56px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #E73F1E 0%, #991b1b 100%);
+  background: linear-gradient(135deg, #E73F1E 0%, #b91c1c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.375rem;
-  box-shadow: 0 8px 24px -4px rgba(231, 63, 30, 0.4);
+  font-size: 1.5rem;
+  box-shadow: 0 8px 32px -4px rgba(231, 63, 30, 0.5);
+  position: relative;
 }
 
-.brand-text h1 {
-  font-size: 1.5rem;
+.logo-pulse {
+  position: absolute;
+  inset: -3px;
+  border-radius: 19px;
+  border: 2px solid #E73F1E;
+  opacity: 0;
+  animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+.header-text h1 {
+  font-size: 1.625rem;
   font-weight: 800;
   color: #f9fafb;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
-.brand-sub {
+.subtitle {
   font-size: 0.8125rem;
   color: #6b7280;
+  margin-top: 0.25rem;
   font-weight: 500;
 }
 
-.header-controls {
+.header-right {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.control-select {
-  padding: 0.625rem 1rem;
-  border-radius: 10px;
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid #374151;
-  background: #1f2937;
+  background: rgba(31, 41, 55, 0.8);
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.icon-btn:hover:not(:disabled) {
+  border-color: #E73F1E;
+  color: #E73F1E;
+  background: rgba(231, 63, 30, 0.1);
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.day-select {
+  padding: 0.625rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #374151;
+  background: rgba(31, 41, 55, 0.8);
   color: #f3f4f6;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   outline: none;
   transition: all 0.2s;
+  backdrop-filter: blur(8px);
 }
 
-.control-select:focus {
+.day-select:focus {
   border-color: #E73F1E;
-  box-shadow: 0 0 0 3px rgba(231, 63, 30, 0.2);
+  box-shadow: 0 0 0 3px rgba(231, 63, 30, 0.15);
 }
 
-/* Error Toast */
-.error-toast {
+/* Error Bar */
+.error-bar {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: 12px;
   color: #f87171;
   margin-bottom: 1.5rem;
   font-size: 0.875rem;
 }
 
-.error-toast button {
+.error-bar button {
   margin-inline-start: auto;
   padding: 0.375rem 0.75rem;
   background: #ef4444;
@@ -376,162 +451,174 @@ onMounted(load);
   cursor: pointer;
 }
 
-/* Stats Row */
-.stats-row {
+/* Stats Grid */
+.stats-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 1rem;
   margin-bottom: 1.75rem;
 }
 
-@media (max-width: 1200px) {
-  .stats-row { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 640px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-}
+@media (max-width: 1280px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* Stat Tile */
-.stat-tile {
+/* Stat Card */
+.stat-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: 1.25rem;
-  background: #1a1f2e;
-  border-radius: 16px;
-  border: 1px solid #2d3748;
+  border-radius: 20px;
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(55, 65, 81, 0.6);
+  backdrop-filter: blur(12px);
   overflow: hidden;
-  transition: all 0.3s ease;
-  animation: fadeSlide 0.4s ease backwards;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cardIn 0.5s ease backwards;
   animation-delay: var(--delay, 0ms);
 }
 
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.stat-tile:hover {
-  transform: translateY(-3px);
-  border-color: var(--tile-color, #E73F1E);
-  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
+.stat-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--clr);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--clr);
 }
 
-.stat-tile.skeleton {
+.stat-card.loading {
   animation: none;
 }
 
-.tile-bg {
+.card-glow {
   position: absolute;
-  inset: 0;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--clr) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
   pointer-events: none;
 }
 
-.tile-pattern {
-  width: 100%;
-  height: 100%;
-  color: var(--tile-color, #E73F1E);
+.stat-card:hover .card-glow {
+  opacity: 0.06;
 }
 
-.tile-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.card-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.125rem;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--clr), color-mix(in srgb, var(--clr) 70%, black));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.125rem;
-  margin-bottom: 0.875rem;
-  background: var(--tile-color, #E73F1E);
   color: white;
-  box-shadow: 0 4px 12px var(--tile-shadow, rgba(231, 63, 30, 0.3));
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px -2px var(--clr);
 }
 
-.tile-content {
+.card-body {
   flex: 1;
+  min-width: 0;
 }
 
-.tile-value {
-  font-size: 1.375rem;
+.card-value {
+  display: block;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #f9fafb;
   letter-spacing: -0.02em;
   line-height: 1.2;
-  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tile-label {
-  font-size: 0.6875rem;
+.card-label {
+  display: block;
+  font-size: 0.625rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: #6b7280;
+  margin-top: 0.25rem;
   font-weight: 600;
 }
 
-.tile-meta {
+.card-trend {
   position: absolute;
-  top: 0.875rem;
-  inset-inline-end: 0.875rem;
+  top: 0.75rem;
+  inset-inline-end: 0.75rem;
 }
 
-.meta-badge {
+.trend {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   padding: 0.25rem 0.5rem;
   border-radius: 20px;
   font-size: 0.6875rem;
   font-weight: 700;
 }
 
-.meta-badge.up {
+.trend.up {
   background: rgba(16, 185, 129, 0.15);
   color: #34d399;
 }
 
-.meta-badge.down {
+.trend.down {
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
 }
 
-/* Tile Colors */
-.tile-green { --tile-color: #10b981; --tile-shadow: rgba(16, 185, 129, 0.3); }
-.tile-blue { --tile-color: #3b82f6; --tile-shadow: rgba(59, 130, 246, 0.3); }
-.tile-red { --tile-color: #ef4444; --tile-shadow: rgba(239, 68, 68, 0.3); }
-.tile-purple { --tile-color: #8b5cf6; --tile-shadow: rgba(139, 92, 246, 0.3); }
-.tile-orange { --tile-color: #f59e0b; --tile-shadow: rgba(245, 158, 11, 0.3); }
-.tile-primary { --tile-color: #E73F1E; --tile-shadow: rgba(231, 63, 30, 0.3); }
-
 /* Skeleton */
-.tile-icon-skel {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%);
+.skel-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  margin-bottom: 0.875rem;
 }
 
-.skel-bar {
-  height: 14px;
+.skel-text {
+  flex: 1;
+}
+
+.skel-line {
+  height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #2d3748 25%, #374151 50%, #2d3748 75%);
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-.skel-bar.w-16 { width: 64px; }
-.skel-bar.w-24 { width: 96px; }
-.skel-bar.mt-2 { margin-top: 8px; }
+.skel-line.w-14 { width: 56px; }
+.skel-line.w-24 { width: 96px; }
+.skel-line.mt-2 { margin-top: 8px; }
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
-/* Charts Section */
-.charts-section {
+/* Charts Layout */
+.charts-layout {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.25rem;
@@ -539,68 +626,75 @@ onMounted(load);
 }
 
 @media (max-width: 1024px) {
-  .charts-section { grid-template-columns: 1fr; }
+  .charts-layout { grid-template-columns: 1fr; }
 }
 
-.side-cards {
+.side-charts {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-/* Chart Block */
-.chart-block {
-  background: #1a1f2e;
-  border: 1px solid #2d3748;
-  border-radius: 16px;
+/* Chart Card */
+.chart-card {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(55, 65, 81, 0.6);
+  border-radius: 20px;
   padding: 1.25rem;
-  transition: border-color 0.2s;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s;
 }
 
-.chart-block:hover {
-  border-color: #4b5563;
+.chart-card:hover {
+  border-color: rgba(75, 85, 99, 0.8);
 }
 
-.block-header {
+.chart-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
 }
 
-.block-info {
+.chart-meta {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.block-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+.chart-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
-.block-icon.primary { background: rgba(231, 63, 30, 0.15); color: #E73F1E; }
-.block-icon.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.block-icon.warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.chart-icon.primary { background: rgba(231, 63, 30, 0.15); color: #E73F1E; }
+.chart-icon.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.chart-icon.warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 
-.block-info h3 {
+.chart-titles h3 {
   font-size: 0.9375rem;
   font-weight: 700;
   color: #f3f4f6;
 }
 
-.block-info p {
+.chart-titles p {
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.125rem;
 }
 
-.time-badge {
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.days-tag {
   padding: 0.25rem 0.625rem;
   background: rgba(231, 63, 30, 0.15);
   color: #E73F1E;
@@ -609,25 +703,27 @@ onMounted(load);
   font-weight: 700;
 }
 
-.chart-area {
+.chart-wrap {
   margin-top: 0.5rem;
 }
 
-.donut-area {
+.donut-wrap {
   display: flex;
   justify-content: center;
 }
 
 /* Actions Section */
 .actions-section {
+  position: relative;
+  z-index: 1;
   margin-bottom: 1.5rem;
 }
 
-.section-heading {
-  font-size: 0.75rem;
+.section-title {
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: #4b5563;
   margin-bottom: 1rem;
 }
@@ -638,39 +734,41 @@ onMounted(load);
   gap: 0.875rem;
 }
 
-.action-card {
+.action-item {
   display: flex;
   align-items: center;
   gap: 0.875rem;
   padding: 1rem 1.125rem;
-  background: #1a1f2e;
-  border: 1px solid #2d3748;
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(55, 65, 81, 0.6);
   border-radius: 14px;
   text-decoration: none;
-  transition: all 0.25s ease;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.action-card::before {
+.action-item::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--clr);
+  background: var(--accent);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.3s;
 }
 
-.action-card:hover {
+.action-item:hover {
   transform: translateX(4px);
-  border-color: var(--clr);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
 }
 
-.action-card:hover::before {
-  opacity: 0.06;
+.action-item:hover::before {
+  opacity: 0.08;
 }
 
-html[dir="rtl"] .action-card:hover {
+html[dir="rtl"] .action-item:hover {
   transform: translateX(-4px);
 }
 
@@ -678,7 +776,7 @@ html[dir="rtl"] .action-card:hover {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--clr);
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -687,14 +785,14 @@ html[dir="rtl"] .action-card:hover {
   flex-shrink: 0;
   position: relative;
   z-index: 1;
-  transition: transform 0.25s ease;
+  transition: transform 0.3s;
 }
 
-.action-card:hover .action-icon {
-  transform: scale(1.08);
+.action-item:hover .action-icon {
+  transform: scale(1.08) rotate(-4deg);
 }
 
-.action-label {
+.action-text {
   flex: 1;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -705,18 +803,18 @@ html[dir="rtl"] .action-card:hover {
 
 .action-arrow {
   color: #4b5563;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   position: relative;
   z-index: 1;
-  transition: all 0.25s ease;
+  transition: all 0.3s;
 }
 
-.action-card:hover .action-arrow {
-  color: var(--clr);
+.action-item:hover .action-arrow {
+  color: var(--accent);
   transform: translateX(3px);
 }
 
-html[dir="rtl"] .action-card:hover .action-arrow {
+html[dir="rtl"] .action-item:hover .action-arrow {
   transform: translateX(-3px);
 }
 </style>

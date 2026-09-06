@@ -486,25 +486,25 @@
             </div>
           </div>
           <div>
-            <label class="mb-1.5 block text-xs font-medium text-slate-600">Address</label>
-            <input v-model="editForm.address" type="text" placeholder="Street address" class="form-input" />
+            <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.address') }}</label>
+            <input v-model="editForm.address" type="text" :placeholder="$t('patient.address_ph')" class="form-input" />
           </div>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-xs font-medium text-slate-600">Medical Notes</label>
-          <textarea v-model="editForm.medical_notes" rows="2" placeholder="Any medical conditions, allergies, or notes..." class="form-input form-input--textarea"></textarea>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.medical_notes') }}</label>
+          <textarea v-model="editForm.medical_notes" rows="2" :placeholder="$t('patient.medical_notes_ph')" class="form-input form-input--textarea"></textarea>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-xs font-medium text-slate-600">Next Appointment</label>
+          <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.next_appointment') }}</label>
           <input v-model="editForm.appointment_date" type="datetime-local" class="form-input" />
         </div>
       </div>
 
       <template #footer>
-        <button type="button" class="btn-secondary" @click="showEdit = false">Cancel</button>
-        <button type="button" class="btn-primary" @click="askSaveEdit">Save Changes</button>
+        <button type="button" class="btn-secondary" @click="showEdit = false">{{ $t('common.cancel') }}</button>
+        <button type="button" class="btn-primary" @click="askSaveEdit">{{ $t('common.save') }}</button>
       </template>
     </Modal>
 
@@ -512,36 +512,36 @@
     <Modal v-model="showConditions" :title="$t('patient.manage_conditions')" size="md">
       <div class="space-y-4">
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">Add New</h4>
+          <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">{{ $t('patient.add_condition') }}</h4>
           <div class="grid gap-3 sm:grid-cols-2">
             <div>
-              <label class="mb-1.5 block text-xs font-medium text-slate-600">Type</label>
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.type_allergy') }}</label>
               <select v-model="conditionForm.type" class="form-input">
-                <option value="allergy">⚠ Allergy</option>
-                <option value="condition">🩺 Condition</option>
+                <option value="allergy">{{ $t('patient.type_allergy') }}</option>
+                <option value="condition">{{ $t('patient.type_condition') }}</option>
               </select>
             </div>
             <div>
-              <label class="mb-1.5 block text-xs font-medium text-slate-600">Severity</label>
+              <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.severity') }}</label>
               <select v-model="conditionForm.severity" class="form-input">
-                <option value="mild">Mild</option>
-                <option value="moderate">Moderate</option>
-                <option value="severe">Severe</option>
+                <option value="mild">{{ $t('patient.sev_mild') }}</option>
+                <option value="moderate">{{ $t('patient.sev_moderate') }}</option>
+                <option value="severe">{{ $t('patient.sev_severe') }}</option>
               </select>
             </div>
           </div>
           <div class="mt-3">
-            <label class="mb-1.5 block text-xs font-medium text-slate-600">Name <span class="text-red-500">*</span></label>
-            <input v-model="conditionForm.name" type="text" placeholder="e.g., Penicillin allergy" class="form-input" :class="{ 'border-red-400': conditionErrors.name }" />
+            <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.condition_name') }} <span class="text-red-500">*</span></label>
+            <input v-model="conditionForm.name" type="text" :placeholder="$t('patient.condition_name_ph')" class="form-input" :class="{ 'border-red-400': conditionErrors.name }" />
             <p v-if="conditionErrors.name" class="mt-1 text-xs text-red-500">{{ conditionErrors.name[0] }}</p>
           </div>
           <div class="mt-3">
-            <label class="mb-1.5 block text-xs font-medium text-slate-600">Note (optional)</label>
-            <input v-model="conditionForm.note" type="text" placeholder="Additional details..." class="form-input" />
+            <label class="mb-1.5 block text-xs font-medium text-slate-600">{{ $t('patient.condition_note') }} ({{ $t('common.optional') }})</label>
+            <input v-model="conditionForm.note" type="text" :placeholder="$t('patient.condition_note_ph')" class="form-input" />
           </div>
           <div class="mt-3 flex justify-end">
             <button type="button" class="btn-primary btn-sm" @click="askSaveCondition" :disabled="savingCondition">
-              {{ editingConditionId ? 'Update' : '+ Add Condition' }}
+              {{ editingConditionId ? $t('common.edit') : $t('patient.add_condition') }}
             </button>
           </div>
         </div>

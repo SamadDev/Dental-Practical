@@ -3,10 +3,10 @@
     <!-- Header -->
     <div class="page-header">
       <div class="header-info">
-        <h1 class="header-title">Queue</h1>
-        <p v-if="!loading && queue.length" class="header-subtitle">{{ queue.length }} patients waiting</p>
+        <h1 class="header-title">{{ $t('queue.title') }}</h1>
+        <p v-if="!loading && queue.length" class="header-subtitle">{{ $t('queue.patients_waiting', { n: queue.length }) }}</p>
       </div>
-      <AddButton v-if="can('queue.manage')" label="Add Patient" @click="openAdd" />
+      <AddButton v-if="can('queue.manage')" :label="$t('queue.add_patient')" @click="openAdd" />
     </div>
 
     <!-- Loading -->
@@ -29,9 +29,9 @@
           <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
         </svg>
       </div>
-      <h3 class="empty-title">No patients in queue</h3>
-      <p class="empty-text">Add patients to the queue to start managing appointments</p>
-      <AddButton v-if="can('queue.manage')" label="Add Patient" @click="openAdd" class="mt-4" />
+      <h3 class="empty-title">{{ $t('queue.no_patients_in_queue') }}</h3>
+      <p class="empty-text">{{ $t('queue.add_patients_hint') }}</p>
+      <AddButton v-if="can('queue.manage')" :label="$t('queue.add_patient')" @click="openAdd" class="mt-4" />
     </div>
 
     <!-- Queue List -->
@@ -121,7 +121,7 @@
             <path d="M21 21l-4.35-4.35"/>
           </svg>
           <input v-model="addForm.search" type="search" autocomplete="off"
-                 placeholder="Search by name or phone..."
+                 :placeholder="$t('queue.search_by_name_or_phone')"
                  class="search-input"
                  @input="onSearchInput" />
         </div>
@@ -129,8 +129,8 @@
         <!-- Selected Patients Bar -->
         <div v-if="selectedPatients.length" class="selected-bar">
           <div class="selected-header">
-            <span class="selected-count">{{ selectedPatients.length }} selected</span>
-            <button type="button" class="selected-clear" @click="selectedPatients = []">Clear all</button>
+            <span class="selected-count">{{ selectedPatients.length }} {{ $t('queue.selected') }}</span>
+            <button type="button" class="selected-clear" @click="selectedPatients = []">{{ $t('queue.clear_all') }}</button>
           </div>
           <div class="selected-tags">
             <span v-for="patient in selectedPatients" :key="patient.id" class="selected-tag">
@@ -143,7 +143,7 @@
         <!-- Results -->
         <div v-if="searching" class="search-loading">
           <div class="loading-spinner"></div>
-          <span>Searching...</span>
+          <span>{{ $t('queue.searching') }}</span>
         </div>
 
         <div v-else-if="addForm.search && results.length === 0" class="search-empty">
@@ -151,9 +151,9 @@
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
-          <p class="search-empty-text">No patients found</p>
+          <p class="search-empty-text">{{ $t('queue.no_patients_found') }}</p>
           <button type="button" class="btn-primary btn-sm mt-3" @click="quickAddPatient">
-            + Create "{{ addForm.search }}"
+            + {{ $t('queue.create') }} "{{ addForm.search }}"
           </button>
         </div>
 
@@ -194,12 +194,12 @@
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
-          <p>Type to search for patients</p>
+          <p>{{ $t('queue.type_to_search') }}</p>
         </div>
 
         <!-- Treatment -->
         <div class="treatment-section">
-          <label class="treatment-label">Treatment (optional)</label>
+          <label class="treatment-label">{{ $t('queue.treatment_optional') }}</label>
           <div class="treatment-chips">
             <button v-for="t in commonTreatments" :key="t" type="button"
                     @click="addForm.treatment_name = addForm.treatment_name === t ? '' : t"
@@ -209,69 +209,69 @@
             </button>
           </div>
           <input v-model="addForm.treatment_name" type="text"
-                 placeholder="Or type custom treatment..."
+                 :placeholder="$t('queue.or_type_custom_treatment')"
                  class="treatment-input" />
         </div>
       </div>
 
       <template #footer>
-        <button type="button" class="btn-secondary" @click="showAdd = false">Cancel</button>
+        <button type="button" class="btn-secondary" @click="showAdd = false">{{ $t('queue.cancel') }}</button>
         <button type="button" class="btn-primary" :disabled="!selectedPatients.length" @click="askAddVisit">
-          Add {{ selectedPatients.length ? `(${selectedPatients.length})` : '' }} to Queue
+          {{ $t('queue.add_to_queue') }} {{ selectedPatients.length ? `(${selectedPatients.length})` : '' }}
         </button>
       </template>
     </Modal>
 
-    <ConfirmDialog v-model="showConfirmActive" title="Start Treatment?" message="This will mark the patient as in treatment." confirm-label="Start" :danger="false" @confirmed="doSetActive" />
-    <ConfirmDialog v-model="showConfirmAdd" title="Add to Queue?" :message="confirmAddMsg" confirm-label="Add" :danger="false" @confirmed="addVisit" />
-    <ConfirmDialog v-model="showConfirmRemove" title="Remove from Queue?" :message="confirmRemoveMsg" confirm-label="Remove" @confirmed="removeFromQueue" />
+    <ConfirmDialog v-model="showConfirmActive" :title="$t('queue.start_treatment')" :message="$t('queue.will_mark_patient')" :confirm-label="$t('queue.start')" :danger="false" @confirmed="doSetActive" />
+    <ConfirmDialog v-model="showConfirmAdd" :title="$t('queue.add_to_queue_confirm')" :message="confirmAddMsg" :confirm-label="$t('queue.add')" :danger="false" @confirmed="addVisit" />
+    <ConfirmDialog v-model="showConfirmRemove" :title="$t('queue.remove_from_queue')" :message="confirmRemoveMsg" :confirm-label="$t('queue.remove')" @confirmed="removeFromQueue" />
 
     <CheckoutDialog v-model="showCheckout" :visit="activeVisit" @completed="onCheckedOut" />
 
     <!-- Quick Add Patient Modal -->
-    <Modal v-model="showQuickAdd" title="Quick Add Patient">
+    <Modal v-model="showQuickAdd" :title="$t('queue.quick_add_patient')">
       <div class="modal-form">
         <div>
-          <label class="form-label">Name <span class="text-red-500">*</span></label>
-          <input v-model="quickAddForm.name" type="text" autofocus placeholder="Patient full name" class="form-input" />
+          <label class="form-label">{{ $t('patient.name_required') }} <span class="text-red-500">*</span></label>
+          <input v-model="quickAddForm.name" type="text" autofocus :placeholder="$t('queue.patient_full_name')" class="form-input" />
         </div>
         <div>
-          <label class="form-label">Phone</label>
+          <label class="form-label">{{ $t('queue.phone') }}</label>
           <div class="relative">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">🇮🇶 +964</span>
-            <input v-model="quickAddForm.phone" type="tel" dir="ltr" inputmode="tel" placeholder="770 123 4567" class="form-input form-input--phone" />
+            <input v-model="quickAddForm.phone" type="tel" dir="ltr" inputmode="tel" :placeholder="$t('queue.phone_placeholder')" class="form-input form-input--phone" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Age</label>
-            <input v-model.number="quickAddForm.age" type="number" min="0" max="120" inputmode="numeric" placeholder="—" class="form-input" />
+            <label class="form-label">{{ $t('queue.age') }}</label>
+            <input v-model.number="quickAddForm.age" type="number" min="0" max="120" inputmode="numeric" :placeholder="$t('common.none')" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Gender</label>
+            <label class="form-label">{{ $t('queue.gender') }}</label>
             <div class="gender-toggle">
               <button type="button" @click="quickAddForm.gender = quickAddForm.gender === 'male' ? '' : 'male'"
                       :class="quickAddForm.gender === 'male' ? 'gender-btn--active' : 'gender-btn'"
                       class="gender-btn">
-                ♂ Male
+                {{ $t('patient.gender_male') }}
               </button>
               <button type="button" @click="quickAddForm.gender = quickAddForm.gender === 'female' ? '' : 'female'"
                       :class="quickAddForm.gender === 'female' ? 'gender-btn--active-female' : 'gender-btn'"
                       class="gender-btn">
-                ♀ Female
+                {{ $t('patient.gender_female') }}
               </button>
             </div>
           </div>
         </div>
         <div>
-          <label class="form-label">Treatment</label>
-          <input v-model="quickAddForm.treatment_name" type="text" :placeholder="addForm.treatment_name || 'Treatment...'" class="form-input" />
+          <label class="form-label">{{ $t('queue.treatment') }}</label>
+          <input v-model="quickAddForm.treatment_name" type="text" :placeholder="addForm.treatment_name || $t('queue.treatment_placeholder')" class="form-input" />
         </div>
       </div>
       <template #footer>
-        <button type="button" class="btn-secondary" @click="showQuickAdd = false">Cancel</button>
+        <button type="button" class="btn-secondary" @click="showQuickAdd = false">{{ $t('queue.cancel') }}</button>
         <button type="button" class="btn-primary" :disabled="savingQuickAdd" @click="doQuickAdd">
-          {{ savingQuickAdd ? 'Creating...' : 'Create & Add to Queue' }}
+          {{ savingQuickAdd ? $t('queue.creating') : $t('queue.create_add_to_queue') }}
         </button>
       </template>
     </Modal>

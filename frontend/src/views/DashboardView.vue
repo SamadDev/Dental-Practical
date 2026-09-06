@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard">
+  <div class="dashboard" :class="{ 'dark': isDark }">
     <!-- Animated Background -->
     <div class="bg-grid"></div>
     <div class="bg-glow bg-glow-1"></div>
@@ -118,7 +118,7 @@
 
       <!-- Side -->
       <div class="side-container">
-        <!-- Patients -->
+        <!-- patients -->
         <div class="chart-card">
           <div class="chart-header">
             <div class="chart-info">
@@ -207,7 +207,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VueApexCharts from 'vue3-apexcharts';
 import FontAwesomeIcon from '../components/FontAwesomeIcon.vue';
@@ -221,12 +221,30 @@ const loading = ref(true);
 const error = ref(false);
 const metrics = ref({});
 const selectedDays = ref(30);
+const isDark = ref(false);
 
 const timeRangeOptions = [
   { label: 'last_7_days', value: 7 },
   { label: 'last_30_days', value: 30 },
   { label: 'last_90_days', value: 90 },
 ];
+
+// Theme detection and watcher
+function checkTheme() {
+  isDark.value = document.querySelector('html')?.classList.contains('dark');
+}
+
+let themeObserver;
+
+onMounted(() => {
+  checkTheme();
+  themeObserver = new MutationObserver(checkTheme);
+  themeObserver.observe(document.querySelector('html'), { attributes: true, attributeFilter: ['class'] });
+});
+
+onUnmounted(() => {
+  if (themeObserver) themeObserver.disconnect();
+});
 
 const quickActions = computed(() => [
   { path: '/patients/new', label: t('patient.new'), icon: 'fa-user-plus', bgColor: '#E73F1E' },
@@ -262,7 +280,6 @@ const rangeLabel = computed(() => {
          t('dashboard.last_90_days');
 });
 
-// Dynamic stat cards based on API data
 const statCards = computed(() => {
   const prevMetrics = metrics.value.previous_metrics || {};
   
@@ -275,81 +292,28 @@ const statCards = computed(() => {
     };
   };
 
-  const profitTrend = calculateTrend(
-    metrics.value.true_net_profit || 0,
-    prevMetrics.true_net_profit
-  );
-  
-  const cashTrend = calculateTrend(
-    metrics.value.total_cash_collected || 0,
-    prevMetrics.total_cash_collected
-  );
-
-  const debtTrend = calculateTrend(
-    metrics.value.active_customer_debt || 0,
-    prevMetrics.active_customer_debt
-  );
+  const profitTrend = calculateTrend(metrics.value.true_net_profit || 0, prevMetrics.true_net_profit);
+  const cashTrend = calculateTrend(metrics.value.total_cash_collected || 0, prevMetrics.total_cash_collected);
+  const debtTrend = calculateTrend(metrics.value.active_customer_debt || 0, prevMetrics.active_customer_debt);
 
   return [
-    { 
-      id: 'true_net_profit', 
-      label: 'true_net_profit', 
-      value: metrics.value.true_net_profit || 0, 
-      icon: 'fa-money-bill-trend-up', 
-      class: 'card-green', 
-      color: '#10b981',
-      ...profitTrend
-    },
-    { 
-      id: 'total_cash_collected', 
-      label: 'total_cash_collected', 
-      value: metrics.value.total_cash_collected || 0, 
-      icon: 'fa-sack-dollar', 
-      class: 'card-blue', 
-      color: '#3b82f6',
-      ...cashTrend
-    },
-    { 
-      id: 'active_customer_debt', 
-      label: 'active_customer_debt', 
-      value: metrics.value.active_customer_debt || 0, 
-      icon: 'fa-hand-holding-dollar', 
-      class: 'card-red', 
-      color: '#ef4444',
-      ...debtTrend
-    },
-    { 
-      id: 'upcoming_aqsat_revenue', 
-      label: 'upcoming_aqsat_revenue', 
-      value: metrics.value.upcoming_aqsat_revenue || 0, 
-      icon: 'fa-calendar-check', 
-      class: 'card-violet', 
-      color: '#8b5cf6',
-      trend: 'up',
-      change: 0
-    },
-    { 
-      id: 'total_expenses', 
-      label: 'total_expenses', 
-      value: metrics.value.total_expenses || 0, 
-      icon: 'fa-file-signature', 
-      class: 'card-amber', 
-      color: '#f59e0b',
-      trend: 'down',
-      change: 0
-    },
-    { 
-      id: 'total_patients', 
-      label: 'total_patients', 
-      value: metrics.value.total_patients || 0, 
-      icon: 'fa-user-group', 
-      class: 'card-rose', 
-      color: '#E73F1E',
-      trend: 'up',
-      change: 0
-    },
+    { id: 'true_net_profit', label: 'true_net_profit', value: metrics.value.true_net_profit || 0, icon: 'fa-money-bill-trend-up', class: 'card-green', color: '#10b981', ...profitTrend },
+    { id: 'total_cash_collected', label: 'total_cash_collected', value: metrics.value.total_cash_collected || 0, icon: 'fa-sack-dollar', class: 'card-blue', color: '#3b82f6', ...cashTrend },
+    { id: 'active_customer_debt', label: 'active_customer_debt', value: metrics.value.active_customer_debt || 0, icon: 'fa-hand-holding-dollar', class: 'card-red', color: '#ef4444', ...debtTrend },
+    { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', class: 'card-violet', color: '#8b5cf6', trend: 'up', change: 0 },
+    { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', class: 'card-amber', color: '#f59e0b', trend: 'down', change: 0 },
+    { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-user-group', class: 'card-rose', color: '#E73F1E', trend: 'up', change: 0 },
   ];
 });
+
+// Dynamic colors based on theme
+const chartColors = computed(() => ({
+  grid: isDark.value ? '#27272a' : '#e4e4e7',
+  text: isDark.value ? '#52525b' : '#71717a',
+  textLight: isDark.value ? '#71717a' : '#a1a1aa',
+  cardBg: isDark.value ? 'rgba(24, 24, 27, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+  cardBorder: isDark.value ? '#27272a' : '#e4e4e7',
+}));
 
 const revenueChartOptions = computed(() => ({
   chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
@@ -359,25 +323,22 @@ const revenueChartOptions = computed(() => ({
   dataLabels: { enabled: false },
   xaxis: {
     categories: metrics.value.revenue_labels || [],
-    labels: { style: { colors: '#52525b', fontSize: '11px' } },
+    labels: { style: { colors: chartColors.value.text, fontSize: '11px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#52525b', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
-  grid: { borderColor: '#27272a', strokeDashArray: 4, xaxis: { lines: { show: false } } },
-  tooltip: { theme: 'dark', y: { formatter: (v) => formatIQD(v) } },
+  yaxis: { labels: { style: { colors: chartColors.value.text, fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  grid: { borderColor: chartColors.value.grid, strokeDashArray: 4, xaxis: { lines: { show: false } } },
+  tooltip: { theme: isDark.value ? 'dark' : 'light', y: { formatter: (v) => formatIQD(v) } },
 }));
 
-const revenueSeries = computed(() => [{ 
-  name: t('dashboard.revenue'), 
-  data: metrics.value.revenue_data || [] 
-}]);
+const revenueSeries = computed(() => [{ name: t('dashboard.revenue'), data: metrics.value.revenue_data || [] }]);
 
 const patientsChartOptions = computed(() => ({
   legend: { 
     position: 'bottom', 
     fontSize: '11px', 
-    labels: { colors: '#52525b' }, 
+    labels: { colors: chartColors.value.textLight }, 
     markers: { width: 8, height: 8, radius: 8 }, 
     itemMargin: { horizontal: 6 } 
   },
@@ -392,13 +353,13 @@ const patientsChartOptions = computed(() => ({
         size: '68%', 
         labels: { 
           show: true, 
-          name: { fontSize: '11px', color: '#52525b' }, 
-          value: { fontSize: '14px', fontWeight: 600, color: '#fafafa', formatter: (v) => v }, 
+          name: { fontSize: '11px', color: chartColors.value.textLight }, 
+          value: { fontSize: '14px', fontWeight: 600, color: isDark.value ? '#fafafa' : '#1f2937', formatter: (v) => v }, 
           total: { 
             show: true, 
             label: t('common.total'), 
             fontSize: '11px', 
-            color: '#52525b', 
+            color: chartColors.value.textLight, 
             formatter: (w) => w.globals.seriesTotals.reduce((a, b) => a + b, 0) 
           } 
         } 
@@ -415,19 +376,16 @@ const expensesChartOptions = computed(() => ({
   colors: ['#E73F1E'],
   xaxis: {
     categories: metrics.value.expenses_labels || [],
-    labels: { style: { colors: '#52525b', fontSize: '10px' } },
+    labels: { style: { colors: chartColors.value.text, fontSize: '10px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
   },
-  yaxis: { labels: { style: { colors: '#52525b', fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
-  grid: { borderColor: '#27272a', strokeDashArray: 4 },
+  yaxis: { labels: { style: { colors: chartColors.value.text, fontSize: '11px' }, formatter: (v) => formatIQD(v) } },
+  grid: { borderColor: chartColors.value.grid, strokeDashArray: 4 },
   dataLabels: { enabled: false },
 }));
 
-const expensesSeries = computed(() => [{ 
-  name: t('dashboard.expenses'), 
-  data: metrics.value.expenses_data || [] 
-}]);
+const expensesSeries = computed(() => [{ name: t('dashboard.expenses'), data: metrics.value.expenses_data || [] }]);
 
 function formatValue(v) { return formatIQD(v); }
 
@@ -450,11 +408,34 @@ onMounted(load);
 
 <style scoped>
 .dashboard {
+  --bg-primary: linear-gradient(145deg, #f4f4f5 0%, #ffffff 50%, #f4f4f5 100%);
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --border-card: #e4e4e7;
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-muted: #a1a1aa;
+  --text-label: #52525b;
+  --bg-hover: rgba(0, 0, 0, 0.02);
+  
   position: relative;
   min-height: 100vh;
   padding: 1.5rem 2rem 2rem;
-  background: linear-gradient(145deg, #09090b 0%, #18181b 50%, #0f0f0f 100%);
+  background: var(--bg-primary);
   overflow-x: hidden;
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Dark Theme */
+.dashboard.dark {
+  --bg-primary: linear-gradient(145deg, #09090b 0%, #18181b 50%, #0f0f0f 100%);
+  --bg-card: rgba(24, 24, 27, 0.9);
+  --border-card: #27272a;
+  --text-primary: #fafafa;
+  --text-secondary: #71717a;
+  --text-muted: #52525b;
+  --text-label: #71717a;
+  --bg-hover: rgba(255, 255, 255, 0.02);
 }
 
 /* Background Effects */
@@ -462,11 +443,17 @@ onMounted(load);
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   pointer-events: none;
   z-index: 0;
+}
+
+.dark .bg-grid {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
 }
 
 .bg-glow {
@@ -481,7 +468,7 @@ onMounted(load);
 .bg-glow-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(231, 63, 30, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(231, 63, 30, 0.06) 0%, transparent 70%);
   top: -200px;
   right: -100px;
 }
@@ -489,10 +476,18 @@ onMounted(load);
 .bg-glow-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
   bottom: -150px;
   left: -100px;
   animation-delay: -10s;
+}
+
+.dark .bg-glow-1 {
+  background: radial-gradient(circle, rgba(231, 63, 30, 0.08) 0%, transparent 70%);
+}
+
+.dark .bg-glow-2 {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
 }
 
 @keyframes float {
@@ -537,7 +532,7 @@ onMounted(load);
   color: white;
   font-size: 1.5rem;
   box-shadow: 
-    0 8px 32px -4px rgba(231, 63, 30, 0.5),
+    0 8px 32px -4px rgba(231, 63, 30, 0.4),
     inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
@@ -549,6 +544,10 @@ onMounted(load);
   animation: ringPulse 3s ease-in-out infinite;
 }
 
+.dark .logo-ring {
+  border-color: rgba(231, 63, 30, 0.4);
+}
+
 @keyframes ringPulse {
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(1.08); opacity: 0; }
@@ -557,14 +556,14 @@ onMounted(load);
 .header-content h1 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-primary);
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
 .header-content p {
   font-size: 0.8125rem;
-  color: #71717a;
+  color: var(--text-secondary);
   margin-top: 0.25rem;
   font-weight: 500;
 }
@@ -579,9 +578,9 @@ onMounted(load);
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  border: 1px solid #27272a;
-  background: rgba(24, 24, 27, 0.8);
-  color: #a1a1aa;
+  border: 1px solid var(--border-card);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -593,7 +592,6 @@ onMounted(load);
 .refresh-btn:hover:not(:disabled) {
   border-color: #E73F1E;
   color: #E73F1E;
-  background: rgba(231, 63, 30, 0.08);
 }
 
 .refresh-btn:disabled {
@@ -609,9 +607,9 @@ onMounted(load);
   appearance: none;
   padding: 0.625rem 2.5rem 0.625rem 1rem;
   border-radius: 14px;
-  border: 1px solid #27272a;
-  background: rgba(24, 24, 27, 0.8);
-  color: #fafafa;
+  border: 1px solid var(--border-card);
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -630,7 +628,7 @@ onMounted(load);
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #71717a;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   pointer-events: none;
 }
@@ -658,6 +656,10 @@ html[dir="rtl"] .select-icon {
   color: #fca5a5;
   margin-bottom: 1.5rem;
   font-size: 0.875rem;
+}
+
+.dark .error-toast {
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .error-toast button {
@@ -692,22 +694,25 @@ html[dir="rtl"] .select-icon {
 .stat-card {
   position: relative;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(24, 24, 27, 0.9) 0%, rgba(39, 39, 42, 0.6) 100%);
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  backdrop-filter: blur(12px);
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: cardReveal 0.5s ease backwards;
   animation-delay: calc(var(--idx) * 60ms);
 }
 
-@keyframes cardReveal {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 .stat-card:hover {
   transform: translateY(-6px) scale(1.02);
   border-color: var(--clr);
+  box-shadow: 
+    0 24px 48px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px var(--clr),
+    0 0 40px -12px var(--clr);
+}
+
+.dark .stat-card:hover {
   box-shadow: 
     0 24px 48px -12px rgba(0, 0, 0, 0.5),
     0 0 0 1px var(--clr),
@@ -721,7 +726,7 @@ html[dir="rtl"] .select-icon {
 .stat-shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--bg-hover) 50%, transparent 100%);
   transform: translateX(-100%);
   animation: shimmer 2s infinite;
 }
@@ -762,7 +767,7 @@ html[dir="rtl"] .select-icon {
   display: block;
   font-size: 1.1875rem;
   font-weight: 800;
-  color: #fafafa;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
   white-space: nowrap;
@@ -775,7 +780,7 @@ html[dir="rtl"] .select-icon {
   font-size: 0.5625rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #71717a;
+  color: var(--text-secondary);
   margin-top: 0.25rem;
   font-weight: 600;
 }
@@ -791,7 +796,7 @@ html[dir="rtl"] .select-icon {
   border-radius: 20px;
   font-size: 0.6875rem;
   font-weight: 700;
-  background: rgba(255,255,255,0.05);
+  background: var(--bg-hover);
   color: var(--clr);
 }
 
@@ -800,7 +805,7 @@ html[dir="rtl"] .select-icon {
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+  background: linear-gradient(90deg, var(--border-card) 25%, var(--bg-hover) 50%, var(--border-card) 75%);
   background-size: 200% 100%;
   animation: skeleton 1.5s infinite;
 }
@@ -812,7 +817,7 @@ html[dir="rtl"] .select-icon {
 .skeleton-bar {
   height: 12px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+  background: linear-gradient(90deg, var(--border-card) 25%, var(--bg-hover) 50%, var(--border-card) 75%);
   background-size: 200% 100%;
   animation: skeleton 1.5s infinite;
 }
@@ -848,15 +853,16 @@ html[dir="rtl"] .select-icon {
 
 /* Chart Card */
 .chart-card {
-  background: linear-gradient(145deg, rgba(24, 24, 27, 0.9) 0%, rgba(39, 39, 42, 0.5) 100%);
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 18px;
   padding: 1.25rem;
   transition: all 0.3s;
+  backdrop-filter: blur(12px);
 }
 
 .chart-card:hover {
-  border-color: #3f3f46;
+  border-color: var(--clr);
 }
 
 .chart-header {
@@ -893,12 +899,12 @@ html[dir="rtl"] .select-icon {
 .chart-text h3 {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .chart-text p {
   font-size: 0.75rem;
-  color: #71717a;
+  color: var(--text-secondary);
   margin-top: 0.125rem;
 }
 
@@ -928,7 +934,7 @@ html[dir="rtl"] .select-icon {
   justify-content: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: #52525b;
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -949,7 +955,7 @@ html[dir="rtl"] .select-icon {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #52525b;
+  color: var(--text-label);
   margin-bottom: 1rem;
 }
 
@@ -964,8 +970,8 @@ html[dir="rtl"] .select-icon {
   align-items: center;
   gap: 0.875rem;
   padding: 0.9375rem 1rem;
-  background: linear-gradient(145deg, rgba(24, 24, 27, 0.9) 0%, rgba(39, 39, 42, 0.5) 100%);
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 14px;
   text-decoration: none;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -973,15 +979,9 @@ html[dir="rtl"] .select-icon {
   animation-delay: calc(var(--i) * 50ms + 300ms);
 }
 
-@keyframes actionReveal {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
 .action-card:hover {
   transform: translateX(6px);
   border-color: var(--accent);
-  background: linear-gradient(145deg, rgba(39, 39, 42, 0.8) 0%, rgba(63, 63, 70, 0.4) 100%);
 }
 
 html[dir="rtl"] .action-card:hover {
@@ -1010,11 +1010,11 @@ html[dir="rtl"] .action-card:hover {
   flex: 1;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #e4e4e7;
+  color: var(--text-primary);
 }
 
 .action-arrow {
-  color: #52525b;
+  color: var(--text-label);
   font-size: 0.75rem;
   transition: all 0.35s;
 }
@@ -1026,5 +1026,10 @@ html[dir="rtl"] .action-card:hover {
 
 html[dir="rtl"] .action-card:hover .action-arrow {
   transform: translateX(-3px);
+}
+
+@keyframes actionReveal {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 </style>

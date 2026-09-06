@@ -434,14 +434,14 @@ const {
 });
 
 const columns = computed(() => [
-  { key: 'name', label: t('patient.name'), sortable: true, width: '200px' },
-  { key: 'phone', label: t('patient.phone'), sortable: true, width: '160px' },
+  { key: 'name', label: t('patient.name'), sortable: true, width: 'minmax(150px, 1fr)' },
+  { key: 'phone', label: t('patient.phone'), sortable: true, width: 'minmax(120px, 0.8fr)' },
   { key: 'age', label: t('patient.age'), sortable: true, width: '70px' },
-  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, width: '160px' },
-  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, width: '140px', align: 'end' },
-  { key: 'visits_count', label: t('patient.total_visits'), sortable: true, width: '80px' },
-  { key: 'last_visit_at', label: t('patient.last_visit'), sortable: true, width: '160px' },
-  { key: 'actions', label: t('common.actions'), sortable: false, width: '180px', align: 'end', printHidden: true },
+  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, width: 'minmax(140px, 0.8fr)' },
+  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, width: 'minmax(100px, 0.6fr)', align: 'end' },
+  { key: 'visits_count', label: t('patient.total_visits'), sortable: true, width: '70px' },
+  { key: 'last_visit_at', label: t('patient.last_visit'), sortable: true, width: 'minmax(120px, 0.8fr)' },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: '140px', align: 'end', printHidden: true },
 ]);
 
 const stats = ref({});

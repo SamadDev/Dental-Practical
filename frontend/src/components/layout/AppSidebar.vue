@@ -171,6 +171,12 @@ function isActive(path) {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(231, 63, 30, 0.4);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.sidebar-logo:hover .logo-icon {
+  transform: scale(1.05) rotate(-3deg);
+  box-shadow: 0 6px 20px rgba(231, 63, 30, 0.5);
 }
 
 .logo-text {
@@ -224,13 +230,36 @@ function isActive(path) {
   border-radius: 0.75rem;
   color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  background: #E73F1E;
+  border-radius: 0 4px 4px 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateX(4px);
+}
+
+html[dir="rtl"] .menu-item:hover {
+  transform: translateX(-4px);
+}
+
+.menu-item:hover::before {
+  transform: translateY(-50%) scaleY(1);
 }
 
 .menu-item--active {
@@ -239,15 +268,7 @@ function isActive(path) {
 }
 
 .menu-item--active::before {
-  content: '';
-  position: absolute;
-  inset-inline-start: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 24px;
-  background: #E73F1E;
-  border-radius: 0 4px 4px 0;
+  transform: translateY(-50%) scaleY(1);
 }
 
 .menu-item--active .menu-icon {
@@ -261,6 +282,12 @@ function isActive(path) {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
+}
+
+.menu-item:hover .menu-icon {
+  transform: scale(1.15);
+  color: #E73F1E;
 }
 
 .menu-label {
@@ -271,24 +298,47 @@ function isActive(path) {
 
 .menu-badge {
   font-size: 0.625rem;
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.125rem 0.5rem;
   background: #E73F1E;
   color: white;
   border-radius: 9999px;
+  animation: badge-pulse 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(231, 63, 30, 0.4);
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .menu-divider {
   padding: 1rem 1rem 0.5rem;
   margin-top: 0.5rem;
+  position: relative;
+}
+
+.menu-divider::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 1rem;
+  inset-inline-end: 1rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 .menu-divider-text {
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   color: rgba(255, 255, 255, 0.3);
+  transition: color 0.3s ease;
+}
+
+.menu-section:hover .menu-divider-text {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .sidebar-footer {
@@ -303,7 +353,7 @@ function isActive(path) {
 
 /* Scrollbar */
 .sidebar-menu::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .sidebar-menu::-webkit-scrollbar-track {
@@ -311,11 +361,19 @@ function isActive(path) {
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Hover effects for mobile */
+@media (hover: hover) {
+  .sidebar-menu {
+    scrollbar-gutter: stable;
+  }
 }
 </style>

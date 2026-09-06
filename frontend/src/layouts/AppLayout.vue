@@ -152,12 +152,19 @@ const goToTop = () => {
 <style scoped>
 .sidebar-enter-active,
 .sidebar-leave-active {
-  transition: transform 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
 }
 
 .sidebar-enter-from,
 .sidebar-leave-to {
   transform: translateX(-100%);
+  opacity: 0;
+}
+
+.sidebar-enter-to,
+.sidebar-leave-from {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 html[dir="rtl"] .sidebar-enter-from,
@@ -167,11 +174,18 @@ html[dir="rtl"] .sidebar-leave-to {
 
 .overlay-enter-active,
 .overlay-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 .overlay-enter-from,
 .overlay-leave-to {
   opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+.overlay-enter-to,
+.overlay-leave-from {
+  opacity: 1;
+  backdrop-filter: blur(4px);
 }
 </style>

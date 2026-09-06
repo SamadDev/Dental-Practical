@@ -60,7 +60,7 @@
       <!-- Desktop Table -->
       <div class="hidden lg:block">
         <div class="table-container overflow-x-auto">
-          <table class="data-table w-full text-sm">
+          <table class="data-table w-full text-sm" :style="tableStyle">
             <thead class="data-table-head">
               <tr>
                 <th

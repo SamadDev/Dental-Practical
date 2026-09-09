@@ -3,6 +3,7 @@ import { useAuth } from '../composables/useAuth';
 import QueueView          from '../views/QueueView.vue';
 import PatientsView       from '../views/PatientsView.vue';
 import PatientView        from '../views/PatientView.vue';
+import PatientFormView    from '../views/PatientFormView.vue';
 import ArchiveView        from '../views/ArchiveView.vue';
 import DashboardView      from '../views/DashboardView.vue';
 import ExpensesView       from '../views/ExpensesView.vue';
@@ -16,6 +17,7 @@ import ReceptionistsView  from '../views/ReceptionistsView.vue';
 import ProfileView        from '../views/ProfileView.vue';
 import RolesView          from '../views/RolesView.vue';
 import CalendarView       from '../views/CalendarView.vue';
+import LabWorkOrdersView  from '../views/LabWorkOrdersView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -37,6 +39,7 @@ const router = createRouter({
     { path: '/receptionists',   component: ReceptionistsView, name: 'receptionists', meta: { permission: 'users.manage' } },
     { path: '/profile',         component: ProfileView,       name: 'profile',  meta: { permission: 'dashboard.view' } },
     { path: '/roles',           component: RolesView,         name: 'roles',    meta: { permission: 'users.manage' } },
+    { path: '/lab-orders',      component: LabWorkOrdersView, name: 'lab_orders', meta: { permission: 'lab.view' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });

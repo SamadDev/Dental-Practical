@@ -80,12 +80,14 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import Icon from '../Icon.vue';
 import { useAuth } from '../../composables/useAuth';
 
 defineEmits(['close']);
 
 const { can } = useAuth();
+const route = useRoute();
 
 const allRoutes = [
   { name: 'home',       path: '/home',          icon: 'home' },
@@ -126,7 +128,9 @@ const visibleRoutes = computed(() => {
 });
 
 function isActive(path) {
-  return window.location.hash.includes(path);
+  // Reactive: re-evaluates on every navigation (window.location.hash is NOT reactive,
+  // which previously froze the highlight until a page refresh).
+  return route.path === path || route.path.startsWith(path + '/');
 }
 </script>
 
@@ -144,7 +148,7 @@ function isActive(path) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
 .sidebar-header {
@@ -152,7 +156,7 @@ function isActive(path) {
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .sidebar-logo {
@@ -187,13 +191,13 @@ function isActive(path) {
 .logo-name {
   font-size: 1.125rem;
   font-weight: 700;
-  color: white;
+  color: #1e293b;
   line-height: 1.2;
 }
 
 .logo-tagline {
   font-size: 0.625rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -201,13 +205,13 @@ function isActive(path) {
 .sidebar-close {
   padding: 0.5rem;
   border-radius: 0.5rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   transition: all 0.2s;
 }
 
 .sidebar-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .sidebar-menu {
@@ -228,7 +232,7 @@ function isActive(path) {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   text-decoration: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -249,8 +253,8 @@ function isActive(path) {
 }
 
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.95);
+  background: rgba(231, 63, 30, 0.08);
+  color: #1e293b;
   transform: translateX(4px);
 }
 
@@ -263,8 +267,8 @@ html[dir="rtl"] .menu-item:hover {
 }
 
 .menu-item--active {
-  background: rgba(231, 63, 30, 0.15);
-  color: white;
+  background: rgba(231, 63, 30, 0.12);
+  color: #E73F1E;
 }
 
 .menu-item--active::before {
@@ -283,6 +287,7 @@ html[dir="rtl"] .menu-item:hover {
   height: 24px;
   flex-shrink: 0;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s ease;
+  color: #64748b;
 }
 
 .menu-item:hover .menu-icon {
@@ -325,7 +330,7 @@ html[dir="rtl"] .menu-item:hover {
   inset-inline-end: 1rem;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
 }
 
 .menu-divider-text {
@@ -333,17 +338,17 @@ html[dir="rtl"] .menu-item:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.3);
+  color: #94a3b8;
   transition: color 0.3s ease;
 }
 
 .menu-section:hover .menu-divider-text {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e2e8f0;
 }
 
 .footer-info {
@@ -361,13 +366,13 @@ html[dir="rtl"] .menu-item:hover {
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #cbd5e1;
   border-radius: 6px;
   transition: background 0.2s;
 }
 
 .sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #94a3b8;
 }
 
 /* Hover effects for mobile */

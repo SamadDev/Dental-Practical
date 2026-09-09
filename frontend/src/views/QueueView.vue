@@ -362,6 +362,8 @@ async function searchPatients() {
   try {
     const { data } = await api.get('/patients', { params: { search: addForm.value.search.trim() } });
     results.value = data.data || data;
+  } catch (err) {
+    toast.error(err.userMessage || t('common.error_loading'));
   } finally {
     searching.value = false;
   }

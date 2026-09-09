@@ -4,10 +4,10 @@
       <header class="mb-5 flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div>
           <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{{ $t('nav.home') }}</p>
-          <h2 class="mt-1 text-xl font-bold tracking-tight text-slate-800">Clinic menu</h2>
+          <h2 class="mt-1 text-xl font-bold tracking-tight text-slate-800">{{ $t('nav.clinic_menu') }}</h2>
         </div>
         <div class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-          {{ totalSections }} modules
+          {{ totalSections }} {{ $t('nav.modules') }}
         </div>
       </header>
 

@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar no-print" dir="ltr">
+  <aside class="sidebar no-print">
     <!-- Brand -->
     <div class="sidebar-brand">
       <div class="sidebar-logo">
@@ -111,6 +111,7 @@ const routePermissionMap = {
   inventory:  'inventory.view',
   vendors:    'vendors.view',
   expenses:   'expenses.view',
+  lab_orders: 'lab.view',
 };
 
 const allRoutes = [
@@ -120,9 +121,10 @@ const allRoutes = [
   { name: 'archive',    path: '/archive',       icon: 'archive' },
   { name: 'dashboard',  path: '/dashboard',     icon: 'bar-chart' },
   { name: 'plans',      path: '/payment-plans', icon: 'credit-card' },
-  { name: 'inventory',  path: '/inventory',     icon: 'package' },
+  { name: 'inventory',   path: '/inventory',     icon: 'package' },
   { name: 'vendors',    path: '/vendors',       icon: 'factory' },
   { name: 'expenses',   path: '/expenses',      icon: 'receipt' },
+  { name: 'lab_orders', path: '/lab-orders',  icon: 'briefcase' },
 ];
 
 const visibleRoutes = computed(() => {

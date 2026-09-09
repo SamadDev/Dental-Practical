@@ -526,7 +526,7 @@ async function load() {
     metrics.value = data;
   } catch (err) {
     error.value = true;
-    console.error('Dashboard load error:', err);
+    toast.error(err.userMessage || t('common.error_loading'));
   } finally {
     loading.value = false;
   }

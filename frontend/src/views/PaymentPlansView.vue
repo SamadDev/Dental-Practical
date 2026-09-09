@@ -435,7 +435,7 @@ async function openDetail(plan) {
     const { data } = await api.get(`/payment-plans/${plan.id}`);
     detail.value = data;
   } catch (e) {
-    console.error('Failed to load plan detail:', e);
+    toast.error(e.userMessage || t('common.error_loading'));
   }
 }
 

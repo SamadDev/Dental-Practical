@@ -304,8 +304,10 @@ import TagInput from './TagInput.vue';
 import Autocomplete from './Autocomplete.vue';
 import ToggleGroup from './ToggleGroup.vue';
 import api from '../utils/axios';
+import { useToast } from '../composables/useToast';
 
-const props = defineProps({
+const toast = useToast();
+defineProps({
   modelValue: {
     type: Object,
     default: () => ({}),
@@ -467,7 +469,7 @@ async function addAllergy(name) {
       form.allergies.push({ id: res.data.id, name: res.data.name });
     }
   } catch (e) {
-    console.error('Failed to add allergy:', e);
+    toast.error(e.userMessage || 'Failed to add allergy');
   }
 }
 
@@ -479,7 +481,7 @@ async function addDisease(name) {
       form.diseases.push({ id: res.data.id, name: res.data.name });
     }
   } catch (e) {
-    console.error('Failed to add disease:', e);
+    toast.error(e.userMessage || 'Failed to add disease');
   }
 }
 
@@ -491,7 +493,7 @@ async function addVisitReason(name) {
       form.visit_reason = res.data.name;
     }
   } catch (e) {
-    console.error('Failed to add visit reason:', e);
+    toast.error(e.userMessage || 'Failed to add visit reason');
   }
 }
 

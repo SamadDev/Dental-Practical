@@ -39,7 +39,7 @@
                   <path v-if="patient.gender === 'female'" d="M12 8v8M8 12h8"/>
                   <path v-else d="M8 12h8"/>
                 </svg>
-                {{ patient.gender === 'female' ? 'Female' : 'Male' }}
+                {{ patient.gender === 'female' ? $t('patient.gender_female') : $t('patient.gender_male') }}
               </span>
               <span v-if="patient.age" class="meta-item">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -61,12 +61,12 @@
 
         <div class="profile-stats">
           <div v-if="appointmentCountdown !== null" class="stat-box" :class="appointmentCountdown <= 1 ? 'stat-box--danger' : 'stat-box--primary'">
-            <span class="stat-value">{{ appointmentCountdown === 0 ? 'Today!' : appointmentCountdown + 'd' }}</span>
-            <span class="stat-label">until appt</span>
+            <span class="stat-value">{{ appointmentCountdown === 0 ? $t('patient.appointment_today') : appointmentCountdown + 'd' }}</span>
+            <span class="stat-label">{{ $t('patient.until_appt') }}</span>
           </div>
           <div class="stat-box stat-box--visits">
             <span class="stat-value">{{ totalVisits }}</span>
-            <span class="stat-label">Visits</span>
+            <span class="stat-label">{{ $t('patient.total_visits') }}</span>
           </div>
         </div>
       </div>
@@ -77,14 +77,14 @@
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          Add to Queue
+          {{ $t('patient.add_to_queue') }}
         </button>
         <button v-if="can('patients.edit')" type="button" class="action-btn action-btn--secondary" @click="openEdit">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-          Edit
+          {{ $t('common.edit') }}
         </button>
         <button v-if="can('patients.delete')" type="button" class="action-btn action-btn--danger" @click="askDeletePatient">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -98,6 +98,18 @@
           </svg>
           WhatsApp
         </a>
+        <button type="button" class="action-btn action-btn--secondary" @click="showPrescriptionDialog = true">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ $t('rx.title') }}
+        </button>
+        <button type="button" class="action-btn action-btn--secondary" @click="showLabOrderDialog = true">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+          </svg>
+          {{ $t('lab.title') }}
+        </button>
         <button v-if="patient.phone && upcomingFollowup" type="button" class="action-btn action-btn--call" @click="callPatient">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
@@ -192,7 +204,7 @@
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
           </svg>
-          Conditions & Allergies
+          {{ $t('patient.conditions_title') }}
         </h3>
         <span v-if="conditions.length" class="detail-card-count">{{ conditions.length }}</span>
       </div>
@@ -579,6 +591,9 @@
     <ConfirmDialog v-model="showConfirmDeleteCondition" :title="$t('common.confirm_delete')" :message="confirmDeleteConditionMsg" :confirm-label="$t('common.delete')" @confirmed="deleteCondition" />
     <ConfirmDialog v-model="showConfirmDeletePatient" :title="$t('common.confirm_delete')" :message="confirmDeletePatientMsg" :confirm-label="$t('common.delete')" @confirmed="deletePatient" />
     <ConfirmDialog v-model="showConfirmSave" :title="$t('common.confirm_save')" :message="$t('common.confirm_save_msg')" :confirm-label="$t('common.save')" :danger="false" @confirmed="saveEdit" />
+
+    <PrescriptionDialog v-if="patient" v-model="showPrescriptionDialog" :patient-id="patient.id" />
+    <LabWorkOrderDialog v-if="patient" v-model="showLabOrderDialog" :patient-id="patient.id" />
   </section>
 </template>
 
@@ -592,6 +607,8 @@ import StatusBadge  from '../components/StatusBadge.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import Icon from '../components/Icon.vue';
 import DentalChart from '../components/DentalChart.vue';
+import PrescriptionDialog from '../components/PrescriptionDialog.vue';
+import LabWorkOrderDialog from '../components/LabWorkOrderDialog.vue';
 import { formatIQD } from '../utils/iqd';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
@@ -675,6 +692,8 @@ function callPatient() {
 
 const showEdit        = ref(false);
 const showConfirmSave = ref(false);
+const showPrescriptionDialog = ref(false);
+const showLabOrderDialog = ref(false);
 const editForm        = ref({});
 const errors          = ref({});
 
@@ -735,8 +754,12 @@ function relativeTime(dateStr) {
 }
 
 async function load() {
-  const { data } = await api.get(`/patients/${route.params.id}`);
-  patient.value = data;
+  try {
+    const { data } = await api.get(`/patients/${route.params.id}`);
+    patient.value = data;
+  } catch (err) {
+    toast.error(err.userMessage || t('common.error_loading'));
+  }
 }
 
 async function uploadXray(e, visit) {

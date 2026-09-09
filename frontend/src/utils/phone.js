@@ -56,3 +56,12 @@ export function formatPhoneForTel(raw) {
   if (!normalized) return '';
   return `+964${normalized}`;
 }
+
+// Format phone as `770 123 4567` (10-digit local Iraq format).
+// Strips non-digits and groups them. Caps at 10 digits.
+export function formatPhoneDigits(raw) {
+  const digits = String(raw || '').replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+}

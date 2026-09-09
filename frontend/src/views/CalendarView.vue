@@ -382,7 +382,7 @@ async function loadAppointments() {
       };
     });
   } catch (e) {
-    console.error('Failed to load appointments:', e);
+    toast.error(e.userMessage || t('common.error_loading'));
   } finally {
     loading.value = false;
   }

@@ -4,3 +4,11 @@ Doctor	doctor@clinic.local	doctor123
 Receptionist	reception@clinic.local	reception123
 What's New
 Visit https://samaddev.github.io/Dental-Practical/ 
+
+2. Keyboard Shortcuts (App.vue)
+- Press N → Go to New Patient
+- Press Q → Go to Queue
+- Press A → Go to Archive
+- Press P → Go to Patients
+- Press D → Go to Dashboard
+- (Doesn't trigger when typing in input fields)

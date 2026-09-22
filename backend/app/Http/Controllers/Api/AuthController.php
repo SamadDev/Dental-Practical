@@ -66,14 +66,14 @@ class AuthController extends Controller
         return response()->json($users);
     }
 
-    /** Admin: create user (admin/receptionist/hygienist only; doctors via DoctorController). */
+    /** Admin: create user (admin/receptionist/hygienist/lab; doctors via DoctorController). */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'required|email|unique:users,email',
             'password'  => 'required|string|min:6',
-            'role'      => ['required', Rule::in(['admin', 'receptionist', 'hygienist'])],
+            'role'      => ['required', Rule::in(User::ROLES)],
             'is_active' => 'sometimes|boolean',
         ]);
 

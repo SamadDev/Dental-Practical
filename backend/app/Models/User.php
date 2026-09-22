@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -13,9 +13,16 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable, HasRoles;
 
+    /**
+     * Every role the clinic can hand out. `doctor` and `receptionist` are also
+     * creatable through their own controllers (which build the linked profile),
+     * `lab` is the laboratory desk that works the shared lab-orders queue.
+     */
+    public const ROLES = ['admin', 'doctor', 'receptionist', 'lab', 'hygienist'];
+
     protected $fillable = [
         'name', 'email', 'password', 'role', 'is_active',
-    ];
+    】;
 
     protected $hidden = [
         'password', 'remember_token',
@@ -48,9 +55,9 @@ class User extends Authenticatable
 
     // ── Doctor profile (one-to-one, for users with role=doctor) ────────────────
 
-    public function doctorProfile(): BelongsTo
+    public function doctorProfile(): HasOne
     {
-        return $this->belongsTo(Doctor::class);
+        return $this->hasOne(Doctor::class, 'user_id');
     }
 
     // ── Receptionist <-> Doctor assignments (many-to-many) ────────────────────
@@ -83,7 +90,10 @@ class User extends Authenticatable
         }
 
         if ($this->isReceptionist()) {
-            $ids = array_merge($ids, $this->assignedDoctors()->pluck('id')->all());
+            // Qualified column: both `doctors` and the pivot have an `id`, and an
+            // unqualified pluck('id') over the join makes SQLite/MySQL throw
+            // "ambiguous column name".
+            $ids = array_merge($ids, $this->assignedDoctors()->pluck('doctors.id')->all());
         }
 
         return array_values(array_unique($ids));

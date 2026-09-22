@@ -166,7 +166,12 @@ class VisitController extends Controller
                     $contract->save();
 
                     $contractId = $contract->id;
-                    $debt       = 0; // Aqsat payments do not create short-term debt.
+
+                    // Whatever part of today's total was neither paid in cash nor
+                    // covered by the installment plan becomes short-term debt.
+                    // Without this the difference (total_cost - amount_paid - plan
+                    // coverage) vanished from every report.
+                    $debt = max(0, $totalCost - $amountPaid);
                     break;
             }
 
@@ -288,6 +293,10 @@ class VisitController extends Controller
         if ($request->filled('patient_id')) {
             $q->where('visits.patient_id', (int) $request->query('patient_id'));
         }
+
+        // Same doctor scoping the queue applies — receptionists must not see
+        // other doctors' completed visits.
+        $this->applyVisitScope($q, $request);
 
         return $q;
     }

@@ -136,10 +136,12 @@ watch(() => props.visit, async (v) => {
   };
   error.value = '';
   if (v.patient_id) {
-    const { data } = await api.get('/payment-plans', {
+    // The backend's checkout endpoint validates aqsat_contract_id against the
+    // aqsat_contracts table, so the picker must list those — not payment plans.
+    const { data } = await api.get('/aqsat-contracts', {
       params: { patient_id: v.patient_id, status: 'active' },
     });
-    contracts.value = data;
+    contracts.value = Array.isArray(data) ? data : (data.data || []);
   }
 }, { immediate: true });
 

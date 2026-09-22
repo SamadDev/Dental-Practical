@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryItem;
+use App\Models\InventoryMovement;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Vendor;
@@ -130,7 +131,7 @@ class VendorController extends Controller
                 'vendor_id'    => $data['vendor_id'],
                 'po_number'    => $data['po_number'],
                 'order_date'   => $data['order_date'],
-                'expected_date'=> $data['expected_date'],
+                'expected_date'=> $data['expected_date'] ?? null,
                 'subtotal'     => $subtotal,
                 'tax_amount'   => 0,
                 'total_amount' => $subtotal,
@@ -204,8 +205,8 @@ class VendorController extends Controller
                     'unit_cost_at_time'   => $poItem->unit_cost,
                     'reference_type'      => 'purchase_order',
                     'reference_id'        => $purchaseOrder->id,
-                    'batch_number'        => $item['batch_number'],
-                    'expiry_date'         => $item['expiry_date'],
+                    'batch_number'        => $item['batch_number'] ?? null,
+                    'expiry_date'         => $item['expiry_date'] ?? null,
                     'notes'               => "PO: {$purchaseOrder->po_number}",
                     'user_id'             => auth()->id(),
                 ]);

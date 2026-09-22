@@ -22,7 +22,8 @@
     "receptionists": "Receptionists",
     "management": "Management",
     "profile": "My Profile",
-    "roles": "Roles & Permissions"
+    "roles": "Roles & Permissions",
+    "calendar": "Calendar"
   },
   "role": {
     "admin": "Admin",
@@ -92,7 +93,15 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
-    "password": "Password"
+    "password": "Password",
+    "confirm": "Confirm",
+    "error": "Something went wrong",
+    "error_loading": "Could not load data",
+    "logout": "Sign Out",
+    "no_options": "No options",
+    "saved": "Saved successfully",
+    "select": "Select",
+    "view": "View"
   },
   "patient": {
     "title": "Patients",
@@ -134,11 +143,11 @@
     "sev_moderate": "Moderate",
     "sev_severe": "Severe",
     "condition_name": "Name",
-    "condition_name_ph": "e.g. Amoxicillin, Diabetes",
+    "condition_name_ph": "e.g., Penicillin allergy",
     "condition_name_required": "Name is required",
     "condition_note": "Note",
     "condition_note_ph": "Optional detail",
-    "add_condition": "Add",
+    "add_condition": "Add Condition",
     "no_conditions": "No known allergies or conditions.",
     "severe_allergy_badge": "Severe allergy — check before prescribing",
     "severe_allergy_short": "Allergy",
@@ -157,20 +166,16 @@
     "tooth": "Tooth",
     "address": "Address",
     "address_ph": "Street address",
-    "medical_notes": "Medical Notes",
     "medical_notes_ph": "Any medical conditions, allergies, or notes...",
     "next_appointment": "Next Appointment",
     "cancel": "Cancel",
     "save_changes": "Save Changes",
     "add_new": "Add New",
     "type": "Type",
-    "severity": "Severity",
     "name_required_star": "Name",
-    "condition_name_ph": "e.g., Penicillin allergy",
     "note_optional": "Note (optional)",
     "note_ph": "Additional details...",
     "update": "Update",
-    "add_condition": "Add Condition",
     "allergy": "Allergy",
     "condition": "Condition",
     "mild": "Mild",
@@ -246,7 +251,24 @@
     "insurance": "Insurance Provider",
     "insurance_placeholder": "Policy number if applicable",
     "consent": "Patient Consent",
-    "consent_text": "I agree to receive dental treatment and understand the associated risks."
+    "consent_text": "I agree to receive dental treatment and understand the associated risks.",
+    "step_personal": "Personal Information",
+    "step_medical": "Medical History",
+    "step_schedule": "Doctor & Appointment",
+    "age_placeholder": "e.g. 32",
+    "phone_placeholder": "770 123 4567",
+    "is_smoker": "Smoker?",
+    "smoker_hint": "Smoking affects healing and treatment planning.",
+    "smoker_yes": "Smoker",
+    "smoker_no": "Non-smoker",
+    "conditions_hint": "Record allergies and chronic conditions so they show on the chart.",
+    "condition_update": "Update",
+    "assigned_doctor": "Assigned Doctor",
+    "doctor_hint": "Doctor responsible for this patient's follow-up.",
+    "no_doctor": "No doctor",
+    "not_set": "Not set",
+    "review_hint": "Review the details below before saving.",
+    "gender_unknown": "Not specified"
   },
   "calendar": {
     "title": "Appointment Calendar",
@@ -276,7 +298,7 @@
     "search_by_name_or_phone": "Search by name or phone...",
     "selected": "selected",
     "clear_all": "Clear all",
-    "searching": "Searching...",
+    "searching": "Searching…",
     "no_patients_found": "No patients found",
     "create": "Create",
     "type_to_search": "Type to search for patients",
@@ -309,18 +331,16 @@
       "active": "Active",
       "completed": "Completed"
     },
-    "add_to_queue": "Add to Queue",
     "in_queue": "In Queue",
-    "remove": "Remove",
     "empty": "No patients in the queue yet.",
     "search_hint": "Type at least 2 characters to search",
     "select_patient": "Select a patient from the list",
-    "searching": "Searching…",
     "type": {
       "walk_in": "Walk-In",
       "phone": "Phone",
       "whatsapp": "WhatsApp"
-    }
+    },
+    "add": "Add"
   },
   "visit": {
     "treatment": "Treatment",
@@ -380,7 +400,8 @@
     "description_required": "Description is required",
     "empty": "No expenses logged yet.",
     "description_hint": "What was this spent on?",
-    "search_placeholder": "Search description…"
+    "search_placeholder": "Search description…",
+    "new": "Log Expense"
   },
   "dashboard": {
     "title": "Financial Dashboard",
@@ -420,7 +441,6 @@
     "payment": "Payment",
     "expense": "Expense",
     "patient": "Patient",
-    "revenue": "Revenue",
     "settings": "Settings",
     "dark_mode": "Dark Mode",
     "dark_mode_desc": "Toggle dark/light theme",
@@ -432,7 +452,8 @@
       "last_7": "Last 7 Days",
       "this_month": "This Month",
       "all_time": "All Time"
-    }
+    },
+    "patients_by_gender": "Patients by Gender"
   },
   "archive": {
     "title": "Treatment Archive",
@@ -641,7 +662,8 @@
     "all_users": "All Users",
     "manage_users": "Manage user roles",
     "change_role": "Change Role",
-    "role_updated": "User role updated successfully"
+    "role_updated": "User role updated successfully",
+    "role": "Role"
   },
   "reminder": {
     "title": "Send Reminder",
@@ -730,5 +752,12 @@
     "cost_ph": "0.00",
     "invoice": "Invoice #",
     "invoice_ph": "Lab invoice number"
+  },
+  "treatment": {
+    "title": "Treatments"
+  },
+  "payment": {
+    "aqsat_paid": "Aqsat Collected",
+    "aqsat_pending": "Aqsat Outstanding"
   }
 }

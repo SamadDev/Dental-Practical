@@ -22,7 +22,8 @@
     "receptionists": "موظفو الاستقبال",
     "management": "الإدارة",
     "profile": "ملفي",
-    "roles": "الأدوار والصلاحيات"
+    "roles": "الأدوار والصلاحيات",
+    "calendar": "التقويم"
   },
   "calendar": {
     "title": "تقويم المواعيد",
@@ -110,7 +111,15 @@
     "status": "الحالة",
     "active": "نشط",
     "inactive": "غير نشط",
-    "password": "كلمة المرور"
+    "password": "كلمة المرور",
+    "confirm": "تأكيد",
+    "error": "حدث خطأ ما",
+    "error_loading": "تعذر تحميل البيانات",
+    "logout": "تسجيل الخروج",
+    "no_options": "لا توجد خيارات",
+    "saved": "تم الحفظ بنجاح",
+    "select": "اختر",
+    "view": "عرض"
   },
   "patient": {
     "title": "المرضى",
@@ -118,7 +127,7 @@
     "name": "الاسم",
     "phone": "رقم الهاتف",
     "age": "العمر",
-    "medical_notes": "ملاحظات طبية",
+    "medical_notes": "الملاحظات الطبية",
     "outstanding_debt": "المبلغ المستحق",
     "outstanding": "المستحق",
     "last_visit": "آخر زيارة",
@@ -135,7 +144,6 @@
     "empty": "لا يوجد مرضى بعد. أضف أول مريض الآن.",
     "search_placeholder": "ابحث باسم أو هاتف…",
     "smoker_badge": "🚬 مدخن",
-    "total_visits": "عدد الزيارات",
     "whatsapp_tooltip": "فتح دردشة واتساب مع {phone}",
     "code": "رمز المريض",
     "gender": "الجنس",
@@ -148,16 +156,16 @@
     "condition_type": "النوع",
     "type_allergy": "حساسية",
     "type_condition": "حالة مرضية",
-    "severity": "الشدة",
+    "severity": "الخطورة",
     "sev_mild": "خفيفة",
     "sev_moderate": "متوسطة",
     "sev_severe": "شديدة",
     "condition_name": "الاسم",
-    "condition_name_ph": "مثال: أموكسيسيلين، السكري",
+    "condition_name_ph": "مثال، حساسية البنسيلين",
     "condition_name_required": "الاسم مطلوب",
     "condition_note": "ملاحظة",
     "condition_note_ph": "تفاصيل اختيارية",
-    "add_condition": "إضافة",
+    "add_condition": "إضافة حالة",
     "no_conditions": "لا توجد حساسية أو حالات مرضية معروفة.",
     "severe_allergy_badge": "حساسية شديدة — تحقق قبل الوصف",
     "severe_allergy_short": "حساسية",
@@ -176,17 +184,13 @@
     "tooth": "السن",
     "address": "العنوان",
     "address_ph": "عنوان الشارع",
-    "medical_notes": "الملاحظات الطبية",
     "medical_notes_ph": "أي حالات طبية أو حساسية أو ملاحظات...",
     "next_appointment": "الموعد التالي",
     "add_new": "إضافة جديد",
     "type": "النوع",
-    "severity": "الخطورة",
-    "condition_name_ph": "مثال، حساسية البنسيلين",
     "note_optional": "ملاحظة (اختياري)",
     "note_ph": "تفاصيل إضافية...",
     "update": "تحديث",
-    "add_condition": "إضافة حالة",
     "allergy": "حساسية",
     "condition": "حالة",
     "mild": "خفيف",
@@ -262,7 +266,27 @@
     "insurance": "مزود التأمين",
     "insurance_placeholder": "رقم البوليصة إن وجد",
     "consent": "موافقة المريض",
-    "consent_text": "أوافق على تلقي علاج الأسنان وأفهم المخاطر المرتبطة بذلك."
+    "consent_text": "أوافق على تلقي علاج الأسنان وأفهم المخاطر المرتبطة بذلك.",
+    "step_personal": "المعلومات الشخصية",
+    "step_medical": "التاريخ الطبي",
+    "step_schedule": "الطبيب والموعد",
+    "name_required_star": "الاسم الكامل",
+    "age_placeholder": "مثال ٣٢",
+    "phone_placeholder": "770 123 4567",
+    "is_smoker": "هل المريض مدخن؟",
+    "smoker_hint": "التدخين يؤثر على الشفاء وخطة العلاج.",
+    "smoker_yes": "مدخن",
+    "smoker_no": "غير مدخن",
+    "conditions_hint": "سجّل الحساسية والأمراض المزمنة لتظهر على المخطط.",
+    "condition_update": "تحديث",
+    "assigned_doctor": "الطبيب المعالج",
+    "doctor_hint": "الطبيب المسؤول عن متابعة المريض.",
+    "no_doctor": "بدون طبيب",
+    "not_set": "غير محدد",
+    "review_hint": "راجع التفاصيل أدناه قبل الحفظ.",
+    "cancel": "إلغاء",
+    "save_changes": "حفظ التغييرات",
+    "gender_unknown": "غير محدد"
   },
   "queue": {
     "title": "طابور اليوم",
@@ -314,7 +338,9 @@
       "walk_in": "حضور",
       "phone": "هاتف",
       "whatsapp": "واتساب"
-    }
+    },
+    "add": "إضافة",
+    "treatment": "العلاج"
   },
   "visit": {
     "treatment": "العلاج",
@@ -374,7 +400,8 @@
     "description_required": "الوصف مطلوب",
     "empty": "لا توجد مصروفات مسجلة بعد.",
     "description_hint": "على ماذا تم صرف هذا المبلغ؟",
-    "search_placeholder": "ابحث في الوصف…"
+    "search_placeholder": "ابحث في الوصف…",
+    "new": "تسجيل المصروف"
   },
   "dashboard": {
     "title": "لوحة الإيرادات",
@@ -425,7 +452,8 @@
       "last_7": "آخر 7 أيام",
       "this_month": "هذا الشهر",
       "all_time": "كل الوقت"
-    }
+    },
+    "patients_by_gender": "المرضى حسب الجنس"
   },
   "archive": {
     "title": "أرشيف العلاجات",
@@ -634,7 +662,8 @@
     "all_users": "جميع المستخدمين",
     "manage_users": "إدارة أدوار المستخدمين",
     "change_role": "تغيير الدور",
-    "role_updated": "تم تحديث دور المستخدم بنجاح"
+    "role_updated": "تم تحديث دور المستخدم بنجاح",
+    "role": "الدور"
   },
   "reminder": {
     "title": "إرسال تذكير",
@@ -723,5 +752,12 @@
     "cost_ph": "0.00",
     "invoice": "رقم الفاتورة",
     "invoice_ph": "رقم فاتورة المعمل"
+  },
+  "treatment": {
+    "title": "العلاجات"
+  },
+  "payment": {
+    "aqsat_paid": "محصّل من الأقساط",
+    "aqsat_pending": "أقساط متبقية"
   }
 }

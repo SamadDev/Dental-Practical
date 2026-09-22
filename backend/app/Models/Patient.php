@@ -64,6 +64,18 @@ class Patient extends Model
         return $this->hasMany(Visit::class);
     }
 
+    /** Medicines the doctor wrote for this patient. */
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
+    /** Laboratory / X-ray requests raised for this patient. */
+    public function labOrders(): HasMany
+    {
+        return $this->hasMany(LabOrder::class);
+    }
+
     public function aqsatContracts(): HasMany
     {
         return $this->hasMany(AqsatContract::class);

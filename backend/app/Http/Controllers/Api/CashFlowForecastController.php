@@ -64,11 +64,25 @@ class CashFlowForecastController extends Controller
      */
     public function weekly(Request $request): JsonResponse
     {
+        // Re-run the forecast pipeline directly (a JsonResponse has no ->json(),
+        // so we cannot decode forecast()'s response — share the logic instead).
         $from = $request->query('from', now()->startOfMonth()->toDateString());
         $to   = $request->query('to',   now()->addMonths(3)->endOfMonth()->toDateString());
+        $includeManual = $request->boolean('include_manual', true);
 
-        $dailyRes = $this->forecast($request);
-        $daily = $dailyRes->json()['daily'];
+        $daily = $this->aggregateDaily(
+            $from,
+            $to,
+            $this->projectAqsatInflows($from, $to),
+            $this->projectVisitInflows($from, $to),
+            $this->projectExpenseOutflows($from, $to),
+            $includeManual
+                ? CashFlowForecast::whereBetween('forecast_date', [$from, $to])
+                    ->orderBy('forecast_date')
+                    ->get()
+                    ->toArray()
+                : [],
+        );
 
         $weekly = [];
         foreach ($daily as $day) {
@@ -274,7 +288,10 @@ class CashFlowForecastController extends Controller
         // Aggregate all sources
         foreach ($sources as $source) {
             foreach ($source as $item) {
-                $d = $item['date'];
+                // Manual forecast rows (from the cash_flow_forecasts table) carry
+                // their date as `forecast_date`; projection helpers use `date`.
+                $d = $item['date'] ?? $item['forecast_date'] ?? null;
+                if ($d === null) continue;
                 if (!isset($daily[$d])) continue;
                 if ($item['type'] === 'inflow') $daily[$d]['inflow'] += $item['amount'];
                 else $daily[$d]['outflow'] += $item['amount'];

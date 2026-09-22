@@ -218,29 +218,34 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import DataTablePagination from './DataTablePagination.vue';
 
 const props = defineProps({
-  columns:        { type: Array,   required: true },
-  rows:           { type: Array,   default: () => [] },
-  loading:        { type: Boolean, default: false },
-  sort:           { type: String,  default: '' },
-  dir:            { type: String,  default: 'desc' },
-  isFiltered:     { type: Boolean, default: false },
-  rowClickable:   { type: Boolean, default: false },
-  emptyText:      { type: String,  default: '' },
-  emptyIcon:      { type: String,  default: '📋' },
-  skeletonRows:   { type: Number,  default: 6 },
-  rowHighlight:   { type: Function, default: undefined },
-  meta:           { type: Object,  default: null },
-  perPage:        { type: Number,  default: 25 },
-  perPageOptions: { type: Array,   default: () => [10, 25, 50, 100] },
-  placeholder:    { type: String,  default: '' },
-  search:         { type: String,  default: '' },
+  columns:                { type: Array,   required: true },
+  rows:                   { type: Array,   default: () => [] },
+  loading:                { type: Boolean, default: false },
+  sort:                   { type: String,  default: '' },
+  dir:                    { type: String,  default: 'desc' },
+  isFiltered:             { type: Boolean, default: false },
+  rowClickable:           { type: Boolean, default: false },
+  emptyText:              { type: String,  default: '' },
+  emptyIcon:              { type: String,  default: '📋' },
+  skeletonRows:           { type: Number,  default: 6 },
+  rowHighlight:           { type: Function, default: undefined },
+  meta:                   { type: Object,  default: null },
+  perPage:                { type: Number,  default: 25 },
+  perPageOptions:         { type: Array,   default: () => [10, 25, 50, 100] },
+  placeholder:            { type: String,  default: '' },
+  search:                 { type: String,  default: '' },
+  defaultVisibleColumns:  { type: Array,   default: () => [] },
 });
 
 const emit = defineEmits(['sort', 'reset', 'row-click', 'page', 'update:perPage', 'input']);
 
 // Column visibility
 const showColumnMenu = ref(false);
-const visibleColumns = ref(props.columns.map(c => c.key));
+const visibleColumns = ref(
+  props.defaultVisibleColumns.length > 0
+    ? props.defaultVisibleColumns
+    : props.columns.map(c => c.key)
+);
 
 const visibleCols = computed(() => {
   return props.columns.filter(col => visibleColumns.value.includes(col.key));

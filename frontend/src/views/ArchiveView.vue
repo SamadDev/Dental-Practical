@@ -28,25 +28,26 @@
       </div>
     </div>
 
-    <DataTable
-      :columns="columns"
-      :rows="rows"
-      :loading="loading"
-      :sort="sort"
-      :dir="dir"
-      :is-filtered="isFiltered"
-      :empty-text="$t('archive.title')"
-      empty-icon="🗂"
-      :meta="meta"
-      :per-page="perPage"
-      :search="search"
-      :placeholder="$t('archive.title')"
-      @sort="toggleSort"
-      @page="goToPage"
-      @update:per-page="(n) => (perPage = n)"
-      @input="onSearchInput"
-      @reset="resetFilters"
-    >
+<DataTable
+  :columns="columns"
+  :rows="rows"
+  :loading="loading"
+  :sort="sort"
+  :dir="dir"
+  :is-filtered="isFiltered"
+  :empty-text="$t('archive.title')"
+  empty-icon="🗂"
+  :meta="meta"
+  :per-page="perPage"
+  :search="search"
+  :placeholder="$t('archive.title')"
+  :default-visible-columns="defaultVisibleColumns"
+  @sort="toggleSort"
+  @page="goToPage"
+  @update:per-page="(n) => (perPage = n)"
+  @input="onSearchInput"
+  @reset="resetFilters"
+>
       <template #filters>
         <button
           type="button"
@@ -307,16 +308,22 @@ const {
 });
 
 const columns = computed(() => [
-  { key: 'patient', label: t('patient.name'), sortable: true, width: '180px' },
-  { key: 'phone', label: t('patient.phone'), sortable: false, width: '160px', printHidden: true },
-  { key: 'total_cost', label: t('common.total'), sortable: true, width: '120px', align: 'end' },
-  { key: 'amount_paid', label: t('checkout.amount_paid'), sortable: true, width: '120px', align: 'end' },
-  { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, width: '130px', align: 'end' },
-  { key: 'created_at', label: t('archive.checkout_date'), sortable: true, width: '160px' },
-  { key: 'visit_type', label: t('table.visit_type'), sortable: true, width: '110px' },
-  { key: 'treatment_notes', label: t('visit.treatment_notes'), sortable: false, width: '200px' },
-  { key: 'actions', label: t('common.actions'), sortable: false, width: '116px', printHidden: true },
+  { key: 'patient', label: t('patient.name'), sortable: true, width: 'minmax(180px, 1fr)' },
+  { key: 'phone', label: t('patient.phone'), sortable: false, width: 'minmax(120px, 0.8fr)', printHidden: true },
+  { key: 'total_cost', label: t('common.total'), sortable: true, width: 'minmax(100px, 0.6fr)', align: 'end' },
+  { key: 'amount_paid', label: t('checkout.amount_paid'), sortable: true, width: 'minmax(100px, 0.6fr)', align: 'end' },
+  { key: 'short_term_debt', label: t('checkout.short_term_debt'), sortable: true, width: 'minmax(100px, 0.6fr)', align: 'end' },
+  { key: 'created_at', label: t('archive.checkout_date'), sortable: true, width: 'minmax(140px, 0.8fr)' },
+  { key: 'visit_type', label: t('table.visit_type'), sortable: true, width: 'minmax(80px, 0.5fr)' },
+  { key: 'treatment_notes', label: t('visit.treatment_notes'), sortable: false, width: 'minmax(150px, 1fr)' },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: 'minmax(100px, 0.5fr)', printHidden: true },
 ]);
+
+const defaultVisibleColumns = computed(() => {
+  return columns.value
+    .filter(col => col.key !== 'treatment_notes')
+    .map(col => col.key);
+});
 
 const format = (v) => formatIQD(v || 0);
 const print = () => window.print();

@@ -5,27 +5,28 @@
       <span aria-hidden="true">⚠</span> {{ error }}
     </p>
 
-    <DataTable
-      :columns="columns"
-      :rows="rows"
-      :loading="loading"
-      :sort="sort"
-      :dir="dir"
-      :is-filtered="isFiltered"
-      :empty-text="$t('patient.title')"
-      empty-icon="🧑‍⚕️"
-      :meta="meta"
-      :per-page="perPage"
-      :search="search"
-      :placeholder="$t('patient.title')"
-      row-clickable
-      @sort="toggleSort"
-      @page="goToPage"
-      @update:per-page="(n) => (perPage = n)"
-      @input="onSearchInput"
-      @reset="resetFilters"
-      @row-click="openPatient"
-    >
+<DataTable
+  :columns="columns"
+  :rows="rows"
+  :loading="loading"
+  :sort="sort"
+  :dir="dir"
+  :is-filtered="isFiltered"
+  :empty-text="$t('patient.title')"
+  empty-icon="🧑‍⚕️"
+  :meta="meta"
+  :per-page="perPage"
+  :search="search"
+  :placeholder="$t('patient.title')"
+  :default-visible-columns="defaultVisibleColumns"
+  row-clickable
+  @sort="toggleSort"
+  @page="goToPage"
+  @update:per-page="(n) => (perPage = n)"
+  @input="onSearchInput"
+  @reset="resetFilters"
+  @row-click="openPatient"
+>
       <template #filters>
         <button
           type="button"
@@ -434,15 +435,21 @@ const {
 });
 
 const columns = computed(() => [
-  { key: 'name', label: t('patient.name'), sortable: true, width: 'minmax(150px, 1fr)' },
+  { key: 'name', label: t('patient.name'), sortable: true, width: 'minmax(160px, 1fr)' },
   { key: 'phone', label: t('patient.phone'), sortable: true, width: 'minmax(120px, 0.8fr)' },
-  { key: 'age', label: t('patient.age'), sortable: true, width: '70px' },
-  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, width: 'minmax(140px, 0.8fr)' },
-  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, width: 'minmax(100px, 0.6fr)', align: 'end' },
-  { key: 'visits_count', label: t('patient.total_visits'), sortable: true, width: '70px' },
-  { key: 'last_visit_at', label: t('patient.last_visit'), sortable: true, width: 'minmax(120px, 0.8fr)' },
-  { key: 'actions', label: t('common.actions'), sortable: false, width: '140px', align: 'end', printHidden: true },
+  { key: 'age', label: t('patient.age'), sortable: true, width: 'minmax(60px, 0.4fr)' },
+  { key: 'appointment_date', label: t('patient.appointment_date'), sortable: true, width: 'minmax(130px, 0.8fr)' },
+  { key: 'outstanding_debt', label: t('patient.outstanding_debt'), sortable: true, width: 'minmax(80px, 0.5fr)', align: 'end' },
+  { key: 'visits_count', label: t('patient.total_visits'), sortable: true, width: 'minmax(60px, 0.4fr)' },
+  { key: 'last_visit_at', label: t('patient.last_visit'), sortable: true, width: 'minmax(110px, 0.7fr)' },
+  { key: 'actions', label: t('common.actions'), sortable: false, width: 'minmax(100px, 0.5fr)', align: 'end', printHidden: true },
 ]);
+
+const defaultVisibleColumns = computed(() => {
+  return columns.value
+    .filter(col => !['visits_count', 'last_visit_at'].includes(col.key))
+    .map(col => col.key);
+});
 
 const stats = ref({});
 

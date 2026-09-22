@@ -121,6 +121,12 @@ class InventoryController extends Controller
         $qty = $data['type'] === 'in' ? $data['quantity'] : -$data['quantity'];
 
         return DB::transaction(function () use ($inventoryItem, $data, $qty) {
+            // Guard against negative stock: a decrementing movement may never
+            // take quantity_on_hand below zero.
+            if ($qty < 0 && ($inventoryItem->quantity_on_hand + $qty) < 0) {
+                abort(422, "Insufficient stock: only {$inventoryItem->quantity_on_hand} on hand.");
+            }
+
             $inventoryItem->increment('quantity_on_hand', $qty);
 
             $movement = InventoryMovement::create([
@@ -128,11 +134,11 @@ class InventoryController extends Controller
                 'type'                => $data['type'],
                 'quantity'            => $qty,
                 'unit_cost_at_time'   => $data['unit_cost_at_time'] ?? $inventoryItem->unit_cost,
-                'reference_id'        => $data['reference_id'],
-                'reference_type'      => $data['reference_type'],
-                'batch_number'        => $data['batch_number'],
-                'expiry_date'         => $data['expiry_date'],
-                'notes'               => $data['notes'],
+                'reference_id'        => $data['reference_id'] ?? null,
+                'reference_type'      => $data['reference_type'] ?? null,
+                'batch_number'        => $data['batch_number'] ?? null,
+                'expiry_date'         => $data['expiry_date'] ?? null,
+                'notes'               => $data['notes'] ?? null,
                 'user_id'             => auth()->id(),
             ]);
 

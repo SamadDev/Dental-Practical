@@ -71,7 +71,7 @@
               <div class="stat-icon">
                 <FontAwesomeIcon :icon="stat.icon" />
               </div>
-              <div class="stat-trend" :class="stat.trend" v-if="stat.trend">
+              <div class="stat-trend" :class="stat.severity" v-if="stat.trend && stat.change > 0">
                 <FontAwesomeIcon :icon="stat.trend === 'up' ? 'fa-arrow-up' : 'fa-arrow-down'" />
                 <span>{{ stat.change }}%</span>
               </div>
@@ -151,7 +151,7 @@
                   <FontAwesomeIcon icon="fa-users-rays" />
                 </div>
                 <div class="chart-titles">
-                  <h3>{{ $t('dashboard.patients_by_status') }}</h3>
+                  <h3>{{ $t('dashboard.patients_by_gender') }}</h3>
                   <p class="total-label">{{ totalPatients }} {{ $t('common.total') }}</p>
                 </div>
               </div>
@@ -171,13 +171,13 @@
             </div>
             <div class="donut-legend" v-if="hasPatientsData">
               <div
-                v-for="(label, i) in metrics.patients_labels"
-                :key="label"
+                v-for="(slot, i) in patientSlices"
+                :key="slot.key"
                 class="legend-item"
               >
                 <span class="legend-dot" :style="{ background: patientColors[i] }"></span>
-                <span class="legend-text">{{ label }}</span>
-                <span class="legend-value">{{ metrics.patients_data[i] || 0 }}</span>
+                <span class="legend-text">{{ slot.label }}</span>
+                <span class="legend-value">{{ slot.value }}</span>
               </div>
             </div>
           </div>
@@ -278,7 +278,7 @@
               </div>
               <div class="summary-text">
                 <span class="summary-value">{{ metrics.total_appointments || 0 }}</span>
-                <span class="summary-label">{{ $t('calendar.title') }}</span>
+                <span class="summary-label">{{ $t('dashboard.total_appointments') }}</span>
               </div>
             </div>
             <div class="summary-item">
@@ -319,7 +319,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VueApexCharts from 'vue3-apexcharts';
 import FontAwesomeIcon from '../components/FontAwesomeIcon.vue';
@@ -328,7 +328,7 @@ import PatientFieldsSettings from '../components/PatientFieldsSettings.vue';
 import api from '../utils/axios';
 import { formatIQD } from '../utils/iqd';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const loading = ref(true);
 const error = ref(false);
@@ -338,6 +338,38 @@ const isDark = ref(false);
 const showSettings = ref(false);
 
 const patientColors = ['#10b981', '#3b82f6', '#ef4444', '#E73F1E', '#8b5cf6', '#f59e0b'];
+
+// Intl locales for the chart axis labels (vue-i18n only knows en/ar/ku).
+const INTL_LOCALES = { en: 'en-GB', ar: 'ar-IQ', ku: 'ckb-IQ' };
+
+/**
+ * Turn the API's ISO bucket keys ('2026-08-23' / '2026-08') into short labels
+ * in the active UI language. Built with explicit local parts so a date never
+ * drifts a day through UTC parsing.
+ */
+function localizeBuckets(keys, granularity, fallback) {
+  if (!Array.isArray(keys) || keys.length === 0) return fallback || [];
+
+  const tag = INTL_LOCALES[locale.value] || 'en-GB';
+
+  return keys.map((key) => {
+    const [y, m, d] = String(key).split('-').map(Number);
+    const date = new Date(y, (m || 1) - 1, d || 1);
+
+    if (Number.isNaN(date.getTime())) return key;
+
+    try {
+      return date.toLocaleDateString(
+        tag,
+        granularity === 'month'
+          ? { month: 'short', year: 'numeric' }
+          : { month: 'short', day: 'numeric' }
+      );
+    } catch {
+      return key;      // unsupported Intl tag -> keep the ISO key
+    }
+  });
+}
 
 const timeRangeOptions = [
   { label: 'last_7_days', value: 7 },
@@ -374,6 +406,40 @@ const hasRevenueData = computed(() => metrics.value.revenue_data && metrics.valu
 const hasPatientsData = computed(() => metrics.value.patients_data && metrics.value.patients_data.length > 0);
 const hasExpensesData = computed(() => metrics.value.expenses_data && metrics.value.expenses_data.length > 0);
 
+/** Axis labels: localised from the ISO keys, falling back to the API's labels. */
+const revenueLabels = computed(() => localizeBuckets(
+  metrics.value.revenue_keys, metrics.value.granularity, metrics.value.revenue_labels
+));
+
+const expensesLabels = computed(() => localizeBuckets(
+  metrics.value.expenses_keys, metrics.value.granularity, metrics.value.expenses_labels
+));
+
+/**
+ * Donut slices with translated legend text. Only 'male' / 'female' / 'unknown'
+ * are known to the translation files; anything else keeps the API's own label
+ * so an unexpected value can never render as a raw i18n key.
+ */
+const patientSlices = computed(() => {
+  const keys = metrics.value.patients_keys || [];
+  const labels = metrics.value.patients_labels || [];
+  const data = metrics.value.patients_data || [];
+
+  return data.map((value, i) => {
+    const key = keys[i];
+    const translatable = key === 'male' || key === 'female' || key === 'unknown';
+
+    return {
+      key: key || `slice-${i}`,
+      label: translatable ? t(`patient.gender_${key}`) : (labels[i] || ''),
+      value,
+    };
+  });
+});
+
+const patientSlicesData = computed(() => patientSlices.value.map((s) => s.value));
+const patientSlicesLabels = computed(() => patientSlices.value.map((s) => s.label));
+
 const totalPatients = computed(() => {
   if (!metrics.value.patients_data || !Array.isArray(metrics.value.patients_data)) return 0;
   return metrics.value.patients_data.reduce((a, b) => a + b, 0);
@@ -389,41 +455,57 @@ const rangeLabel = computed(() => {
 const statCards = computed(() => {
   const prevMetrics = metrics.value.previous_metrics || {};
 
-  const calculateTrend = (current, previous) => {
-    if (!previous || previous === 0) return { trend: null, change: 0 };
+  // `severity` is the colour; `trend` is only the arrow direction. More
+  // expenses / more debt is "worse", so it must not be painted green.
+  const calculateTrend = (current, previous, higherIsBetter = true) => {
+    if (!previous || previous === 0) return { trend: null, change: 0, severity: 'up' };
     const change = ((current - previous) / previous) * 100;
+    const rising = change >= 0;
+
     return {
-      trend: change >= 0 ? 'up' : 'down',
-      change: Math.abs(Math.round(change))
+      trend: rising ? 'up' : 'down',
+      change: Math.abs(Math.round(change)),
+      severity: rising === higherIsBetter ? 'up' : 'down',
     };
   };
 
-  const profitTrend = calculateTrend(metrics.value.true_net_profit || 0, prevMetrics.true_net_profit);
-  const cashTrend = calculateTrend(metrics.value.total_cash_collected || 0, prevMetrics.total_cash_collected);
-  const debtTrend = calculateTrend(metrics.value.active_customer_debt || 0, prevMetrics.active_customer_debt);
+  const profitTrend = calculateTrend(metrics.value.true_net_profit || 0, prevMetrics.true_net_profit, true);
+  const cashTrend = calculateTrend(metrics.value.total_cash_collected || 0, prevMetrics.total_cash_collected, true);
+  const debtTrend = calculateTrend(metrics.value.active_customer_debt || 0, prevMetrics.active_customer_debt, false);
+  const expenseTrend = calculateTrend(metrics.value.total_expenses || 0, prevMetrics.total_expenses, false);
 
   return [
     { id: 'true_net_profit', label: 'true_net_profit', value: metrics.value.true_net_profit || 0, icon: 'fa-money-bill-trend-up', color: '#10b981', ...profitTrend, sparkline: metrics.value.revenue_data || [] },
     { id: 'total_cash_collected', label: 'total_cash_collected', value: metrics.value.total_cash_collected || 0, icon: 'fa-sack-dollar', color: '#3b82f6', ...cashTrend, sparkline: [] },
     { id: 'active_customer_debt', label: 'active_customer_debt', value: metrics.value.active_customer_debt || 0, icon: 'fa-hand-holding-dollar', color: '#ef4444', ...debtTrend, sparkline: [] },
-    { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', color: '#8b5cf6', trend: 'up', change: 0, sparkline: [] },
-    { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', color: '#f59e0b', trend: 'down', change: 0, sparkline: metrics.value.expenses_data || [] },
-    { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-user-group', color: '#E73F1E', trend: 'up', change: 0, sparkline: [] },
-    { id: 'total_appointments', label: 'total_appointments', value: metrics.value.total_appointments || 0, icon: 'fa-calendar', color: '#06b6d4', trend: 'up', change: 0, sparkline: [] },
-    { id: 'completed_visits', label: 'completed_visits', value: metrics.value.completed_visits || 0, icon: 'fa-check-circle', color: '#84cc16', trend: 'up', change: 0, sparkline: [] },
+    { id: 'upcoming_aqsat_revenue', label: 'upcoming_aqsat_revenue', value: metrics.value.upcoming_aqsat_revenue || 0, icon: 'fa-calendar-check', color: '#8b5cf6', trend: null, change: 0, severity: 'up', sparkline: [] },
+    { id: 'total_expenses', label: 'total_expenses', value: metrics.value.total_expenses || 0, icon: 'fa-file-signature', color: '#f59e0b', ...expenseTrend, sparkline: metrics.value.expenses_data || [] },
+    { id: 'total_patients', label: 'total_patients', value: metrics.value.total_patients || 0, icon: 'fa-user-group', color: '#E73F1E', trend: null, change: 0, severity: 'up', sparkline: [] },
+    { id: 'total_appointments', label: 'total_appointments', value: metrics.value.total_appointments || 0, icon: 'fa-calendar', color: '#06b6d4', trend: null, change: 0, severity: 'up', sparkline: [] },
+    { id: 'completed_visits', label: 'completed_visits', value: metrics.value.completed_visits || 0, icon: 'fa-check-circle', color: '#84cc16', ...calculateTrend(metrics.value.completed_visits || 0, prevMetrics.completed_visits, true), sparkline: [] },
   ];
 });
 
+/**
+ * Comparison bars for the three headline money figures.
+ *
+ * The old version divided every value by true_net_profit, so "Total Cash
+ * Collected" regularly rendered as 300%+ and a negative profit flipped every
+ * bar negative. Percentages are now relative to the largest figure in the
+ * group, which is always 0-100% and stays meaningful when profit is negative.
+ */
 const revenueBreakdown = computed(() => {
-  const total = metrics.value.true_net_profit || 1;
   const items = [
     { label: t('dashboard.true_net_profit'), value: metrics.value.true_net_profit || 0, color: '#10b981' },
     { label: t('dashboard.total_cash_collected'), value: metrics.value.total_cash_collected || 0, color: '#3b82f6' },
     { label: t('dashboard.total_expenses'), value: metrics.value.total_expenses || 0, color: '#ef4444' },
   ];
-  return items.map(item => ({
+
+  const scale = Math.max(...items.map((i) => Math.abs(i.value)), 0) || 1;
+
+  return items.map((item) => ({
     ...item,
-    pct: Math.round((item.value / total) * 100) || 0
+    pct: Math.min(100, Math.round((Math.abs(item.value) / scale) * 100)),
   }));
 });
 
@@ -442,7 +524,7 @@ const revenueChartOptions = computed(() => ({
   colors: ['#E73F1E'],
   dataLabels: { enabled: false },
   xaxis: {
-    categories: metrics.value.revenue_labels || [],
+    categories: revenueLabels.value,
     labels: { style: { colors: chartColors.value.text, fontSize: '11px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },
@@ -458,7 +540,7 @@ const revenueSeries = computed(() => [{ name: t('dashboard.revenue'), data: metr
 const patientsChartOptions = computed(() => ({
   legend: { show: false },
   chart: { fontFamily: 'inherit', background: 'transparent', animations: { enabled: true } },
-  labels: metrics.value.patients_labels || [],
+  labels: patientSlicesLabels.value,
   colors: patientColors,
   stroke: { width: 0 },
   dataLabels: { enabled: false },
@@ -483,14 +565,14 @@ const patientsChartOptions = computed(() => ({
   },
 }));
 
-const patientsSeries = computed(() => metrics.value.patients_data || []);
+const patientsSeries = computed(() => patientSlicesData.value);
 
 const expensesChartOptions = computed(() => ({
   chart: { toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
   plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', columnWidth: '35%' } },
   colors: ['#E73F1E'],
   xaxis: {
-    categories: metrics.value.expenses_labels || [],
+    categories: expensesLabels.value,
     labels: { style: { colors: chartColors.value.text, fontSize: '10px' } },
     axisBorder: { show: false },
     axisTicks: { show: false },

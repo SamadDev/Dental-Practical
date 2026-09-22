@@ -22,7 +22,8 @@
     "receptionists": "وەرگرەکان",
     "management": "بەڕێوەبردن",
     "profile": "پرۆفایلی من",
-    "roles": "ڕۆڵ و ڕێپێدان"
+    "roles": "ڕۆڵ و ڕێپێدان",
+    "calendar": "ڕۆژنامە"
   },
   "calendar": {
     "title": "ڕۆژنامەی نووبەتەکان",
@@ -110,7 +111,15 @@
     "status": "دۆخ",
     "active": "چالاک",
     "inactive": "ناچالاک",
-    "password": "وشەی نهێنی"
+    "password": "وشەی نهێنی",
+    "confirm": "دڵنیاکردنەوە",
+    "error": "هەڵەیەک ڕوویدا",
+    "error_loading": "نەتوانرا داتا باربکرێت",
+    "logout": "دەرچوون",
+    "no_options": "هیچ هەڵبژاردەیەک نییە",
+    "saved": "بە سەرکەوتوویی پاشەکەوت کرا",
+    "select": "هەڵبژێرە",
+    "view": "بینین"
   },
   "patient": {
     "title": "نەخۆشەکان",
@@ -118,7 +127,7 @@
     "name": "ناو",
     "phone": "ژمارەی تەلەفۆن",
     "age": "تەمەن",
-    "medical_notes": "تێبینی پزیشکی",
+    "medical_notes": "تێبینی تەندرووستی",
     "outstanding_debt": "قەرزی ماوە",
     "outstanding": "ماوە",
     "last_visit": "دواین سەردان",
@@ -135,7 +144,6 @@
     "empty": "هێشتا هیچ نەخۆشێک نییە. یەکەمیان زیاد بکە.",
     "search_placeholder": "گەڕان بە ناو یان ژمارە…",
     "smoker_badge": "🚬 جگەرەکێش",
-    "total_visits": "سەردانەکان",
     "whatsapp_tooltip": "کردنەوەی قسەکەوت لەگەڵ {phone} بە واتساپ",
     "code": "کۆدی نەخۆش",
     "gender": "ڕەگەز",
@@ -148,16 +156,16 @@
     "condition_type": "جۆر",
     "type_allergy": "ئەلێرجی",
     "type_condition": "نەخۆشی",
-    "severity": "پلە",
+    "severity": "توندی",
     "sev_mild": "کەم",
     "sev_moderate": "مامناوەند",
     "sev_severe": "توند",
     "condition_name": "ناو",
-    "condition_name_ph": "بۆ نموونە: ئەموکسیسیلین، شەکرە",
+    "condition_name_ph": "بۆ نموونە، هەستیاری بە پێنیسیلین",
     "condition_name_required": "ناو پێویستە",
     "condition_note": "تێبینی",
     "condition_note_ph": "وردەکاری ئارەزوومەندانە",
-    "add_condition": "زیادکردن",
+    "add_condition": "زیادکردنی حاڵەت",
     "no_conditions": "هیچ ئەلێرجی یان نەخۆشییەک نەناسراوە.",
     "severe_allergy_badge": "ئەلێرجیی توند — پێش دەرمان پشکنین بکە",
     "severe_allergy_short": "ئەلێرجی",
@@ -176,17 +184,13 @@
     "tooth": "ددان",
     "address": "ناونیشان",
     "address_ph": "ناونیشانی شەقام",
-    "medical_notes": "تێبینی تەندرووستی",
     "medical_notes_ph": "هەر نەخۆشیەک، هەستیاری یان تێبینی...",
     "next_appointment": "ڕێکەوتی داهاتوو",
     "add_new": "زیادکردنی نوێ",
     "type": "جۆر",
-    "severity": "توندی",
-    "condition_name_ph": "بۆ نموونە، هەستیاری بە پێنیسیلین",
     "note_optional": "تێبینی (ئارەوە)",
     "note_ph": "زانیاری زیادە...",
     "update": "نوێکردنەوە",
-    "add_condition": "زیادکردنی حاڵەت",
     "allergy": "هەستیاری",
     "condition": "حاڵەت",
     "mild": "ساکار",
@@ -262,7 +266,27 @@
     "insurance": "دابینکاری بیمە",
     "insurance_placeholder": "ژمارەی بیمە ئەگەر هەیە",
     "consent": "ڕەزامەندی نەخۆش",
-    "consent_text": "من ڕازیم بە وەرگرتنی چارەسەری ددان و تێگەیشتم لە مەترسییەکانی."
+    "consent_text": "من ڕازیم بە وەرگرتنی چارەسەری ددان و تێگەیشتم لە مەترسییەکانی.",
+    "step_personal": "زانیاری کەسی",
+    "step_medical": "مێژووی تەندرووستی",
+    "step_schedule": "پزیشک و بەروار",
+    "name_required_star": "ناوی تەواو",
+    "age_placeholder": "بۆ نموونە ٣٢",
+    "phone_placeholder": "770 123 4567",
+    "is_smoker": "ئایا جگەرەکێشە؟",
+    "smoker_hint": "جگەرەکێشان کاریگەری لەسەر چاکبوونەوە و پلانی چارەسەر هەیە.",
+    "smoker_yes": "جگەرەکێش",
+    "smoker_no": "جگەرەکێش نییە",
+    "conditions_hint": "حەساسیەت و نەخۆشییە درێژخایەنەکان تۆمار بکە بۆ دەرکەوتن لەسەر هێڵکاری.",
+    "condition_update": "نوێکردنەوە",
+    "assigned_doctor": "پزیشکی تایبەت",
+    "doctor_hint": "ئەو پزیشکەی بەرپرسە لە شوێنکەوتنی نەخۆش.",
+    "no_doctor": "بەبێ پزیشک",
+    "not_set": "دیارینەکراوە",
+    "review_hint": "پێش پاشەکەوتکردن پێداچوونەوە بە وردەکارییەکانی خوارەوە بکە.",
+    "cancel": "هەڵوەشاندنەوە",
+    "save_changes": "پاشەکەوتکردنی گۆڕانکارییەکان",
+    "gender_unknown": "دیارینەکراوە"
   },
   "queue": {
     "title": "ڕیزی ئەمڕۆ",
@@ -314,7 +338,9 @@
       "walk_in": "هاتوو",
       "phone": "تەلەفۆن",
       "whatsapp": "واتساپ"
-    }
+    },
+    "add": "زیادکردن",
+    "treatment": "چارەسەر"
   },
   "visit": {
     "treatment": "چارەسەر",
@@ -374,7 +400,8 @@
     "description_required": "وەسف پێویستە",
     "empty": "هێشتا هیچ خەرجییەک تۆمار نەکراوە.",
     "description_hint": "ئەم پارەیە بۆ چی خەرجکرا؟",
-    "search_placeholder": "گەڕان بە وەسف…"
+    "search_placeholder": "گەڕان بە وەسف…",
+    "new": "تۆمارکردنی خەرجی"
   },
   "dashboard": {
     "title": "داشبۆردی دارایی",
@@ -425,7 +452,8 @@
       "last_7": "٧ ڕۆژی ڕابردوو",
       "this_month": "ئەم مانگە",
       "all_time": "هەموو کاتەکان"
-    }
+    },
+    "patients_by_gender": "نەخۆشەکان بەپێی ڕەگەز"
   },
   "archive": {
     "title": "ئەرشیفی چارەسەرکردن",
@@ -634,7 +662,8 @@
     "all_users": "هەموو بەکارهێنەران",
     "manage_users": "بەڕێوەبردنی ڕۆڵی بەکارهێنەران",
     "change_role": "گۆڕینی ڕۆڵ",
-    "role_updated": "ڕۆڵی بەکارهێنەر بە سەرکەوتوویی نوێکرایەوە"
+    "role_updated": "ڕۆڵی بەکارهێنەر بە سەرکەوتوویی نوێکرایەوە",
+    "role": "ڕۆڵ"
   },
   "reminder": {
     "title": "ناردنی یادخستەنەوە",
@@ -723,5 +752,12 @@
     "cost_ph": "0.00",
     "invoice": "ژمارەی پسوولە",
     "invoice_ph": "ژمارەی پسوولەی تاقیگا"
+  },
+  "treatment": {
+    "title": "چارەسەرەکان"
+  },
+  "payment": {
+    "aqsat_paid": "کۆکراوە لە قیست",
+    "aqsat_pending": "قیستی ماوە"
   }
 }

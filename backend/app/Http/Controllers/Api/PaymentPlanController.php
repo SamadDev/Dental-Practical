@@ -165,7 +165,9 @@ class PaymentPlanController extends Controller
     /** Mark installment as waived. */
     public function waiveInstallment(PaymentPlanInstallment $installment): JsonResponse
     {
-        $installment->update(['status' => 'waived', 'amount_paid' => $installment->amount]);
+        // A waived installment is forgiven, not collected — marking it as
+        // amount_paid inflated any "collected" sums built on installments.
+        $installment->update(['status' => 'waived']);
         $plan = $installment->plan;
         if ($plan->installments()->whereIn('status', ['pending', 'partial', 'overdue'])->count() === 0) {
             $plan->update(['status' => 'completed']);
@@ -182,7 +184,10 @@ class PaymentPlanController extends Controller
             ->orderBy('due_date')
             ->get()
             ->map(function ($i) {
-                $daysOverdue = now()->diffInDays($i->due_date);
+                // due_date is in the past here, so diffFrom(now) is the positive
+                // overdue count; Carbon's signed diffInDays would return a negative.
+                $daysOverdue = (int) \Carbon\Carbon::parse($i->due_date)->startOfDay()
+                    ->diffInDays(now()->startOfDay());
                 return [
                     'installment' => $i,
                     'days_overdue' => $daysOverdue,

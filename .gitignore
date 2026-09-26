@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# Dependencies & build output
+# ---------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+backend/vendor/
+backend/storage/*.key
+backend/public/build/
+backend/public/hot/
+backend/public/storage
+
+# ---------------------------------------------------------------------------
+# Environment & secrets
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+.env.backup
+
+# ---------------------------------------------------------------------------
+# Local databases & backups
+# ---------------------------------------------------------------------------
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+backend/database/*.db
+*.sql
+*.dump
+
+# ---------------------------------------------------------------------------
+# Test & tooling caches
+# ---------------------------------------------------------------------------
+.phpunit.result.cache
+backend/.phpunit.cache/
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*.log
+backend/storage/pail
+
+# ---------------------------------------------------------------------------
+# Editors / OS noise
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+npm-debug.log*
+yarn-error.log*

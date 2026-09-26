@@ -2,17 +2,31 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Concerns\HandlesDataTableQueries;
 use App\Http\Controllers\Controller;
 use App\Models\AqsatContract;
 use App\Models\CashFlowForecast;
 use App\Models\Expense;
 use App\Models\Visit;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CashFlowForecastController extends Controller
 {
+    use HandlesDataTableQueries;
+
+    /** Sort key => qualified column, whitelisted for the manual-entries table. */
+    private const SORTABLE = [
+        'forecast_date' => 'cash_flow_forecasts.forecast_date',
+        'type'          => 'cash_flow_forecasts.type',
+        'description'   => 'cash_flow_forecasts.description',
+        'amount'        => 'cash_flow_forecasts.amount',
+        'status'        => 'cash_flow_forecasts.status',
+        'created_at'    => 'cash_flow_forecasts.created_at',
+    ];
+
     /**
      * Generate cash flow forecast from existing data + manual entries.
      * Returns daily breakdown for a date range.
@@ -33,12 +47,7 @@ class CashFlowForecastController extends Controller
         $expenseOutflows = $this->projectExpenseOutflows($from, $to);
 
         // 4. Manual forecasts
-        $manualItems = $includeManual
-            ? CashFlowForecast::whereBetween('forecast_date', [$from, $to])
-                ->orderBy('forecast_date')
-                ->get()
-                ->toArray()
-            : [];
+        $manualItems = $includeManual ? $this->manualItems($from, $to) : [];
 
         // Combine all into daily buckets
         $daily = $this->aggregateDaily($from, $to, $aqsatInflows, $visitInflows, $expenseOutflows, $manualItems);
@@ -77,10 +86,7 @@ class CashFlowForecastController extends Controller
             $this->projectVisitInflows($from, $to),
             $this->projectExpenseOutflows($from, $to),
             $includeManual
-                ? CashFlowForecast::whereBetween('forecast_date', [$from, $to])
-                    ->orderBy('forecast_date')
-                    ->get()
-                    ->toArray()
+                ? $this->manualItems($from, $to)
                 : [],
         );
 
@@ -102,18 +108,53 @@ class CashFlowForecastController extends Controller
     }
 
     /**
-     * CRUD for manual forecast entries.
+     * Manual forecast entries, in the shape the frontend DataTable expects
+     * (search / sort / per_page + `totals` summed over the whole filter set,
+     * not just the current page — same contract as /expenses).
      */
     public function index(Request $request): JsonResponse
     {
-        $q = CashFlowForecast::query()->orderBy('forecast_date');
+        $query = $this->manualEntries($request);
+        $this->applySort($query, $request, self::SORTABLE, 'forecast_date', 'asc');
 
-        if ($from = $request->query('from')) $q->where('forecast_date', '>=', $from);
-        if ($to = $request->query('to'))   $q->where('forecast_date', '<=', $to);
-        if ($type = $request->query('type')) $q->where('type', $type);
-        if ($status = $request->query('status')) $q->where('status', $status);
+        $page = $query->paginate($this->perPage($request));
 
-        return response()->json($q->paginate(50));
+        $sums = $this->manualEntries($request)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'inflow' THEN amount ELSE 0 END), 0) as inflow")
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'outflow' THEN amount ELSE 0 END), 0) as outflow")
+            ->first();
+
+        $inflow  = (int) ($sums->inflow ?? 0);
+        $outflow = (int) ($sums->outflow ?? 0);
+
+        return response()->json([
+            ...$page->toArray(),
+            'totals' => [
+                'inflow'  => $inflow,
+                'outflow' => $outflow,
+                'net'     => $inflow - $outflow,
+            ],
+        ]);
+    }
+
+    /** The filtered manual-entry query, shared by the list and its totals. */
+    private function manualEntries(Request $request): Builder
+    {
+        $query = CashFlowForecast::query();
+
+        if ($type = $request->query('type')) {
+            $query->where('type', $type);
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($search = trim((string) $request->query('search'))) {
+            $query->where('description', 'like', "%{$search}%");
+        }
+
+        return $this->applyDateRange($query, $request, 'forecast_date');
     }
 
     public function store(Request $request): JsonResponse
@@ -197,6 +238,34 @@ class CashFlowForecastController extends Controller
     }
 
     // ---------- Private projection helpers ----------
+
+    /**
+     * Manual entries in the shape aggregateDaily() expects.
+     *
+     * The model casts `forecast_date` to a date, so toArray() would hand back an
+     * ISO timestamp ("2026-09-29T00:00:00.000000Z"). That never matches a daily
+     * bucket key ("2026-09-29"), which silently dropped every manual entry from
+     * the projection — the rows were stored, validated and listed, but never
+     * counted. Dates are narrowed to Y-m-d here.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function manualItems(string $from, string $to): array
+    {
+        return CashFlowForecast::whereBetween('forecast_date', [$from, $to])
+            ->orderBy('forecast_date')
+            ->get()
+            ->map(fn (CashFlowForecast $f) => [
+                'date'        => $f->forecast_date->toDateString(),
+                'type'        => $f->type,
+                'source'      => $f->source,
+                'source_id'   => $f->source_id,
+                'description' => $f->description,
+                'amount'      => $f->amount,
+                'status'      => $f->status,
+            ])
+            ->all();
+    }
 
     private function projectAqsatInflows(string $from, string $to): array
     {
@@ -292,6 +361,9 @@ class CashFlowForecastController extends Controller
                 // their date as `forecast_date`; projection helpers use `date`.
                 $d = $item['date'] ?? $item['forecast_date'] ?? null;
                 if ($d === null) continue;
+                // Narrow ISO timestamps to Y-m-d so a row can never be silently
+                // skipped just because it was serialized with a time component.
+                $d = substr((string) $d, 0, 10);
                 if (!isset($daily[$d])) continue;
                 if ($item['type'] === 'inflow') $daily[$d]['inflow'] += $item['amount'];
                 else $daily[$d]['outflow'] += $item['amount'];

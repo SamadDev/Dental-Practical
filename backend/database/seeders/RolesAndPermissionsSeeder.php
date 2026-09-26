@@ -38,6 +38,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.view', 'inventory.move', 'inventory.adjust',
             // Vendors & purchase orders
             'vendors.view', 'vendors.create', 'vendors.edit', 'vendors.po',
+            // Lab (external dental lab + in-house diagnostics)
+            'lab.view', 'lab.manage', 'lab.orders.delete',
+            // Reports (revenue by treatment, doctor production)
+            'reports.view',
             // Finance
             'cash_flow.view', 'cash_flow.manage',
             'dashboard.view',
@@ -55,23 +59,32 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::findOrCreate('doctor', 'web')->syncPermissions([
             'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
             'queue.view', 'queue.manage',
-            'visits.view', 'visits.create', 'visits.edit', 'visits.checkout', 'visits.xray',
+            // visits.pay_debt + payment_plans.pay: whoever already records
+            // payments at checkout (visits.checkout) may also settle the debt
+            // and collect installments — otherwise the archive/payment-plan
+            // buttons would 403 (see ArchiveView/PaymentPlansView gating).
+            'visits.view', 'visits.create', 'visits.edit', 'visits.checkout', 'visits.pay_debt', 'visits.xray',
             'archive.view',
             'aqsat.view', 'aqsat.create', 'aqsat.edit',
-            'payment_plans.view', 'payment_plans.create', 'payment_plans.edit',
+            'payment_plans.view', 'payment_plans.create', 'payment_plans.edit', 'payment_plans.pay',
             'inventory.view',
+            'lab.view', 'lab.manage',
+            'reports.view',
             'dashboard.view',
         ]);
 
         Role::findOrCreate('receptionist', 'web')->syncPermissions([
             'patients.view', 'patients.create', 'patients.edit',
             'queue.view', 'queue.manage',
-            'visits.view', 'visits.create', 'visits.checkout',
+            // The money desk: same rationale as the doctor role above.
+            'visits.view', 'visits.create', 'visits.checkout', 'visits.pay_debt',
             'archive.view',
             'aqsat.view', 'aqsat.create', 'aqsat.edit',
-            'payment_plans.view', 'payment_plans.create', 'payment_plans.edit',
+            'payment_plans.view', 'payment_plans.create', 'payment_plans.edit', 'payment_plans.pay',
             'expenses.view', 'expenses.create', 'expenses.delete',
             'inventory.view', 'inventory.move',
+            'lab.view',
+            'reports.view',
             'dashboard.view',
         ]);
 
@@ -81,6 +94,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'visits.view', 'visits.create', 'visits.edit', 'visits.xray',
             'archive.view',
             'inventory.view',
+        ]);
+
+        // The laboratory desk (User::ROLES includes `lab`) — works the shared
+        // lab-orders queue: sees orders, records progress, prints sheets.
+        Role::findOrCreate('lab', 'web')->syncPermissions([
+            'patients.view',
+            'lab.view', 'lab.manage', 'lab.orders.delete',
         ]);
 
         // Every user gets the Spatie role matching its legacy column.

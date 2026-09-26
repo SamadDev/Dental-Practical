@@ -85,7 +85,7 @@
       </template>
 
       <template #toolbar-right>
-        <AddButton :label="$t('inventory.new')" @click="openCreate" />
+        <AddButton v-if="can('inventory.adjust')" :label="$t('inventory.new')" @click="openCreate" />
       </template>
       <template #cell(name)="{ row }">
         <div class="leading-tight">
@@ -120,7 +120,7 @@
 
       <template #cell(actions)="{ row }">
         <div class="flex justify-end gap-1.5 no-print">
-          <button class="btn-ghost btn-sm" @click="openMove(row)" :title="$t('inventory.move')"><Icon name="repeat" :size="14" /></button>
+          <button v-if="can('inventory.move')" class="btn-ghost btn-sm" @click="openMove(row)" :title="$t('inventory.move')"><Icon name="repeat" :size="14" /></button>
         </div>
       </template>
 
@@ -136,7 +136,7 @@
         </div>
         <div class="mt-2 flex items-center justify-between gap-2">
           <p class="text-xs text-slate-500">{{ row.vendor?.name ?? '—' }} · {{ fmt(row.unit_cost) }} {{ $t('currency') }}</p>
-          <button class="btn-ghost btn-sm" @click.stop="openMove(row)"><Icon name="repeat" :size="14" /></button>
+          <button v-if="can('inventory.move')" class="btn-ghost btn-sm" @click.stop="openMove(row)"><Icon name="repeat" :size="14" /></button>
         </div>
       </template>
     </DataTable>
@@ -235,8 +235,10 @@ import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
+import { useAuth } from '../composables/useAuth';
 
 const { t } = useI18n();
+const { can } = useAuth();
 
 const {
   rows, loading, error, search, filters, sort, dir, perPage, meta,
@@ -255,8 +257,12 @@ const columns = computed(() => [
   { key: 'quantity_on_hand', label: t('inventory.qty'), sortable: true, width: '10%' },
   { key: 'unit_cost', label: t('inventory.unit_cost'), sortable: true, width: '13%', align: 'end' },
   { key: 'expiry_date', label: t('inventory.expiry_date'), sortable: false, width: '13%' },
-  { key: 'actions', label: t('common.actions'), sortable: false, width: '10%', align: 'end', printHidden: true },
-]);
+  // The actions column only holds the stock-movement button, so hide it for
+  // read-only roles (e.g. hygienist) instead of rendering a 403 dead end.
+  can('inventory.move')
+    ? { key: 'actions', label: t('common.actions'), sortable: false, width: '10%', align: 'end', printHidden: true }
+    : null,
+].filter(Boolean));
 
 const fmt = (v) => formatIQD(v || 0);
 const categories = ref([]);

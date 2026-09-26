@@ -191,7 +191,7 @@
                   @click.stop="openFollowup(row)">
             <Icon name="calendar" :size="14" />
           </button>
-          <button v-if="row.short_term_debt > 0" class="btn-success btn-sm"
+          <button v-if="can('visits.pay_debt') && row.short_term_debt > 0" class="btn-success btn-sm"
                   @click="openPay(row)" :title="$t('checkout.pay_debt')">
             <Icon name="credit-card" :size="14" />
           </button>
@@ -222,7 +222,7 @@
             <button class="btn-ghost btn-sm" :title="$t('visit.book_followup')" @click.stop="openFollowup(row)">
               <Icon name="calendar" :size="14" />
             </button>
-            <button v-if="row.short_term_debt > 0" class="btn-success btn-sm" @click.stop="openPay(row)">
+            <button v-if="can('visits.pay_debt') && row.short_term_debt > 0" class="btn-success btn-sm" @click.stop="openPay(row)">
               <Icon name="credit-card" :size="14" />
             </button>
           </span>
@@ -272,7 +272,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DataTable from '../components/DataTable.vue';
 import DataTableFilters from '../components/DataTableFilters.vue';
@@ -285,10 +285,11 @@ import Icon from '../components/Icon.vue';
 import api from '../utils/axios';
 import { useDataTable } from '../composables/useDataTable';
 import { formatIQD } from '../utils/iqd';
-import { formatDateTime } from '../utils/datetime';
+import { formatDate, formatDateTime } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import { usePrint } from '../composables/usePrint';
 
 const { t } = useI18n();
 const { can } = useAuth();
@@ -326,7 +327,78 @@ const defaultVisibleColumns = computed(() => {
 });
 
 const format = (v) => formatIQD(v || 0);
-const print = () => window.print();
+
+const { printNow, registerPagePrinter } = usePrint();
+
+/** Chips describing which slice of the archive the report covers. */
+const printFilters = computed(() => {
+  const out = [];
+  if (search.value.trim()) out.push({ label: t('common.search'), value: search.value.trim() });
+  if (filters.from) out.push({ label: t('archive.date_from'), value: filters.from });
+  if (filters.to) out.push({ label: t('archive.date_to'), value: filters.to });
+  if (filters.visit_type) out.push({ label: t('table.visit_type'), value: visitTypeLabel(filters.visit_type) });
+  if (filters.treatment_name) out.push({ label: t('print.treatment'), value: filters.treatment_name });
+  if (filters.min_total || filters.max_total) {
+    out.push({ label: t('common.total'), value: `${filters.min_total || 0}–${filters.max_total || '∞'}` });
+  }
+  return out;
+});
+
+const printColumns = computed(() => [
+  { key: 'created_at', label: t('archive.checkout_date'), width: '82px', format: (row) => formatDate(row.created_at) },
+  { key: 'patient', label: t('patient.name'), class: 'print-table__strong', thClass: 'print-table__wrap', format: (row) => row.patient?.name || '—' },
+  { key: 'phone', label: t('patient.phone'), width: '92px', format: (row) => formatPhoneForDisplay(row.patient?.phone) || '—' },
+  { key: 'visit_type', label: t('table.visit_type'), align: 'center', width: '68px', format: (row) => visitTypeLabel(row.visit_type) },
+  { key: 'treatment_name', label: t('print.treatment'), thClass: 'print-table__wrap', format: (row) => row.treatment_name || '—' },
+  { key: 'treatment_notes', label: t('visit.treatment_notes'), thClass: 'print-table__wrap', class: 'print-table__muted', format: (row) => row.treatment_notes || '—' },
+  { key: 'total_cost', label: t('common.total'), align: 'end', width: '90px', format: (row) => formatIQD(row.total_cost || 0) },
+  { key: 'amount_paid', label: t('checkout.amount_paid'), align: 'end', width: '90px', class: 'print-table__success', format: (row) => formatIQD(row.amount_paid || 0) },
+  {
+    key: 'short_term_debt',
+    label: t('checkout.short_term_debt'),
+    align: 'end',
+    width: '90px',
+    format: (row) => formatIQD(row.short_term_debt || 0),
+    class: (row) => (Number(row.short_term_debt) > 0 ? 'print-table__danger' : 'print-table__muted'),
+  },
+]);
+
+const printTotals = computed(() => {
+  // index + 9 columns = 10 cells; the label spans the first 6.
+  return [
+    { label: t('print.totals'), colspan: 6, class: 'print-table__num print-table__strong' },
+    { value: format(totals.value?.total), colspan: 1 },
+    { value: format(totals.value?.paid), colspan: 1, class: 'print-table__num print-table__success' },
+    { value: format(totals.value?.debt), colspan: 1, class: 'print-table__num print-table__danger' },
+    { value: '', colspan: 1 },
+  ];
+});
+
+/** Print the filtered archive as a ledger table. */
+function print() {
+  printNow('tableReport', {
+    title: t('print.visit_list'),
+    chips: printFilters.value,
+    kpis: [
+      { label: t('common.total'), value: format(totals.value?.total) },
+      { label: t('checkout.amount_paid'), value: format(totals.value?.paid), tone: 'positive' },
+      { label: t('checkout.short_term_debt'), value: format(totals.value?.debt), tone: totals.value?.debt > 0 ? 'danger' : 'positive' },
+    ],
+    columns: printColumns.value,
+    rows: rows.value,
+    totals: printTotals.value,
+    orientation: 'landscape',
+  });
+}
+
+function visitTypeLabel(type) {
+  if (!type) return '—';
+  const key = `queue.type.${type}`;
+  const label = t(key);
+  return label === key ? type : label;
+}
+
+let unregisterPrinter = null;
 
 const preset = computed(() => {
   if (!filters.from && !filters.to) return '';
@@ -429,5 +501,12 @@ async function addToQueue(row) {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(print);
+  load();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
 </script>

@@ -48,9 +48,12 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | 43200 minutes = 30 days. Without an expiry an issued token is valid
+    | forever, so a device that was once logged in keeps access indefinitely.
+    |
     */
 
-    'expiration' => null,
+    'expiration' => env('SANCTUM_EXPIRATION', 43200),
 
     /*
     |--------------------------------------------------------------------------

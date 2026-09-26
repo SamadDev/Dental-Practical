@@ -7,10 +7,14 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\LabOrderController;
+use App\Http\Controllers\Api\MasterListController;
 use App\Http\Controllers\Api\PatientConditionController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PaymentPlanController;
+use App\Http\Controllers\Api\PrescriptionController;
 use App\Http\Controllers\Api\ReceptionistController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ToothChartController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\VisitController;
@@ -30,12 +34,15 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Public
     Route::get('health', [\App\Http\Controllers\Api\HealthController::class, 'check']);
-    Route::post('login', [AuthController::class, 'login']);
+    // Brute-force guard: 6 login attempts per minute per client (429 beyond that).
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
     // Authenticated (token required)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::put('user/profile', [AuthController::class, 'updateProfile']);
+        Route::put('user/password', [AuthController::class, 'updatePassword']);
 
         // Admin-only user management
         Route::middleware('permission:users.manage')->group(function () {
@@ -43,6 +50,8 @@ Route::prefix('v1')->group(function () {
             Route::post('users', [AuthController::class, 'store']);
             Route::patch('users/{user}', [AuthController::class, 'update']);
             Route::delete('users/{user}', [AuthController::class, 'destroy']);
+            Route::get('roles', [AuthController::class, 'roles']);
+            Route::put('users/{user}/role', [AuthController::class, 'updateRole']);
         });
 
         // Doctor management (admin)
@@ -76,8 +85,22 @@ Route::prefix('v1')->group(function () {
         Route::patch('conditions/{condition}', [PatientConditionController::class, 'update'])->middleware('permission:patients.edit');
         Route::delete('conditions/{condition}', [PatientConditionController::class, 'destroy'])->middleware('permission:patients.edit');
 
+        // Patient prescriptions (medicine history, nested under the patient)
+        Route::get('patients/{patient}/prescriptions', [PrescriptionController::class, 'index'])->middleware('permission:patients.view');
+        Route::post('patients/{patient}/prescriptions', [PrescriptionController::class, 'store'])->middleware('permission:patients.edit');
+        Route::delete('patients/{patient}/prescriptions/{prescription}', [PrescriptionController::class, 'destroy'])->middleware('permission:patients.delete');
+
+        // Master suggestion lists (patient form autocomplete)
+        Route::get('allergies', [MasterListController::class, 'allergies'])->middleware('permission:patients.view');
+        Route::post('allergies', [MasterListController::class, 'storeAllergy'])->middleware('permission:patients.edit');
+        Route::get('diseases', [MasterListController::class, 'diseases'])->middleware('permission:patients.view');
+        Route::post('diseases', [MasterListController::class, 'storeDisease'])->middleware('permission:patients.edit');
+        Route::get('visit-reasons', [MasterListController::class, 'visitReasons'])->middleware('permission:patients.view');
+        Route::post('visit-reasons', [MasterListController::class, 'storeVisitReason'])->middleware('permission:patients.edit');
+
         // Dental chart (per-tooth statuses, universal numbering 1-32)
         Route::get('patients/{patient}/teeth', [ToothChartController::class, 'show'])->middleware('permission:patients.view');
+        Route::get('patients/{patient}/teeth/{tooth}/history', [ToothChartController::class, 'history'])->middleware('permission:patients.view');
         Route::put('patients/{patient}/teeth', [ToothChartController::class, 'update'])->middleware('permission:visits.edit');
 
         // Aqsat contracts
@@ -101,7 +124,12 @@ Route::prefix('v1')->group(function () {
         Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('permission:expenses.delete');
 
         // Financial dashboard
-        Route::get('dashboard/metrics', [DashboardController::class, 'metrics'])->middleware('permission:dashboard.view');// Cash Flow Forecast
+        Route::get('dashboard/metrics', [DashboardController::class, 'metrics'])->middleware('permission:dashboard.view');
+
+        // Performance reports (revenue by treatment, doctor production)
+        Route::get('reports/overview', [ReportController::class, 'overview'])->middleware('permission:reports.view');
+
+        // Cash Flow Forecast
         Route::get('cash-flow/forecast', [CashFlowForecastController::class, 'forecast'])->middleware('permission:cash_flow.view');
         Route::get('cash-flow/weekly', [CashFlowForecastController::class, 'weekly'])->middleware('permission:cash_flow.view');
         Route::get('cash-flow/manual', [CashFlowForecastController::class, 'index'])->middleware('permission:cash_flow.view');
@@ -120,6 +148,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('payment-plans/{paymentPlan}', [PaymentPlanController::class, 'destroy'])->middleware('permission:payment_plans.edit');
         Route::post('payment-plans/installments/{installment}/pay', [PaymentPlanController::class, 'payInstallment'])->middleware('permission:payment_plans.pay');
         Route::post('payment-plans/installments/{installment}/waive', [PaymentPlanController::class, 'waiveInstallment'])->middleware('permission:payment_plans.pay');
+
+        // Lab work orders (external dental lab + in-house diagnostics)
+        Route::get('lab-orders', [LabOrderController::class, 'index'])->middleware('permission:lab.view');
+        Route::post('lab-orders', [LabOrderController::class, 'store'])->middleware('permission:lab.manage');
+        Route::get('lab-orders/{labOrder}', [LabOrderController::class, 'show'])->middleware('permission:lab.view');
+        Route::match(['put', 'patch'], 'lab-orders/{labOrder}', [LabOrderController::class, 'update'])->middleware('permission:lab.manage');
+        Route::delete('lab-orders/{labOrder}', [LabOrderController::class, 'destroy'])->middleware('permission:lab.orders.delete');
 
         // Inventory
         Route::get('inventory', [InventoryController::class, 'index'])->middleware('permission:inventory.view');

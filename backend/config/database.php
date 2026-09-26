@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Str;
 
+// PHP 8.5 moved the PDO driver constants onto driver-specific classes
+// (PDO::MYSQL_ATTR_SSL_CA → Pdo\Mysql::ATTR_SSL_CA) and deprecated the legacy
+// names. Resolve whichever one the running PHP provides so booting the app (and
+// therefore every test) stays deprecation-clean.
+$pdoMysqlSslCa = class_exists(\Pdo\Mysql::class)
+    ? \Pdo\Mysql::ATTR_SSL_CA
+    : constant('PDO::MYSQL_ATTR_SSL_CA');
+
 return [
 
     /*
@@ -58,7 +66,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                constant('PDO::MYSQL_ATTR_SSL_CA') => env('MYSQL_ATTR_SSL_CA'),
+                $pdoMysqlSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -78,7 +86,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                constant('PDO::MYSQL_ATTR_SSL_CA') => env('MYSQL_ATTR_SSL_CA'),
+                $pdoMysqlSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

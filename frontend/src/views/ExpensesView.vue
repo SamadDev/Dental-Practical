@@ -23,7 +23,7 @@
     </header>
 
     <!-- Quick-entry form -->
-    <form v-if="can('expenses.create')" class="no-print card mb-5 p-4" novalidate @submit.prevent="askAdd">
+    <form v-if="can('expenses.create')" ref="formEl" class="no-print card mb-5 p-4" novalidate @submit.prevent="askAdd">
       <div class="grid items-start gap-4 md:grid-cols-[minmax(0,14rem)_1fr_auto]">
         <FormField v-slot="{ id }" :label="$t('expense.amount')" :error="errors.amount" required>
           <IqdInput :id="id" v-model="form.amount" :invalid="!!errors.amount" />
@@ -126,7 +126,7 @@
         >
           🖨 {{ $t('common.print') }}
         </button>
-        <AddButton :label="$t('expense.new')" @click="openCreate" />
+        <AddButton v-if="can('expenses.create')" :label="$t('expense.new')" @click="openCreate" />
       </template>
       <template #cell(created_at)="{ row }">
         <span class="whitespace-nowrap text-slate-600">{{ formatDateTime(row.created_at) }}</span>
@@ -265,6 +265,7 @@ const columns = computed(() => [
 ]);
 
 const form       = ref({ amount: 0, description: '' });
+const formEl     = ref(null);
 const errors     = ref({});
 const submitting = ref(false);
 const formError  = ref('');
@@ -316,6 +317,16 @@ function validate() {
   if (!form.value.description.trim())  e.description = t('expense.description_required');
   errors.value = e;
   return Object.keys(e).length === 0;
+}
+
+/**
+ * The Add button targets the inline quick-entry form above the table (there is
+ * no modal on this screen). This handler was missing entirely, so clicking
+ * "+ Log Expense" did nothing but log a Vue warning.
+ */
+function openCreate() {
+  formEl.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  formEl.value?.querySelector('input')?.focus();
 }
 
 function askAdd() {

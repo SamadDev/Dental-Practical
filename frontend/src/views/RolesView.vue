@@ -296,8 +296,21 @@ async function loadRoles() {
 async function loadUsers() {
   loadingUsers.value = true;
   try {
-    const { data } = await api.get('/users');
-    users.value = (data.data || []).map(u => ({
+    // GET /users is paginated, so walk every page — otherwise a clinic with
+    // more than one page of staff would silently lose users from this screen.
+    const perPage = 200;
+    let page = 1;
+    let lastPage = 1;
+    const all = [];
+
+    do {
+      const { data } = await api.get('/users', { params: { per_page: perPage, page } });
+      all.push(...(data.data || []));
+      lastPage = data.last_page || 1;
+      page += 1;
+    } while (page <= lastPage);
+
+    users.value = all.map(u => ({
       ...u,
       initials: (u.name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
     }));

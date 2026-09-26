@@ -55,14 +55,22 @@ class AuthController extends Controller
     }
 
     /** Admin: list all users with their profiles. */
-    public function index(): JsonResponse
+    /**
+     * GET /users - admin user list.
+     *
+     * `per_page` is honoured but capped, so the roles screen can load the whole
+     * clinic in one pass without letting a client request the entire table.
+     */
+    public function index(Request $request): JsonResponse
     {
+        $perPage = min(max($request->integer('per_page', 50), 1), 200);
+
         $users = User::query()
             ->with(['doctorProfile', 'assignedDoctors'])
             ->select('id', 'name', 'email', 'role', 'is_active', 'created_at')
             ->orderBy('role')
             ->orderBy('name')
-            ->paginate(50);
+            ->paginate($perPage);
 
         return response()->json($users);
     }

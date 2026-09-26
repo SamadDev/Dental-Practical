@@ -59,6 +59,12 @@ class Patient extends Model
         return $this->hasMany(ToothRecord::class);
     }
 
+    /** Append-only log behind the dental chart's "treatment history". */
+    public function toothHistory(): HasMany
+    {
+        return $this->hasMany(ToothRecordHistory::class);
+    }
+
     public function visits(): HasMany
     {
         return $this->hasMany(Visit::class);

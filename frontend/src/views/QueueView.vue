@@ -6,7 +6,16 @@
         <h1 class="header-title">{{ $t('queue.title') }}</h1>
         <p v-if="!loading && queue.length" class="header-subtitle">{{ $t('queue.patients_waiting', { n: queue.length }) }}</p>
       </div>
-      <AddButton v-if="can('queue.manage')" :label="$t('queue.add_patient')" @click="openAdd" />
+      <div class="header-actions">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium"
+          @click="printQueue"
+        >
+          🖨 {{ $t('common.print') }}
+        </button>
+        <AddButton v-if="can('queue.manage')" :label="$t('queue.add_patient')" @click="openAdd" />
+      </div>
     </div>
 
     <!-- Loading -->
@@ -279,7 +288,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import StatusBadge    from '../components/StatusBadge.vue';
 import Modal          from '../components/Modal.vue';
@@ -291,7 +301,9 @@ import { formatPhoneForDisplay, formatPhoneForWhatsApp } from '../utils/phone';
 import { formatIQD } from '../utils/iqd';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import { usePrint } from '../composables/usePrint';
 
+const { t } = useI18n();
 const { can } = useAuth();
 const toast = useToast();
 
@@ -463,7 +475,56 @@ async function removeFromQueue() {
 function openCheckout(v) { activeVisit.value = v; showCheckout.value = true; }
 async function onCheckedOut() { await load(); }
 
-onMounted(load);
+/* --- Print: the queue as a paper table (never a screenshot of the cards) --- */
+const { printNow, registerPagePrinter } = usePrint();
+
+const printColumns = computed(() => [
+  { key: 'patient', label: t('patient.name'), class: 'print-table__strong', thClass: 'print-table__wrap',
+    format: (row) => row.patient?.name || '—' },
+  { key: 'phone', label: t('patient.phone'), width: '96px',
+    format: (row) => formatPhoneForDisplay(row.patient?.phone) || '—' },
+  { key: 'treatment_name', label: t('print.treatment'), thClass: 'print-table__wrap',
+    format: (row) => row.treatment_name || '—' },
+  { key: 'queue_status', label: t('aqsat.status'), align: 'center', width: '80px',
+    format: (row) => t(`queue.status.${row.queue_status}`) },
+  { key: 'appointment_date', label: t('patient.appointment_date'), width: '110px',
+    format: (row) => (row.patient?.appointment_date ? formatDateTime(row.patient.appointment_date) : '—') },
+  {
+    key: 'allergy', label: '⚠', align: 'center', width: '56px',
+    format: (row) => (Number(row.patient?.severe_allergies_count) > 0 ? 'Yes' : '—'),
+    class: (row) => (Number(row.patient?.severe_allergies_count) > 0 ? 'print-table__danger' : 'print-table__muted'),
+  },
+]);
+
+/** Print today's queue as a report table. */
+function printQueue() {
+  const active = queue.value.filter((v) => v.queue_status === 'active').length;
+  printNow('tableReport', {
+    title: t('print.queue_list'),
+    kpis: [
+      { label: t('print.total_records'), value: String(queue.value.length) },
+      { label: t('queue.status.active'), value: String(active) },
+    ],
+    columns: printColumns.value,
+    rows: queue.value,
+    totals: [
+      { label: t('print.totals'), colspan: 5, class: 'print-table__num print-table__strong' },
+      { value: String(queue.value.length), colspan: 1, class: 'print-table__center print-table__strong' },
+    ],
+    emptyText: t('queue.no_patients_in_queue'),
+  });
+}
+
+let unregisterPrinter = null;
+
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printQueue);
+  load();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
 </script>
 
 <style scoped>

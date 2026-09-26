@@ -18,6 +18,7 @@ import ProfileView        from '../views/ProfileView.vue';
 import RolesView          from '../views/RolesView.vue';
 import CalendarView       from '../views/CalendarView.vue';
 import LabWorkOrdersView  from '../views/LabWorkOrdersView.vue';
+import ReportsView         from '../views/ReportsView.vue';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -40,6 +41,7 @@ const router = createRouter({
     { path: '/profile',         component: ProfileView,       name: 'profile',  meta: { permission: 'dashboard.view' } },
     { path: '/roles',           component: RolesView,         name: 'roles',    meta: { permission: 'users.manage' } },
     { path: '/lab-orders',      component: LabWorkOrdersView, name: 'lab_orders', meta: { permission: 'lab.view' } },
+    { path: '/reports',         component: ReportsView,       name: 'reports', meta: { permission: 'reports.view' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });

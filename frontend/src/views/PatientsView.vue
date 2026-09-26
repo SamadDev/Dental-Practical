@@ -60,6 +60,17 @@
         </button>
       </template>
 
+      <template #toolbar-right>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+          @click="printPatientList"
+        >
+          🖨 {{ $t('common.print') }}
+        </button>
+        <AddButton v-if="can('patients.create')" label="Add +" @click="openAdd" />
+      </template>
+
       <template #advanced-filters>
         <div class="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -84,9 +95,6 @@
         </div>
       </template>
 
-      <template #toolbar-right>
-        <AddButton v-if="can('patients.create')" label="Add +" @click="openAdd" />
-      </template>
       <template #cell(name)="{ row }">
         <div class="flex items-center gap-2">
           <div class="min-w-0">
@@ -362,7 +370,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, nextTick, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '../utils/axios';
@@ -376,6 +384,7 @@ import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import { usePrint } from '../composables/usePrint';
 import { usePatientFormFields } from '../composables/usePatientFormFields';
 import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatIQD } from '../utils/iqd';
@@ -433,6 +442,31 @@ const {
   sort: 'created_at',
   dir: 'desc',
 });
+
+const { printNow, registerPagePrinter } = usePrint();
+
+/** Active filters, printed as chips at the top of the report. */
+const printFilters = computed(() => {
+  const out = [];
+  if (search.value.trim()) out.push({ label: t('common.search'), value: search.value.trim() });
+  if (filters.has_debt) out.push({ label: t('archive.filter_with_debt'), value: '✓' });
+  if (filters.appointment) out.push({ label: t('patient.appointment_date'), value: filters.appointment });
+  if (filters.age_min || filters.age_max) {
+    out.push({ label: t('patient.age'), value: `${filters.age_min || 0}–${filters.age_max || '∞'}` });
+  }
+  return out;
+});
+
+/** Print the list as a real report table (not a screenshot of the screen). */
+function printPatientList() {
+  printNow('patientTable', {
+    title: t('print.patient_list'),
+    patients: rows.value,
+    chips: printFilters.value,
+  });
+}
+
+let unregisterPrinter = null;
 
 const columns = computed(() => [
   { key: 'name', label: t('patient.name'), sortable: true, width: 'minmax(160px, 1fr)' },
@@ -652,7 +686,12 @@ async function addToQueue() {
 }
 
 onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printPatientList);
   load();
   loadSidecars();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
 });
 </script>

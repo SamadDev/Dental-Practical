@@ -119,6 +119,13 @@
       </template>
 
       <template #toolbar-right>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+          @click="printExpenses"
+        >
+          🖨 {{ $t('common.print') }}
+        </button>
         <AddButton :label="$t('expense.new')" @click="openCreate" />
       </template>
       <template #cell(created_at)="{ row }">
@@ -186,7 +193,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTableFilters    from '../components/DataTableFilters.vue';
@@ -197,8 +204,9 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import FormField     from '../components/FormField.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { useAuth } from '../composables/useAuth';
+import { usePrint } from '../composables/usePrint';
 import { formatIQD } from '../utils/iqd';
-import { formatDateTime } from '../utils/datetime';
+import { formatDate, formatDateTime } from '../utils/datetime';
 
 const { t } = useI18n();
 const { can } = useAuth();
@@ -214,6 +222,38 @@ const {
 });
 
 const format = (v) => formatIQD(v || 0);
+
+const { printNow, registerPagePrinter } = usePrint();
+
+const printColumns = computed(() => [
+  { key: 'created_at', label: t('archive.checkout_date'), width: '110px', format: (row) => formatDate(row.created_at) },
+  { key: 'description', label: t('expense.description'), thClass: 'print-table__wrap', class: 'print-table__strong', format: (row) => row.description || '—' },
+  { key: 'amount', label: t('expense.amount'), align: 'end', width: '120px', format: (row) => formatIQD(row.amount || 0) },
+]);
+
+/** Print the filtered expense ledger as a table. */
+function printExpenses() {
+  printNow('tableReport', {
+    title: t('print.expense_list'),
+    chips: [
+      ...(search.value.trim() ? [{ label: t('common.search'), value: search.value.trim() }] : []),
+      ...(filters.from ? [{ label: t('archive.date_from'), value: filters.from }] : []),
+      ...(filters.to ? [{ label: t('archive.date_to'), value: filters.to }] : []),
+    ],
+    kpis: [
+      { label: t('common.total'), value: format(totals.value?.amount), tone: 'danger' },
+      { label: t('print.total_records'), value: String(meta.value.total ?? rows.value.length) },
+    ],
+    columns: printColumns.value,
+    rows: rows.value,
+    totals: [
+      { label: t('print.totals'), colspan: 2, class: 'print-table__num print-table__strong' },
+      { value: format(totals.value?.amount), colspan: 1, class: 'print-table__num print-table__danger' },
+    ],
+  });
+}
+
+let unregisterPrinter = null;
 
 const columns = computed(() => [
   { key: 'created_at',  label: t('archive.checkout_date'),  sortable: true, skeleton: 'md' },
@@ -321,5 +361,12 @@ async function remove() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printExpenses);
+  load();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
 </script>

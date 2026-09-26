@@ -23,7 +23,7 @@
           >
             <div>
               <p class="font-medium text-slate-900">{{ role.name }}</p>
-              <p class="text-xs text-slate-500">{{ role.description }}</p>
+              <p class="text-xs text-slate-500">{{ role.description || $t('role.desc_' + role.name) }}</p>
             </div>
             <span class="text-xs text-slate-400">{{ role.users_count }} {{ $t('roles.users') }}</span>
           </div>
@@ -38,7 +38,7 @@
             <span class="badge-success" v-if="selectedRole.is_active">{{ $t('common.active') }}</span>
             <span class="badge-danger" v-else>{{ $t('common.inactive') }}</span>
           </div>
-          <p class="mt-1 text-sm text-slate-500">{{ selectedRole.description }}</p>
+          <p class="mt-1 text-sm text-slate-500">{{ selectedRole.description || $t('role.desc_' + selectedRole.name) }}</p>
         </div>
 
         <div class="px-4 py-3">

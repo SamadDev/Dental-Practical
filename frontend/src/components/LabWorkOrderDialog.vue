@@ -102,6 +102,9 @@
             <div class="flex-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-semibold text-slate-800">{{ order.patient?.name || 'Patient #' + order.patient_id }}</span>
+                <span v-if="order.order_number" class="font-mono text-xs tracking-wide text-slate-400">
+                  {{ order.order_number }}
+                </span>
                 <span class="rounded-full px-2.5 py-0.5 text-xs font-medium"
                       :class="statusClass(order.status)">
                   {{ $t('lab.status_' + order.status) }}
@@ -115,7 +118,7 @@
                 <span v-if="order.material">{{ order.material }}</span>
                 <span v-if="order.shade">{{ $t('lab.shade') }}: {{ order.shade }}</span>
                 <span v-if="order.due_date">{{ $t('lab.due_date') }}: {{ formatDate(order.due_date) }}</span>
-                <span v-if="order.cost">{{ formatIQD(order.cost) }}</span>
+                <span v-if="order.cost">{{ formatIQD(order.cost) }} {{ $t('currency') }}</span>
               </div>
               <p v-if="order.notes" class="mt-2 text-xs text-slate-400">{{ order.notes }}</p>
             </div>
@@ -167,6 +170,8 @@ import ConfirmDialog from './ConfirmDialog.vue';
 import { useToast } from '../composables/useToast';
 import { useAuth } from '../composables/useAuth';
 import api from '../utils/axios';
+import { formatDate } from '../utils/datetime';
+import { formatIQD } from '../utils/iqd';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -317,14 +322,4 @@ async function deleteOrder() {
     toast.error(t('common.error'));
   }
 }
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString();
-};
-
-const formatIQD = (amount) => {
-  if (!amount && amount !== 0) return '';
-  return new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0 }).format(amount) + ' IQD';
-};
 </script>

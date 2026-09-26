@@ -112,6 +112,7 @@ const routePermissionMap = {
   vendors:    'vendors.view',
   expenses:   'expenses.view',
   lab_orders: 'lab.view',
+  reports:    'reports.view',
 };
 
 const allRoutes = [
@@ -125,6 +126,7 @@ const allRoutes = [
   { name: 'vendors',    path: '/vendors',       icon: 'factory' },
   { name: 'expenses',   path: '/expenses',      icon: 'receipt' },
   { name: 'lab_orders', path: '/lab-orders',  icon: 'briefcase' },
+  { name: 'reports',    path: '/reports',     icon: 'trending-up' },
 ];
 
 const visibleRoutes = computed(() => {

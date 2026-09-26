@@ -5,12 +5,17 @@
         <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{{ $t('nav.home') }}</p>
         <h2 class="text-xl font-bold text-slate-800">{{ $t('lab.title') }}</h2>
       </div>
-      <button type="button" class="btn-primary" @click="openCreate">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        {{ $t('lab.new_order') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button type="button" class="btn-secondary" @click="printLabOrders">
+          🖨 {{ $t('common.print') }}
+        </button>
+        <button type="button" class="btn-primary" @click="openCreate">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          {{ $t('lab.new_order') }}
+        </button>
+      </div>
     </header>
 
     <div class="card">
@@ -53,6 +58,9 @@
                              class="font-semibold text-slate-800 hover:text-primary">
                   {{ order.patient?.name || 'Patient #' + order.patient_id }}
                 </router-link>
+                <span v-if="order.order_number" class="font-mono text-xs tracking-wide text-slate-400">
+                  {{ order.order_number }}
+                </span>
                 <span class="rounded-full px-2.5 py-0.5 text-xs font-medium"
                       :class="statusClass(order.status)">
                   {{ $t('lab.status_' + order.status) }}
@@ -66,7 +74,7 @@
                 <span v-if="order.material">{{ order.material }}</span>
                 <span v-if="order.shade">{{ $t('lab.shade') }}: {{ order.shade }}</span>
                 <span v-if="order.due_date">{{ $t('lab.due_date') }}: {{ formatDate(order.due_date) }}</span>
-                <span v-if="order.cost" class="font-medium text-slate-700">{{ formatIQD(order.cost) }}</span>
+                <span v-if="order.cost" class="font-medium text-slate-700">{{ formatIQD(order.cost) }} {{ $t('currency') }}</span>
               </div>
               <p v-if="order.notes" class="mt-2 text-xs text-slate-400">{{ order.notes }}</p>
             </div>
@@ -173,13 +181,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from '../components/Modal.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import { useToast } from '../composables/useToast';
 import { useAuth } from '../composables/useAuth';
+import { usePrint } from '../composables/usePrint';
 import api from '../utils/axios';
+import { formatDate } from '../utils/datetime';
+import { formatIQD } from '../utils/iqd';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -238,7 +249,65 @@ const filteredOrders = computed(() => {
   return result;
 });
 
-onMounted(() => { load(); loadPatients(); });
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printLabOrders);
+  load();
+  loadPatients();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
+
+/* --- Print: work orders as a paper table --- */
+const { printNow, registerPagePrinter } = usePrint();
+
+const printColumns = computed(() => [
+  { key: 'order_number', label: t('lab.order_no'), width: '92px', class: 'print-table__strong',
+    format: (row) => row.order_number || '—' },
+  { key: 'patient', label: t('lab.patient'), class: 'print-table__strong', thClass: 'print-table__wrap',
+    format: (row) => row.patient?.name || `${t('patient.name')} #${row.patient_id}` },
+  { key: 'lab_type', label: t('lab.type'), width: '84px',
+    format: (row) => t(`lab.type_${row.lab_type}`) },
+  { key: 'tooth_number', label: t('lab.tooth'), align: 'center', width: '56px' },
+  { key: 'material', label: t('lab.material'), width: '96px' },
+  { key: 'shade', label: t('lab.shade'), align: 'center', width: '64px' },
+  { key: 'due_date', label: t('lab.due_date'), width: '92px',
+    format: (row) => (row.due_date ? formatDate(row.due_date) : '—') },
+  { key: 'cost', label: t('lab.cost'), align: 'end', width: '96px', class: 'print-table__strong',
+    format: (row) => formatIQD(row.cost || 0) },
+  { key: 'status', label: t('lab.status'), align: 'center', width: '84px',
+    format: (row) => t(`lab.status_${row.status}`) },
+  { key: 'notes', label: t('lab.notes'), thClass: 'print-table__wrap', class: 'print-table__muted' },
+]);
+
+/** Print the (filtered) work-order list as a report table. */
+function printLabOrders() {
+  const list = filteredOrders.value;
+  const totalCost = list.reduce((sum, order) => sum + (Number(order.cost) || 0), 0);
+  printNow('tableReport', {
+    title: t('print.lab_list'),
+    chips: [
+      ...(filterStatus.value ? [{ label: t('lab.status'), value: t(`lab.status_${filterStatus.value}`) }] : []),
+      ...(search.value.trim() ? [{ label: t('common.search'), value: search.value.trim() }] : []),
+    ],
+    kpis: [
+      { label: t('print.total_records'), value: String(list.length) },
+      { label: t('lab.cost'), value: formatIQD(totalCost) },
+    ],
+    columns: printColumns.value,
+    rows: list,
+    totals: [
+      { label: t('print.totals'), colspan: 7, class: 'print-table__num print-table__strong' },
+      { value: formatIQD(totalCost), colspan: 1, class: 'print-table__num print-table__strong' },
+      { value: '', colspan: 2 },
+    ],
+    emptyText: t('lab.no_orders'),
+    orientation: 'landscape',
+  });
+}
+
+let unregisterPrinter = null;
 
 async function load() {
   loading.value = true;
@@ -325,15 +394,5 @@ async function deleteOrder() {
 async function changePage(page) {
   currentPage.value = page;
   await load();
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString();
-}
-
-function formatIQD(amount) {
-  if (!amount && amount !== 0) return '';
-  return new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0 }).format(amount) + ' IQD';
 }
 </script>

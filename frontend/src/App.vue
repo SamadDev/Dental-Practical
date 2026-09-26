@@ -3,6 +3,8 @@
     <router-view v-if="$route.name === 'login'" />
     <AppLayout v-else />
     <KeyboardShortcuts ref="shortcutsRef" />
+    <!-- Renders the paper-sized print preview (and the only thing that prints). -->
+    <PrintHost />
   </div>
 </template>
 
@@ -11,6 +13,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from './layouts/AppLayout.vue';
 import KeyboardShortcuts from './components/KeyboardShortcuts.vue';
+import PrintHost from './components/PrintHost.vue';
 import { useLangStore } from './store/lang';
 
 const lang = useLangStore();

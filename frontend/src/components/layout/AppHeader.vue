@@ -108,11 +108,13 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLangStore } from '../../store/lang';
 import { useAuth } from '../../composables/useAuth';
+import { usePrint } from '../../composables/usePrint';
 
 const route = useRoute();
 const { t, locale } = useI18n();
 const lang = useLangStore();
 const { user, logout } = useAuth();
+const { printCurrentPage } = usePrint();
 const emit = defineEmits(['toggle-sidebar']);
 
 const showLangDropdown = ref(false);
@@ -166,7 +168,9 @@ function toggleSidebar() {
 }
 
 function print() {
-  window.print();
+  // Prints a document built from data (report table / invoice / statement),
+  // never the on-screen layout.
+  printCurrentPage();
 }
 
 function handleClickOutside(event) {

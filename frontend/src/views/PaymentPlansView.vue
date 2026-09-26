@@ -84,6 +84,13 @@
       </template>
 
       <template #toolbar-right>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+          @click="printPlans"
+        >
+          🖨 {{ $t('common.print') }}
+        </button>
         <AddButton :label="$t('plans.new')" @click="openCreate" />
       </template>
       <template #cell(patient)="{ row }">
@@ -262,7 +269,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
 import DataTable from '../components/DataTable.vue';
@@ -275,6 +282,7 @@ import IqdInput      from '../components/IqdInput.vue';
 import Icon from '../components/Icon.vue';
 import { useDataTable } from '../composables/useDataTable';
 import { useAuth } from '../composables/useAuth';
+import { usePrint } from '../composables/usePrint';
 import { formatIQD } from '../utils/iqd';
 import { formatDate } from '../utils/datetime';
 import { formatPhoneForWhatsApp } from '../utils/phone';
@@ -304,6 +312,47 @@ const columns = computed(() => [
 ]);
 
 const fmt = (v) => formatIQD(v || 0);
+
+const { printNow, registerPagePrinter } = usePrint();
+
+const printColumns = computed(() => [
+  { key: 'patient', label: t('patient.name'), thClass: 'print-table__wrap', class: 'print-table__strong', format: (row) => row.patient?.name || '—' },
+  { key: 'phone', label: t('patient.phone'), width: '92px', format: (row) => row.patient?.phone || '—' },
+  { key: 'name', label: t('plans.plan_name'), thClass: 'print-table__wrap' },
+  { key: 'total_amount', label: t('plans.total'), align: 'end', width: '96px', format: (row) => fmt(row.total_amount) },
+  { key: 'remaining', label: t('plans.remaining'), align: 'end', width: '96px', format: (row) => fmt(remaining(row)), class: (row) => (remaining(row) > 0 ? 'print-table__danger' : 'print-table__success') },
+  { key: 'progress', label: t('plans.progress'), align: 'center', width: '70px', format: (row) => `${settledCount(row)}/${row.installment_count ?? 0}` },
+  { key: 'start_date', label: t('plans.start_date'), width: '92px', format: (row) => (row.start_date ? formatDate(row.start_date) : '—') },
+  { key: 'status', label: t('aqsat.status'), align: 'center', width: '80px', format: (row) => String(row.status || '—').toUpperCase() },
+]);
+
+/** Print the payment-plan ledger as a table. */
+function printPlans() {
+  const outstanding = rows.value.reduce((sum, row) => sum + remaining(row), 0);
+  printNow('tableReport', {
+    title: t('print.plan_list'),
+    chips: [
+      ...(search.value.trim() ? [{ label: t('common.search'), value: search.value.trim() }] : []),
+      ...(filters.status ? [{ label: t('aqsat.status'), value: filters.status }] : []),
+      ...(filters.with_overdue ? [{ label: t('plans.installment_status.overdue'), value: '✓' }] : []),
+    ],
+    kpis: [
+      { label: t('print.total_records'), value: String(meta.value.total ?? rows.value.length) },
+      { label: t('plans.outstanding'), value: fmt(outstanding), tone: outstanding > 0 ? 'danger' : 'positive' },
+      { label: t('plans.collected'), value: fmt(planStats.collected), tone: 'positive' },
+    ],
+    columns: printColumns.value,
+    rows: rows.value,
+    totals: [
+      { label: t('print.totals'), colspan: 4, class: 'print-table__num print-table__strong' },
+      { value: fmt(outstanding), colspan: 1, class: 'print-table__num print-table__danger' },
+      { value: '', colspan: 3 },
+    ],
+    orientation: 'landscape',
+  });
+}
+
+let unregisterPrinter = null;
 
 function shouldRemindInstallment(installment) {
   return ['pending', 'partial', 'overdue'].includes(installment.status) &&
@@ -515,5 +564,12 @@ async function create() {
   finally { busy.value = false; }
 }
 
-onMounted(load);
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printPlans);
+  load();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
 </script>

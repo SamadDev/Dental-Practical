@@ -116,6 +116,20 @@
           </svg>
           Call
         </button>
+        <button type="button" class="action-btn action-btn--secondary" @click="printStatement">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          {{ $t('print.patient_statement') }}
+        </button>
+        <button type="button" class="action-btn action-btn--secondary" @click="printInvoice">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <path d="M14 2v6h6M9 13h6M9 17h6"/>
+          </svg>
+          {{ $t('print.invoice') }}
+        </button>
       </div>
     </div>
 
@@ -598,7 +612,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import api from '../utils/axios';
@@ -614,6 +628,8 @@ import { formatDateTime, toLocalInput } from '../utils/datetime';
 import { formatPhoneForDisplay, formatPhoneForWhatsApp, formatPhoneInput, sanitizePhoneInput } from '../utils/phone';
 import { useAuth } from '../composables/useAuth';
 import { useToast } from '../composables/useToast';
+import { usePrint } from '../composables/usePrint';
+import { buildPatientInvoice } from '../utils/printDocuments';
 
 const route   = useRoute();
 const router  = useRouter();
@@ -624,6 +640,27 @@ const patient = ref(null);
 const uploading = ref(false);
 
 const format = (v) => formatIQD(v);
+
+const { printNow, registerPagePrinter } = usePrint();
+
+/** Print this patient's full history as a statement document. */
+function printStatement() {
+  if (!patient.value) return;
+  printNow('patientStatement', {
+    patient: patient.value,
+    title: t('print.patient_statement'),
+  });
+}
+
+/** Print an invoice covering every charged visit on this patient. */
+function printInvoice() {
+  if (!patient.value) return;
+  printNow('invoice', {
+    invoiceData: buildPatientInvoice(patient.value),
+  });
+}
+
+let unregisterPrinter = null;
 
 const activeVisit = computed(() => patient.value?.visits?.find((v) => v.queue_status === 'active'));
 const pendingVisits = computed(() => (patient.value?.visits || []).filter((v) => v.queue_status !== 'completed'));
@@ -885,7 +922,14 @@ async function addToQueue() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  unregisterPrinter = registerPagePrinter(printStatement);
+  load();
+});
+
+onBeforeUnmount(() => {
+  unregisterPrinter?.();
+});
 </script>
 
 <style scoped>

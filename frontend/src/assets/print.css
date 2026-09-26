@@ -1,218 +1,914 @@
-/* ============================================
-   PRINT STYLES
-   Print styles for receipts, patient cards, and reports
-   ============================================ */
+/* ============================================================================
+   PRINT SYSTEM
+   ----------------------------------------------------------------------------
+   Printing never dumps the on-screen UI onto paper. Instead every view opens a
+   *document* (a `print-sheet`, sized like the paper it targets) inside
+   `PrintHost`. On screen that sheet is shown as a preview; when printing, the
+   whole application is hidden and only the sheet reaches the printer.
+
+   Layout primitives used by every document:
+     .print-sheet        the paper
+     .print-head         clinic branding + document title + meta
+     .print-table        the report table (this is the "print as table" bit)
+     .print-kpis         summary numbers
+     .print-signatures   sign-off blocks
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. Preview host (screen only)
+   ------------------------------------------------------------------------ */
+
+.print-host {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(3px);
+}
+
+.print-host__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.print-host__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.print-host__heading svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: #f87171;
+}
+
+.print-host__title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.print-host__note {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.print-host__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-host__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.print-host__btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.print-host__btn--primary {
+  background: #e73f1e;
+  border-color: #e73f1e;
+  color: #fff;
+}
+
+.print-host__btn--primary:hover {
+  background: #dc2626;
+}
+
+.print-host__viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 28px 16px 64px;
+}
+
+.print-host__frame {
+  width: max-content;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------------------------
+   2. The sheet — sized like real paper
+   ------------------------------------------------------------------------ */
+
+.print-sheet {
+  position: relative;
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 14mm 13mm;
+  background: #fff;
+  color: #111827;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.print-sheet--landscape {
+  width: 297mm;
+  min-height: 210mm;
+}
+
+.print-sheet--receipt {
+  width: 80mm;
+  min-height: 0;
+  padding: 6mm 5mm;
+  font-size: 10px;
+}
+
+.print-sheet *,
+.print-sheet *::before,
+.print-sheet *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------
+   3. Document header
+   ------------------------------------------------------------------------ */
+
+.print-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #e73f1e;
+}
+
+.print-head__brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.print-head__logo {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e73f1e 0%, #dc2626 100%);
+  color: #fff;
+}
+
+.print-head__logo svg {
+  width: 26px;
+  height: 26px;
+}
+
+.print-clinic-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.print-clinic-line {
+  margin: 2px 0 0;
+  font-size: 10.5px;
+  color: #6b7280;
+}
+
+.print-head__doc {
+  text-align: right;
+  min-width: 180px;
+}
+
+.print-doc-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+}
+
+.print-doc-subtitle {
+  margin: 3px 0 0;
+  font-size: 10.5px;
+  color: #6b7280;
+}
+
+.print-meta-list {
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10.5px;
+}
+
+.print-meta-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.print-meta-label {
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 9px;
+  padding-top: 1px;
+}
+
+.print-meta-value {
+  font-weight: 600;
+  color: #374151;
+  min-width: 90px;
+  text-align: right;
+}
+
+/* Filter chips describing what a report covers. */
+.print-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.print-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fef2ef;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.print-chip__label {
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 8.5px;
+}
+
+/* ---------------------------------------------------------------------------
+   4. Body sections + tables
+   ------------------------------------------------------------------------ */
+
+.print-body {
+  padding-top: 16px;
+}
+
+.print-section {
+  margin-top: 18px;
+}
+
+.print-section:first-child {
+  margin-top: 0;
+}
+
+.print-section__title {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-section__title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.print-table--compact {
+  font-size: 9px;
+}
+
+.print-table th,
+.print-table td {
+  border: 1px solid #e2e8f0;
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.print-table--compact th,
+.print-table--compact td {
+  padding: 3px 5px;
+}
+
+.print-table thead th {
+  background: #f8fafc;
+  font-size: 8.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.print-table--zebra tbody tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+.print-table tfoot td {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid #cbd5e1;
+}
+
+.print-table__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  white-space: nowrap;
+}
+
+.print-table__center {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.print-table__index {
+  text-align: center;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+  width: 28px;
+}
+
+.print-table__strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.print-table__muted {
+  color: #6b7280;
+}
+
+.print-table__danger {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.print-table__success {
+  color: #047857;
+  font-weight: 600;
+}
+
+.print-table__nowrap {
+  white-space: nowrap;
+}
+
+.print-table__wrap {
+  white-space: normal;
+  min-width: 140px;
+}
+
+.print-empty {
+  padding: 28px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 11px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+}
+
+/* Summary number cards above a report table. */
+.print-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.print-kpi {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.print-kpi__label {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.print-kpi__value {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+
+.print-kpi--positive .print-kpi__value { color: #047857; }
+.print-kpi--warning  .print-kpi__value { color: #b45309; }
+.print-kpi--danger   .print-kpi__value { color: #b91c1c; }
+
+/* Free-form notes / terms block. */
+.print-notes {
+  margin-top: 16px;
+  padding: 9px 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 10px;
+  color: #475569;
+  white-space: pre-wrap;
+}
+
+/* Two-column definition grid (patient statement, invoice parties). */
+.print-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 4px 20px;
+}
+
+.print-grid__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px dotted #e2e8f0;
+  font-size: 10px;
+}
+
+.print-grid__label {
+  color: #6b7280;
+}
+
+.print-grid__value {
+  font-weight: 600;
+  color: #111827;
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------------------
+   5. Sign-off + footer
+   ------------------------------------------------------------------------ */
+
+.print-signatures {
+  display: flex;
+  justify-content: flex-end;
+  gap: 40px;
+  margin-top: 34px;
+}
+
+.print-signature {
+  width: 160px;
+  text-align: center;
+}
+
+.print-signature__line {
+  height: 1px;
+  background: #9ca3af;
+  margin-bottom: 5px;
+}
+
+.print-signature__label {
+  font-size: 9.5px;
+  color: #6b7280;
+}
+
+.print-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 9px;
+  color: #9ca3af;
+}
+
+.print-foot__strong {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ---------------------------------------------------------------------------
+   6. Invoice document
+   ------------------------------------------------------------------------ */
+
+.print-invoice__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.print-invoice--centered .print-invoice__top {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.print-invoice__brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.print-invoice__badge {
+  min-width: 170px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2ef;
+  border: 1px solid #fecaca;
+  text-align: right;
+}
+
+.print-badge__label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #b91c1c;
+}
+
+.print-badge__number {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #7f1d1d;
+}
+
+.print-badge__rows {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.print-badge__row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.print-badge__row dt {
+  color: #9ca3af;
+}
+
+.print-badge__row dd {
+  margin: 0;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+
+.print-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.print-party {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.print-party__title {
+  margin: 0 0 5px;
+  font-size: 8.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+}
+
+.print-party p {
+  margin: 0 0 2px;
+}
+
+.print-party__name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.print-party__line {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+/* Totals block on the invoice — a narrow table right-aligned under the items. */
+.print-invoice__totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.print-invoice__totals-inner {
+  width: 260px;
+}
+
+.print-sum-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 8px;
+  font-size: 10.5px;
+}
+
+.print-sum-row__label {
+  color: #6b7280;
+}
+
+.print-sum-row__value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+.print-sum-row--discount .print-sum-row__value { color: #047857; }
+.print-sum-row--paid .print-sum-row__value { color: #047857; }
+.print-sum-row--due .print-sum-row__value { color: #b91c1c; }
+
+.print-sum-row--grand {
+  border-top: 2px solid #e73f1e;
+  margin-top: 4px;
+  padding-top: 7px;
+  font-size: 13px;
+}
+
+.print-sum-row--grand .print-sum-row__label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.print-sum-row--grand .print-sum-row__value {
+  font-weight: 800;
+  color: #b91c1c;
+}
+
+.print-sum-row--balance {
+  border-top: 2px dashed #fecaca;
+  margin-top: 3px;
+  padding-top: 6px;
+}
+
+.print-sum-row--balance .print-sum-row__label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.print-pay-box {
+  margin-top: 18px;
+  padding: 10px 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+}
+
+.print-pay-box__methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.print-pay-box__bank {
+  margin: 0;
+  font-size: 9.5px;
+  color: #065f46;
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+.print-thanks {
+  margin: 0 0 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.print-terms {
+  margin: 0;
+  font-size: 9.5px;
+  color: #9ca3af;
+}
+
+.print-watermark {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 74px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #e73f1e;
+  opacity: 0.05;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---------------------------------------------------------------------------
+   7. Receipt (80mm thermal)
+   ------------------------------------------------------------------------ */
+
+.print-receipt-head {
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.print-receipt-head__name {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.print-receipt-head__line {
+  margin: 1px 0 0;
+  font-size: 9px;
+  color: #6b7280;
+}
+
+.print-receipt__divider {
+  border-top: 1px dashed #cbd5e1;
+  margin: 8px 0;
+}
+
+.print-receipt__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  padding: 1.5px 0;
+}
+
+.print-receipt__row dt {
+  color: #6b7280;
+}
+
+.print-receipt__row dd {
+  margin: 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.print-receipt__total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.print-receipt__thankyou {
+  margin: 0;
+  text-align: center;
+  font-size: 9px;
+  color: #6b7280;
+}
+
+/* ---------------------------------------------------------------------------
+   8. Printing
+   ------------------------------------------------------------------------ */
 
 @media print {
-  /* Hide elements not needed for printing */
-  .no-print,
-  .sidebar,
-  .header,
-  .footer,
-  .btn,
-  .dropdown,
-  .modal-footer,
-  .keyboard-shortcuts-hint,
-  [role="toolbar"],
-  .hide-on-print {
+  /* Only the print document goes to paper — never the app UI. */
+  body.print-open #app {
     display: none !important;
   }
 
-  /* Reset background colors */
-  body {
-    background: white !important;
-    color: black !important;
-    font-size: 12pt;
-    line-height: 1.4;
+  body.print-open .print-host {
+    position: static;
+    inset: auto;
+    display: block;
+    background: none;
+    backdrop-filter: none;
   }
 
-  /* Ensure white background for all containers */
-  .bg-white,
-  .panel,
-  .card,
-  .bg-slate-50,
-  .bg-gray-50,
-  .dark\:bg-gray-800 {
-    background: white !important;
-    border-color: #ddd !important;
+  body.print-open .print-host__bar {
+    display: none !important;
   }
 
-  /* Improve text readability */
-  .text-slate-600,
-  .text-slate-500,
-  .text-gray-500 {
-    color: #333 !important;
+  body.print-open .print-host__viewport {
+    overflow: visible;
+    padding: 0;
   }
 
-  .text-slate-700,
-  .text-gray-700,
-  .text-slate-900 {
-    color: #111 !important;
+  body.print-open .print-host__frame {
+    width: auto;
+    margin: 0;
   }
 
-  /* Use system fonts for printing */
-  * {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  body.print-open .print-sheet {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
   }
 
-  /* Page setup */
-  @page {
-    margin: 1cm;
-    size: A4;
+  /* Full-bleed colours (table headers, brand bars, badges). */
+  .print-sheet,
+  .print-sheet * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Links - show URL after link text */
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    font-size: 9pt;
-    color: #666;
-  }
-
-  /* Avoid page breaks inside tables */
-  table {
-    page-break-inside: avoid;
-  }
-
-  /* Avoid page breaks inside cards */
-  .card,
-  .panel {
-    page-break-inside: avoid;
-  }
-
-  /* Headers at top of each page */
-  thead {
+  /* Repeat table headers on every page, never split a row. */
+  .print-table thead {
     display: table-header-group;
   }
 
-  /* Footer with page numbers */
-  @page:last-child {
-    margin-bottom: 0;
+  .print-table tfoot {
+    display: table-footer-group;
   }
 
-  /* Receipt specific styles */
-  .receipt {
-    max-width: 300px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px dashed #ccc;
-  }
-
-  .receipt-header {
-    text-align: center;
-    border-bottom: 1px dashed #ccc;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-  }
-
-  .receipt-items {
-    border-bottom: 1px dashed #ccc;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-  }
-
-  .receipt-total {
-    font-weight: bold;
-    font-size: 14pt;
-    margin-top: 10px;
-  }
-
-  /* Patient card styles */
-  .patient-card {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-
-  .patient-card-header {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-  }
-
-  /* Visit summary */
-  .visit-summary {
-    margin-bottom: 20px;
-  }
-
-  .visit-summary-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px dotted #eee;
-  }
-
-  /* Invoice styles */
-  .invoice {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .invoice-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-  }
-
-  .invoice-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-
-  .invoice-table th,
-  .invoice-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-
-  .invoice-table th {
-    background: #f5f5f5;
-  }
-
-  /* Treatment plan */
-  .treatment-plan {
-    margin-bottom: 20px;
-  }
-
-  .treatment-item {
-    padding: 10px;
-    border-left: 3px solid #E73F1E;
-    margin-bottom: 10px;
-    background: #f9f9f9;
-  }
-
-  /* Lab results */
-  .lab-result {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 15px;
-  }
-
-  .lab-result-header {
-    font-weight: bold;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
-  }
-
-  /* Dental chart print */
-  .dental-chart-print {
-    max-width: 500px;
-    margin: 0 auto;
-  }
-
-  /* Avoid cutting images */
-  img {
-    max-width: 100% !important;
+  .print-table tr,
+  .print-kpi,
+  .print-party,
+  .print-pay-box,
+  .print-notes {
     page-break-inside: avoid;
   }
 
-  /* Force background prints */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  .print-section {
+    page-break-inside: auto;
+  }
+
+  .print-watermark {
+    display: none;
+  }
+
+  /* --- Fallback for a plain Ctrl/Cmd+P with no document open --------------
+     The screen UI is printed, but stripped down to something readable: all
+     chrome disappears and only the table survives. */
+  body:not(.print-open) .no-print,
+  body:not(.print-open) .sidebar,
+  body:not(.print-open) .app-header,
+  body:not(.print-open) .app-footer,
+  body:not(.print-open) .app-topbar,
+  body:not(.print-open) .breadcrumbs,
+  body:not(.print-open) .table-filters,
+  body:not(.print-open) .table-pagination-bar,
+  body:not(.print-open) .dropdown,
+  body:not(.print-open) .modal-footer,
+  body:not(.print-open) .hide-on-print {
+    display: none !important;
+  }
+
+  body:not(.print-open) {
+    background: #fff !important;
   }
 }

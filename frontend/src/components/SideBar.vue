@@ -113,6 +113,7 @@ const routePermissionMap = {
   expenses:   'expenses.view',
   lab_orders: 'lab.view',
   reports:    'reports.view',
+  cash_flow:  'cash_flow.view',
 };
 
 const allRoutes = [
@@ -127,6 +128,7 @@ const allRoutes = [
   { name: 'expenses',   path: '/expenses',      icon: 'receipt' },
   { name: 'lab_orders', path: '/lab-orders',  icon: 'briefcase' },
   { name: 'reports',    path: '/reports',     icon: 'trending-up' },
+  { name: 'cash_flow',  path: '/cash-flow',   icon: 'repeat' },
 ];
 
 const visibleRoutes = computed(() => {

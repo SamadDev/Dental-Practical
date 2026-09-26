@@ -44,6 +44,9 @@ const routeLabelMap = {
   receptionists: 'nav.receptionists',
   profile: 'nav.profile',
   roles: 'nav.roles',
+  cash_flow: 'nav.cash_flow',
+  lab_orders: 'nav.lab_orders',
+  reports: 'nav.reports',
 };
 
 const crumbs = computed(() => {

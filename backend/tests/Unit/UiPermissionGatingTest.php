@@ -19,6 +19,7 @@ class UiPermissionGatingTest extends TestCase
         'views/ArchiveView.vue'      => ['queue.manage', 'visits.pay_debt'],
         'views/PaymentPlansView.vue' => ['payment_plans.pay', 'payment_plans.edit'],
         'views/InventoryView.vue'    => ['inventory.adjust', 'inventory.move'],
+        'views/CashFlowView.vue'     => ['cash_flow.manage'],
     ];
 
     public function test_admin_only_actions_are_hidden_behind_can_checks(): void
